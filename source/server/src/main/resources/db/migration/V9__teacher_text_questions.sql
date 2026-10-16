@@ -1,0 +1,8 @@
+ALTER TABLE questions
+  ADD COLUMN question_type VARCHAR(24) NOT NULL DEFAULT 'MCQ',
+  ADD COLUMN accepted_answer VARCHAR(255) NULL;
+
+ALTER TABLE attempt_items
+  ADD COLUMN question_type VARCHAR(24) NOT NULL DEFAULT 'MCQ',
+  ADD COLUMN accepted_answer VARCHAR(255) NULL,
+  ADD COLUMN text_answer VARCHAR(255) NULL;
