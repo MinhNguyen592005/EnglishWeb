@@ -1,6 +1,6 @@
 package com.grammarquest.security;
 
-import com.grammarquest.domain.UserRepository;
+import com.grammarquest.repository.UserRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;

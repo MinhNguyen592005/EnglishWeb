@@ -1,7 +1,7 @@
 package com.grammarquest.config;
 
-import com.grammarquest.domain.User;
-import com.grammarquest.domain.UserRepository;
+import com.grammarquest.entity.User;
+import com.grammarquest.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
