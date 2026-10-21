@@ -1,0 +1,16 @@
+.live-exam { margin: 24px 0; }
+.class-workspace.view-members .live-exam, .class-workspace.view-chat .live-exam { display: none; }
+.class-workspace.view-exams > .feature-grid, .class-workspace.view-exams .class-new-assignment, .class-workspace.view-exams .class-rename, .class-workspace.view-exams .chat-panel { display: none; }
+.live-exam-list { display: flex; flex-wrap: wrap; gap: 10px; margin: 18px 0; }
+.live-exam-body, .live-exam-editor { border-top: 1px solid var(--border, #e7e5ef); padding-top: 20px; margin-top: 20px; }
+.live-exam-question { border: 1px solid var(--border, #e7e5ef); border-radius: 16px; padding: 20px; margin: 18px 0; min-width: 0; }
+.live-exam-question legend { font-weight: 700; padding: 0 8px; white-space: pre-wrap; overflow-wrap: anywhere; }
+.live-exam-question textarea { width: 100%; min-height: 80px; margin: 8px 0 16px; }
+.live-exam-option { display: flex; align-items: center; gap: 12px; background: #f8f7fc; border: 1px solid transparent; border-radius: 12px; padding: 14px; margin: 8px 0; cursor: pointer; }
+.live-exam-option.selected { border-color: #8b5cf6; background: #f1eafe; }
+.live-exam-option input { width: 18px; height: 18px; flex: 0 0 18px; accent-color: #7c3aed; }
+.live-exam td small { display: block; color: #77718a; margin-top: 4px; }
+.live-exam table { width: 100%; border-collapse: collapse; }
+.live-exam th, .live-exam td { text-align: left; padding: 12px; border-bottom: 1px solid #eeeaf5; }
+.live-exam [disabled] { cursor: default; }
+@media(max-width:700px) { .live-exam .panel-heading { align-items: flex-start; flex-direction: column; gap: 12px; } .live-exam-question { padding: 12px; } }

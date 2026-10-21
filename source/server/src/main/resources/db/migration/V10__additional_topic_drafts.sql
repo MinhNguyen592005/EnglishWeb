@@ -1,0 +1,4 @@
+INSERT INTO lessons(topic_slug,ordinal_no,title,summary,theory,published) VALUES
+('basic-tenses',0,'Các thì cơ bản','Bản nháp: hiện tại, quá khứ và tương lai','Các thì tiếng Anh diễn tả thời điểm và trạng thái của hành động. Bài học này cần được giáo viên hoặc quản trị viên bổ sung ví dụ và tối thiểu 10 câu hỏi trước khi xuất bản.',false),
+('passive-voice',0,'Câu bị động','Bản nháp: chuyển trọng tâm sang đối tượng chịu tác động','Câu bị động thường có cấu trúc be + quá khứ phân từ. Bài học này cần được bổ sung ví dụ theo từng thì và tối thiểu 10 câu hỏi trước khi xuất bản.',false),
+('relative-clauses',0,'Mệnh đề quan hệ','Bản nháp: dùng who, which, that để bổ nghĩa danh từ','Mệnh đề quan hệ cung cấp thông tin về danh từ đứng trước. Bài học này cần được bổ sung ví dụ phân biệt mệnh đề xác định và không xác định cùng tối thiểu 10 câu hỏi trước khi xuất bản.',false);

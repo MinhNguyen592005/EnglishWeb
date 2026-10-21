@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://grammar-quest.local/schemas/attempt-v1.json",
+  "title": "Grammar Quest attempt response v1",
+  "type": "object",
+  "required": ["id", "kind", "status", "totalQuestions", "requiredCorrect", "correctCount", "bossHp", "awardedXp", "questions"],
+  "properties": {
+    "id": { "type": "integer", "minimum": 1 },
+    "kind": { "enum": ["PRACTICE", "LESSON_BOSS", "CHAPTER_BOSS"] },
+    "status": { "enum": ["IN_PROGRESS", "WON", "LOST"] },
+    "lessonId": { "type": ["integer", "null"] },
+    "totalQuestions": { "type": "integer", "minimum": 1 },
+    "requiredCorrect": { "type": "integer", "minimum": 0 },
+    "correctCount": { "type": "integer", "minimum": 0 },
+    "bossHp": { "type": "number", "minimum": 0, "maximum": 100 },
+    "awardedXp": { "type": "integer", "minimum": 0 },
+    "questions": { "type": "array", "items": { "type": "object", "required": ["ordinalNo", "prompt", "options"], "properties": {
+      "ordinalNo": { "type": "integer", "minimum": 1 },
+      "prompt": { "type": "string" },
+      "options": { "type": "array", "minItems": 4, "maxItems": 4, "items": { "type": "string" } },
+      "answer": { "type": ["string", "null"] },
+      "correct": { "type": ["boolean", "null"] },
+      "correctOption": { "type": ["string", "null"] },
+      "explanation": { "type": ["string", "null"] }
+    } } }
+  },
+  "additionalProperties": false
+}
