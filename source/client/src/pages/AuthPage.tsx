@@ -2,6 +2,7 @@ import { Eye, EyeOff, Rocket, Sparkles } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
+import { useRegistrationWelcome } from '../app/RegistrationWelcomeContext'
 import { api } from '../services/api'
 
 export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
@@ -12,6 +13,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const { setUser } = useAuth()
+  const {showAfterRegistration}=useRegistrationWelcome()
   const navigate = useNavigate()
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
@@ -21,8 +23,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
         await api.register(username, displayName, password)
         profile = await api.login(username, password)
       } else profile = await api.login(username, password)
+      if(mode==='register'&&profile.role==='LEARNER')showAfterRegistration(profile.id)
       setUser(profile)
-      navigate(profile.role==='ADMIN'?'/admin':profile.role==='TEACHER'?'/teacher':'/dashboard', { replace: true })
+      navigate(profile.role==='ADMIN'?'/admin':profile.role==='TEACHER'?'/teacher':mode==='register'?'/placement':'/', { replace: true })
     } catch (e) { setError((e as Error).message) }
     finally { setBusy(false) }
   }
