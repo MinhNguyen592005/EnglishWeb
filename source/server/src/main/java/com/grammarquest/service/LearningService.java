@@ -13,6 +13,8 @@ import java.util.*;
 
 @Service
 public class LearningService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private PlacementService placement;
     private final UserRepository users;
     private final LessonRepository lessons;
     private final QuestionRepository questions;
@@ -40,6 +42,7 @@ public class LearningService {
         User user=users.findByUsernameIgnoreCase(username).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED,"UNAUTHENTICATED","Vui lòng đăng nhập"));
         if(user.locked) throw new ApiException(HttpStatus.FORBIDDEN,"ACCOUNT_LOCKED","Tài khoản đã bị khóa");
         if(user.role.equals("ADMIN")) throw new ApiException(HttpStatus.FORBIDDEN,"ADMIN_ONLY_MANAGEMENT","Quản trị viên chỉ sử dụng chức năng quản trị");
+        if(user.placementEligible&&user.role.equals("LEARNER"))placement.requireCompleted(user);
         return user;
     }
     private User learner(String username) {

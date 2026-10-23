@@ -23,22 +23,25 @@ public class AuthController {
     private final PasswordEncoder encoder;
     private final AuthenticationManager manager;
     private final HttpSessionSecurityContextRepository contextRepository;
+    private final com.grammarquest.service.PlacementService placement;
     public AuthController(UserRepository users, PasswordEncoder encoder, AuthenticationManager manager,
-                          HttpSessionSecurityContextRepository contextRepository) {
-        this.users=users; this.encoder=encoder; this.manager=manager; this.contextRepository=contextRepository;
+                          HttpSessionSecurityContextRepository contextRepository,com.grammarquest.service.PlacementService placement) {
+        this.users=users; this.encoder=encoder; this.manager=manager; this.contextRepository=contextRepository;this.placement=placement;
     }
     public record Register(@NotBlank @Size(min=3,max=80) String username,
                            @NotBlank @Size(min=2,max=120) String displayName,
                            @NotBlank @Size(min=8,max=100) String password) {}
     public record Login(@NotBlank String username, @NotBlank String password) {}
-    public record Profile(Long id, String username, String displayName, String role, long totalXp, long level, long xpInLevel) {
-        public static Profile from(User u) { return new Profile(u.id,u.username,u.displayName,u.role,u.totalXp,u.totalXp/1000+1,u.totalXp%1000); }
+    public record Profile(Long id, String username, String displayName, String role, long totalXp, long level, long xpInLevel,boolean placementEligible) {
+        public static Profile from(User u) { return new Profile(u.id,u.username,u.displayName,u.role,u.totalXp,u.totalXp/1000+1,u.totalXp%1000,u.placementEligible); }
     }
     @GetMapping("/csrf") public Map<String,String> csrf(CsrfToken token) { return Map.of("token", token.getToken()); }
+    @org.springframework.transaction.annotation.Transactional
     @PostMapping("/register") public ResponseEntity<Profile> register(@Valid @RequestBody Register body) {
         String name=body.username().trim().toLowerCase();
         if(users.existsByUsernameIgnoreCase(name)) throw new ApiException(HttpStatus.CONFLICT,"USERNAME_TAKEN","Tên đăng nhập đã được dùng");
-        User user=users.save(new User(name,body.displayName().trim(),encoder.encode(body.password())));
+        User user=new User(name,body.displayName().trim(),encoder.encode(body.password()));user.placementEligible=true;user=users.save(user);
+        placement.enrollNewUser(user.id);
         return ResponseEntity.status(201).body(Profile.from(user));
     }
     @PostMapping("/login") public Profile login(@Valid @RequestBody Login body, HttpServletRequest request, HttpServletResponse response) {

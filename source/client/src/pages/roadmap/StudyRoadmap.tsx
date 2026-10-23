@@ -1,0 +1,78 @@
+import { ArrowLeft, ArrowRight, BookOpen, Check, ChevronRight, LockKeyhole, Sparkles, Target, Trophy } from 'lucide-react'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { useSystemSocket } from '../../app/SystemSocketContext'
+import { Layout } from '../../components/Layout'
+import { ErrorState, Loading } from '../../components/States'
+import { StudyQuiz } from './StudyQuiz'
+import type { StudyAttempt, StudyCourse, StudyKind, StudyLessonDetail } from './types'
+import './study.css'
+
+export function StudyRoadmap(){
+  const {request,connected,subscribe}=useSystemSocket()
+  const [search,setSearch]=useSearchParams()
+  const [course,setCourse]=useState<StudyCourse|null>(null)
+  const [error,setError]=useState('')
+  const [busy,setBusy]=useState(false)
+  const [revision,setRevision]=useState(0)
+  const reload=useCallback(()=>setRevision(n=>n+1),[])
+  const startKeys=useRef(new Map<string,string>())
+  useEffect(()=>subscribe(message=>{if(message.action==='ROADMAP_PROGRESS_CHANGED')reload()}),[subscribe,reload])
+  useEffect(()=>{if(!connected)return;let active=true;setError('');request<StudyCourse>('ROADMAP_OPEN','ROADMAP_COURSE_DATA').then(data=>{if(active)setCourse(data)}).catch(e=>{if(active)setError(e.message)});return()=>{active=false}},[request,connected,revision])
+  const open=(params:Record<string,string>,scrollToTop=true)=>{setError('');setSearch(params,{preventScrollReset:!scrollToTop});if(scrollToTop)window.scrollTo({top:0,behavior:'smooth'})}
+  if(!course)return <Layout title="Lộ trình">{error?<ErrorState message={error} retry={reload}/>:<Loading/>}</Layout>
+  const levels=course.levels
+  const selected=levels.find(l=>`level-${l.id}`===search.get('planet')&&l.unlocked)||levels.find(l=>l.unlocked&&!l.passed)||levels[0]
+  const requestedModule=selected?.modules.find(m=>m.id===search.get('module'))
+  const module=requestedModule?.unlocked?requestedModule:undefined
+  const lessonId=search.get('lesson'),attemptId=search.get('attempt')
+  const backToModule=(levelId?:number,moduleId?:string)=>open({planet:`level-${levelId??selected.id}`,...(moduleId?{module:moduleId}:module?{module:module.id}:{})})
+  if(lessonId)return <LessonScreen key={lessonId} id={lessonId} onBack={backToModule} openLesson={(id,levelId,moduleId)=>open({planet:`level-${levelId}`,module:moduleId,lesson:id})}/>
+  if(attemptId)return <AttemptScreen key={attemptId} id={Number(attemptId)} onBack={backToModule}/>
+  const total=levels.reduce((n,l)=>n+l.lessonCount,0),done=levels.reduce((n,l)=>n+l.completedCount,0)
+  const nextLevel=levels.find(l=>l.unlocked&&!l.passed)||levels.at(-1)
+  const nextModule=nextLevel?.modules.find(m=>m.unlocked&&m.completedCount<m.lessonCount)
+  const nextLesson=nextModule?.lessons.find(l=>l.status!=='COMPLETED')
+  async function start(kind:StudyKind,referenceId:string){
+    setBusy(true);setError('')
+    const key=`${kind}:${referenceId}`;if(!startKeys.current.has(key))startKeys.current.set(key,crypto.randomUUID())
+    try{const a=await request<StudyAttempt>('ROADMAP_START','ROADMAP_COURSE_DATA',{kind,referenceId,requestKey:startKeys.current.get(key)});startKeys.current.delete(key);open({planet:`level-${a.levelId}`,...(kind.startsWith('MODULE_')?{module:referenceId}:{}),attempt:String(a.id)})}catch(e){setError((e as Error).message)}finally{setBusy(false)}
+  }
+  return <Layout title="Lộ trình"><div className="study-course">
+    <div className="breadcrumb"><Link to="/dashboard">Tổng quan</Link><ChevronRight size={16}/>Lộ trình</div>
+    <div className="page-heading"><div><span className="section-label">HỆ MẶT TRỜI TRI THỨC</span><h1>Khám phá 5 hành tinh ngữ pháp</h1><p>Mỗi hành tinh là một level. Hoàn thành bài học, đạt 8/10 câu kiểm tra để mở hành tinh tiếp theo.</p></div><div className="heading-icon"><Target size={35}/></div></div>
+    <section className="card roadmap-summary"><div className="roadmap-summary-main"><span className="section-label">TIẾN ĐỘ TOÀN LỘ TRÌNH</span><strong>{done}<span>/{total}</span></strong><p>Bài học đã hoàn thành · {levels.filter(l=>l.passed).length}/5 level đã vượt qua</p><div className="progress-track"><div style={{width:`${total?done/total*100:0}%`}}/></div><small>5 level nội bộ của khóa ngữ pháp</small></div><div className="roadmap-next"><span className="section-label">BƯỚC TIẾP THEO</span><h2>{nextLesson?.title||(!nextLevel?.passed?'Kiểm tra cuối level':'Đã chinh phục 5 hành tinh!')}</h2><p>{nextModule?.title||nextLevel?.title}</p><button className="button primary" onClick={()=>nextLesson&&nextLevel&&nextModule?open({planet:`level-${nextLevel.id}`,module:nextModule.id,lesson:nextLesson.id}):nextLevel&&open({planet:`level-${nextLevel.id}`})}>{nextLesson?'Tiếp tục học':'Xem level'}<ArrowRight size={17}/></button></div></section>
+    <section className="planet-map" aria-label="Bản đồ 5 level"><div className="planet-map-heading"><span className="section-label">BẢN ĐỒ KHÁM PHÁ</span><h2>Chọn hành tinh của bạn</h2><p>Từ nền tảng câu và từ đến các cấu trúc ngữ pháp chuyên sâu.</p></div><div className="planet-path">{levels.map((level,index)=><div className="planet-stop" key={level.id}><button type="button" className={`planet-button ${level.planetStyle} ${selected?.id===level.id?'selected':''} ${level.unlocked?'':'locked'}`} disabled={!level.unlocked} aria-pressed={selected?.id===level.id} aria-label={`Level ${level.id}: ${level.title}${level.unlocked?'':'. Chưa mở khóa'}`} onClick={()=>open({planet:`level-${level.id}`})}><span className="planet-halo"/><span className="planet-body"><span className="planet-surface"/></span><span className="planet-ring"/>{!level.unlocked&&<span className="planet-lock"><LockKeyhole size={22}/></span>}</button><div className="planet-caption"><span>LEVEL {level.id}</span><strong>{level.title}</strong><small>{level.placementPassed?'Vượt qua theo đầu vào · Ôn tập':level.passed?'Đã vượt qua':level.unlocked?`${level.completedCount}/${level.lessonCount} bài hoàn thành`:`Đạt 8/10 kiểm tra level ${level.id-1} để mở`}</small></div>{index<levels.length-1&&<span className={`planet-connector ${level.passed?'complete':''}`} aria-hidden="true"/>}</div>)}</div></section>
+    {error&&<div className="error-banner" role="alert">{error}</div>}
+    {selected&&<section className="roadmap-chapter"><div className="roadmap-chapter-header"><div className="roadmap-chapter-number">0{selected.id}</div><div className="roadmap-chapter-copy"><span className="section-label">LEVEL {selected.id} · {selected.modules.length} MODULE</span><h2>{selected.title}</h2><p>{selected.outcome}</p><small><Sparkles size={15}/> Học kiến thức → Luyện tập → Nộp bài → Ôn tập → Kiểm tra level</small></div><div className="roadmap-chapter-progress"><strong>{selected.completedCount}/{selected.lessonCount}</strong><span>bài đã hoàn thành</span><div className="progress-track"><div style={{width:`${selected.completedCount/selected.lessonCount*100}%`}}/></div></div></div>
+      <div className="study-module-tabs" aria-label="Các module">{selected.modules.map(m=><button key={m.id} className={`study-module-tab ${module?.id===m.id?'active':''} ${m.unlocked?'':'locked'}`} disabled={!m.unlocked} onClick={()=>open({planet:`level-${selected.id}`,module:m.id},false)}><span>MODULE {m.ordinalNo} {!m.unlocked&&<LockKeyhole size={14}/>}</span><strong>{m.title}</strong><small>{m.unlocked?`${m.completedCount}/${m.lessonCount} bài hoàn thành`:m.lockReason}</small><div className="progress-track"><div style={{width:`${m.completedCount/m.lessonCount*100}%`}}/></div></button>)}</div>
+      {requestedModule&&!requestedModule.unlocked&&<div className="study-module-locked" role="status"><LockKeyhole size={18}/>{requestedModule.lockReason}</div>}
+      {module&&<div className="study-module-detail"><div className="study-module-heading"><div><span className="section-label">MODULE {module.ordinalNo}</span><h2>{module.title}</h2><p>Hiểu cấu trúc, luyện tập theo từng bài và ôn lại kiến thức trong module.</p></div><span className="tag">{module.completedCount}/{module.lessonCount} bài</span></div><div className="roadmap-levels">{module.lessons.map((lesson,i)=><article className={`roadmap-level ${lesson.status==='COMPLETED'?'completed':'available'}`} key={lesson.id}><div className="roadmap-level-index">{lesson.status==='COMPLETED'?<Check size={20}/>:i+1}</div><div className="roadmap-level-content"><div className="roadmap-level-kicker"><span>BÀI {lesson.id}</span><span className="roadmap-state">{{NOT_STARTED:'Chưa học',IN_PROGRESS:'Đang học',COMPLETED:'Đã hoàn thành'}[lesson.status]}</span></div><h3>{lesson.title}</h3><div className="roadmap-level-meta"><span><BookOpen size={15}/>Lý thuyết và ví dụ</span><span><Target size={15}/>3 câu luyện cố định · Nộp đủ để hoàn thành</span></div></div><div className="roadmap-level-action"><button className={`button ${lesson.status==='COMPLETED'?'secondary':'primary'}`} onClick={()=>open({planet:`level-${selected.id}`,module:module.id,lesson:lesson.id})}>{lesson.status==='COMPLETED'?'Ôn lại':lesson.status==='IN_PROGRESS'?'Tiếp tục':'Bắt đầu'}<ArrowRight size={16}/></button></div></article>)}</div><div className="study-module-actions"><button className="button secondary" disabled={busy||!connected} onClick={()=>start('MODULE_REVIEW',module.id)}>Ôn tập module</button><button className="button secondary" disabled={busy||!connected||module.completedCount!==module.lessonCount} onClick={()=>start('MODULE_TEST',module.id)}>Kiểm tra module</button><small>Hoàn thành các bài trong module để mở kiểm tra module. Điểm giúp xác định nội dung cần ôn.</small></div></div>}
+      <div className={`roadmap-capstone ${selected.examReady?'ready':'locked'}`}><div className="roadmap-capstone-icon"><Trophy size={25}/></div><div><span className="section-label">KIỂM TRA CUỐI LEVEL {selected.id}</span><h3>Tổng hợp: {selected.title}</h3><p>10 câu từ các module · Đạt ít nhất 8/10 để vượt level</p><small>{selected.placementPassed?'Đã vượt qua theo kiểm tra đầu vào. Các bài học vẫn giữ tiến độ thực tế.':selected.passed?'Đã vượt qua. Bạn có thể ôn tập hoặc kiểm tra lại.':selected.examReady?'Đã mở bài kiểm tra. Sẵn sàng đến hành tinh mới!':`Hoàn thành ${selected.lessonCount-selected.completedCount} bài còn lại để mở kiểm tra.`}</small><small className="study-review-note">Ôn tập level chỉ lấy nội dung từ các module đã mở.</small></div><div className="study-exam-actions"><button className="button secondary" disabled={busy||!connected} onClick={()=>start('LEVEL_REVIEW',String(selected.id))}>Ôn tập level</button><button className="button primary" disabled={busy||!connected||!selected.examReady} onClick={()=>start('LEVEL_TEST',String(selected.id))}>{busy?'Đang tạo…':selected.passed?'Kiểm tra lại':'Kiểm tra lên level'}<ArrowRight size={17}/></button></div></div>
+    </section>}
+  </div></Layout>
+}
+
+function LessonScreen({id,onBack,openLesson}:{id:string;onBack:(levelId?:number,moduleId?:string)=>void;openLesson:(id:string,levelId:number,moduleId:string)=>void}){
+  const {request,connected}=useSystemSocket()
+  const [lesson,setLesson]=useState<StudyLessonDetail|null>(null)
+  const [error,setError]=useState('')
+  const [revision,setRevision]=useState(0)
+  useEffect(()=>{if(!connected)return;let active=true;setError('');request<StudyLessonDetail>('ROADMAP_LESSON','ROADMAP_COURSE_DATA',{lessonId:id}).then(data=>{if(active)setLesson(data)}).catch(e=>{if(active)setError(e.message)});return()=>{active=false}},[id,request,connected,revision])
+  async function updateAttempt(attempt:StudyAttempt){
+    setLesson(old=>old&&({...old,attempt,completed:old.completed||attempt.status!=='IN_PROGRESS'}))
+    if(attempt.status==='IN_PROGRESS')setTimeout(()=>document.querySelector('.study-quiz')?.scrollIntoView({behavior:'smooth'}),0)
+    else try{setLesson(await request<StudyLessonDetail>('ROADMAP_LESSON','ROADMAP_COURSE_DATA',{lessonId:id}))}catch(e){setError((e as Error).message)}
+  }
+  return <Layout title="Bài học lộ trình"><div className="study-course"><button className="text-button study-back" onClick={()=>onBack()}><ArrowLeft size={16}/>Quay lại module</button>{!lesson?error?<ErrorState message={error} retry={()=>setRevision(n=>n+1)}/>:<Loading/>:<><div className="page-heading"><div><span className="section-label">LEVEL {lesson.levelId} · {lesson.moduleTitle} · BÀI {lesson.id}</span><h1>{lesson.title}</h1><p>{lesson.completed?'Đã hoàn thành · Bạn có thể ôn lại và luyện tập thêm.':'Đọc kiến thức và nộp đủ phần luyện tập để hoàn thành bài.'}</p></div><div className="heading-icon"><BookOpen size={35}/></div></div><article className="card study-theory"><section><h2>Mục tiêu bài học</h2><p>{lesson.content.objective}</p></section>{lesson.content.prerequisites.length>0&&<section><h2>Kiến thức cần biết trước</h2><div className="study-prerequisites">{lesson.content.prerequisites.map(p=><button key={p.id} className="text-button" onClick={()=>openLesson(p.id,lesson.levelId,lesson.moduleId)}>{p.title}<ArrowRight size={14}/></button>)}</div></section>}{lesson.content.sections.map((section,i)=><section key={i}><h2>{section.title}</h2><p className="study-multiline">{section.body}</p></section>)}<section><h2>Ví dụ minh họa</h2>{lesson.content.examples.map((example,i)=><div className="study-example" key={i}><strong>{example.english}</strong><p>{example.vietnamese}</p></div>)}</section><section><h2>Lỗi thường gặp</h2>{lesson.content.mistakes.map((mistake,i)=><div className="study-mistake" key={i}><p><span>Sai:</span> {mistake.wrong}</p><p><strong>Đúng:</strong> {mistake.right}</p><p>{mistake.explanation}</p></div>)}</section><section><h2>Vận dụng</h2><p>{lesson.content.application}</p><label className="text-answer-label">Ghi chú luyện viết của bạn<textarea key={lesson.id} maxLength={3000} placeholder="Tự đặt câu hoặc viết đoạn văn ngắn. Bạn tự đối chiếu với kiến thức và ví dụ trong bài." defaultValue={sessionStorage.getItem(`study-writing-${id}`)||''} onChange={e=>sessionStorage.setItem(`study-writing-${id}`,e.target.value)}/></label></section><section><h2>Tổng kết</h2><p>{lesson.content.summary}</p></section></article><StudyQuiz key={`${lesson.attempt.id}-${lesson.attempt.status}`} attempt={lesson.attempt} onAttempt={updateAttempt} onBack={()=>onBack(lesson.levelId,lesson.moduleId)} onNext={lesson.attempt.status!=='IN_PROGRESS'&&lesson.nextLessonId?()=>openLesson(lesson.nextLessonId!,lesson.levelId,lesson.moduleId):undefined}/></>}</div></Layout>
+}
+
+function AttemptScreen({id,onBack}:{id:number;onBack:()=>void}){
+  const {request,connected}=useSystemSocket()
+  const [attempt,setAttempt]=useState<StudyAttempt|null>(null)
+  const [error,setError]=useState('')
+  const [revision,setRevision]=useState(0)
+  const [,setSearch]=useSearchParams()
+  useEffect(()=>{if(!connected)return;let active=true;setError('');request<StudyAttempt>('ROADMAP_ATTEMPT','ROADMAP_COURSE_DATA',{attemptId:id}).then(data=>{if(active)setAttempt(data)}).catch(e=>{if(active)setError(e.message)});return()=>{active=false}},[id,request,connected,revision])
+  return <Layout title="Ôn tập và kiểm tra lộ trình"><div className="study-course"><button className="text-button study-back" onClick={()=>onBack()}><ArrowLeft size={16}/>Quay lại lộ trình</button>{!attempt?error?<ErrorState message={error} retry={()=>setRevision(n=>n+1)}/>:<Loading/>:<StudyQuiz key={`${attempt.id}-${attempt.status}`} attempt={attempt} onAttempt={a=>{setAttempt(a);if(a.id!==id)setSearch({planet:`level-${a.levelId}`,...(a.kind.startsWith('MODULE_')?{module:a.referenceId}:{}),attempt:String(a.id)},{replace:true});window.scrollTo({top:0,behavior:'smooth'})}} onBack={onBack}/>}</div></Layout>
+}
