@@ -23,7 +23,15 @@ public class ArenaController {
     private final JdbcTemplate db;
     private final UserRepository users;
     private final RealtimeNotifier notifier;
-    public ArenaController(JdbcTemplate db, UserRepository users, RealtimeNotifier notifier) { this.db=db; this.users=users; this.notifier=notifier; }
+    private final com.grammarquest.service.DailyQuestService dailyQuestService;
+    public ArenaController(JdbcTemplate db, UserRepository users, RealtimeNotifier notifier) {
+        this(db, users, notifier, null);
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public ArenaController(JdbcTemplate db, UserRepository users, RealtimeNotifier notifier,
+                           com.grammarquest.service.DailyQuestService dailyQuestService) {
+        this.db=db; this.users=users; this.notifier=notifier; this.dailyQuestService=dailyQuestService;
+    }
     public record Join(@NotBlank String code) {}
     public record Ready(boolean ready) {}
     public record Answer(int roundNo,@NotBlank String option) {}
@@ -153,6 +161,9 @@ public class ArenaController {
         if(pause!=null&&now.isAfter(pause.toInstant().plusSeconds(30))) {
             long winner=Objects.equals(pausedId,((Number)r.get("host_id")).longValue())?((Number)r.get("guest_id")).longValue():((Number)r.get("host_id")).longValue();
             db.update("update arena_rooms set status='FINISHED',winner_id=?,round_deadline_at=null,pause_started_at=null,paused_user_id=null,state_version=state_version+1 where id=?",winner,id);
+            if (dailyQuestService != null) {
+                dailyQuestService.recordProgress(winner, "ARENA_WIN", 1);
+            }
             notifier.arena(id);
             return locked(id);
         }
@@ -199,6 +210,13 @@ public class ArenaController {
                 if(h!=g) winner=h<g?((Number)r.get("host_id")).longValue():((Number)r.get("guest_id")).longValue();
             }
             db.update("update arena_rooms set status='FINISHED',host_score=?,guest_score=?,winner_id=?,round_deadline_at=null,state_version=state_version+1 where id=?",hostScore,guestScore,winner,id);
+            if (dailyQuestService != null) {
+                long hostId = ((Number) r.get("host_id")).longValue();
+                Long guestId = r.get("guest_id") == null ? null : ((Number) r.get("guest_id")).longValue();
+                dailyQuestService.recordProgress(hostId, "ARENA_PLAY", 1);
+                if (guestId != null) dailyQuestService.recordProgress(guestId, "ARENA_PLAY", 1);
+                if (winner != null) dailyQuestService.recordProgress(winner, "ARENA_WIN", 1);
+            }
         } else {
             Instant next=Instant.now();
             db.update("update arena_rounds set started_at=? where room_id=? and round_no=?",Timestamp.from(next),id,no+1);
@@ -216,6 +234,9 @@ public class ArenaController {
             long absent=((Number)room.get("paused_user_id")).longValue();
             long winner=absent==((Number)room.get("host_id")).longValue()?((Number)room.get("guest_id")).longValue():((Number)room.get("host_id")).longValue();
             db.update("update arena_rooms set status='FINISHED',winner_id=?,round_deadline_at=null,pause_started_at=null,paused_user_id=null,state_version=state_version+1 where id=?",winner,id);
+            if (dailyQuestService != null) {
+                dailyQuestService.recordProgress(winner, "ARENA_WIN", 1);
+            }
             notifier.arena(id);
         } else settle(room);
     }

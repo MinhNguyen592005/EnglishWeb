@@ -1,4 +1,4 @@
-import type { AdminContent, AdminLesson, AdminQuestion, AdminUser, Attempt, Classroom, CurriculumTopic, Lesson, Profile, TeacherCurriculum, TeacherQuestion } from '../types'
+import type { AdminContent, AdminLesson, AdminQuestion, AdminUser, Attempt, Classroom, CurriculumTopic, DailyQuestOverview, Lesson, MilestoneClaimResponse, Profile, QuestClaimResponse, TeacherCurriculum, TeacherQuestion, UserStreak } from '../types'
 
 type ApiError = { code?: string; message?: string; fields?: Record<string, string> }
 let csrfToken: string | null = null
@@ -67,5 +67,9 @@ export const api = {
   adminContent: () => request<AdminContent>('/admin/content'),
   adminPublishLesson: (id:number,published:boolean) => request<{id:number}>(`/admin/lessons/${id}/publication`,{method:'PATCH',body:JSON.stringify({published})}),
   adminPublishQuestion: (id:number,published:boolean) => request<{id:number}>(`/admin/questions/${id}/publication`,{method:'PATCH',body:JSON.stringify({published})}),
-  adminAudit: () => request<{id:number;actor:string;action:string;targetType:string;targetId:number;detail:string;createdAt:string}[]>('/admin/audit')
+  adminAudit: () => request<{id:number;actor:string;action:string;targetType:string;targetId:number;detail:string;createdAt:string}[]>('/admin/audit'),
+  dailyQuests: () => request<DailyQuestOverview>('/daily-quests'),
+  claimDailyQuest: (id: number) => request<QuestClaimResponse>(`/daily-quests/${id}/claim`, { method: 'POST' }),
+  claimDailyMilestone: () => request<MilestoneClaimResponse>('/daily-quests/claim-milestone', { method: 'POST' }),
+  dailyStreak: () => request<UserStreak>('/daily-quests/streak')
 }

@@ -20,9 +20,18 @@ public class LearningService {
     private final AttemptItemRepository items;
     private final XpLedgerRepository xp;
     private final JdbcTemplate db;
+    private final DailyQuestService dailyQuests;
     public LearningService(UserRepository users, LessonRepository lessons, QuestionRepository questions,
                            AttemptRepository attempts, AttemptItemRepository items, XpLedgerRepository xp, JdbcTemplate db) {
         this.users=users; this.lessons=lessons; this.questions=questions; this.attempts=attempts; this.items=items; this.xp=xp; this.db=db;
+        this.dailyQuests=null;
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public LearningService(UserRepository users, LessonRepository lessons, QuestionRepository questions,
+                           AttemptRepository attempts, AttemptItemRepository items, XpLedgerRepository xp, JdbcTemplate db,
+                           DailyQuestService dailyQuests) {
+        this.users=users; this.lessons=lessons; this.questions=questions; this.attempts=attempts; this.items=items; this.xp=xp; this.db=db;
+        this.dailyQuests=dailyQuests;
     }
     public record LessonView(Long id, String topicSlug, String topicTitle, int topicSortOrder, String title, String summary, String theory, int ordinalNo,
                              String difficulty, String status, boolean chapterCompleted) {}
@@ -215,7 +224,23 @@ public class LearningService {
                 throw new ApiException(HttpStatus.CONFLICT,"ANSWER_ORDER","Hãy trả lời theo thứ tự");
             if(textQuestion(item)) item.textAnswer=option; else item.answer=option;
             item.answeredAt=Instant.now();
-            if(correct(item)) a.correctCount++;
+            if(correct(item)) {
+                a.correctCount++;
+                if (dailyQuests != null) {
+                    dailyQuests.recordProgress(user.id, "CORRECT_COUNT", 1);
+                    if (a.kind.equals("LESSON_BOSS") || a.kind.equals("CHAPTER_BOSS")) {
+                        dailyQuests.recordProgress(user.id, "BOSS_DAMAGE", a.kind.equals("CHAPTER_BOSS") ? 13 : 20);
+                    }
+                    int currentStreak = 0;
+                    for (int idx = 0; idx < ordinal; idx++) {
+                        if (correct(entries.get(idx))) currentStreak++;
+                        else currentStreak = 0;
+                    }
+                    if (currentStreak >= 5) {
+                        dailyQuests.recordProgress(user.id, "STREAK_CORRECT", currentStreak);
+                    }
+                }
+            }
             if(entries.stream().allMatch(i -> answerOf(i)!=null)) complete(a);
         }
         boolean reveal=a.kind.equals("PRACTICE")||!a.status.equals("IN_PROGRESS");
@@ -231,6 +256,22 @@ public class LearningService {
     private void complete(Attempt a) {
         boolean won=a.kind.equals("PRACTICE")||a.correctCount>=a.requiredCorrect;
         a.status=won?"WON":"LOST"; a.completedAt=Instant.now();
+        if (dailyQuests != null) {
+            if (a.kind.equals("PRACTICE")) {
+                dailyQuests.recordProgress(a.userId, "PRACTICE_COUNT", 1);
+                if (a.correctCount == a.totalQuestions) {
+                    dailyQuests.recordProgress(a.userId, "PERFECT_PRACTICE", 1);
+                }
+            } else if (won && (a.kind.equals("LESSON_BOSS") || a.kind.equals("CHAPTER_BOSS"))) {
+                dailyQuests.recordProgress(a.userId, "BOSS_WIN", 1);
+            }
+            try {
+                Integer count = db.queryForObject("select count(1) from assignment_attempts where attempt_id=?", Integer.class, a.id);
+                if (count != null && count > 0) {
+                    dailyQuests.recordProgress(a.userId, "CLASS_ASSIGNMENT", 1);
+                }
+            } catch (Exception ignored) {}
+        }
         if(won&&!a.kind.equals("PRACTICE")) {
             String key=a.kind.equals("CHAPTER_BOSS")
                 ? chapterRewardKey(a.lessonId==null?"conditionals":lessons.findById(a.lessonId).orElseThrow().topicSlug)

@@ -22,7 +22,10 @@ public class LiveExamService {
     private final JdbcTemplate db;
     private final UserRepository users;
     private final ObjectMapper json;
-    public LiveExamService(JdbcTemplate db,UserRepository users,ObjectMapper json) {this.db=db;this.users=users;this.json=json;}
+    private final DailyQuestService dailyQuests;
+    public LiveExamService(JdbcTemplate db,UserRepository users,ObjectMapper json) {this(db,users,json,null);}
+    @org.springframework.beans.factory.annotation.Autowired
+    public LiveExamService(JdbcTemplate db,UserRepository users,ObjectMapper json,DailyQuestService dailyQuests) {this.db=db;this.users=users;this.json=json;this.dailyQuests=dailyQuests;}
     private ApiException invalid(String message) {return new ApiException(HttpStatus.BAD_REQUEST,"INVALID_EXAM",message);}
     private void require(boolean condition,String message) {if(!condition)throw invalid(message);}
     private User user(String username) {
@@ -208,7 +211,13 @@ public class LiveExamService {
                         answers.put(question,option.asInt());
                     }
                 }
-                db.update("update class_exam_submissions set answers_json=?,correct_count=?,answered_count=?,submitted=?,updated_at=current_timestamp(6) where exam_id=? and user_id=?",answers.toString(),score(qs,answers),answers.size(),action.equals("EXAM_SUBMIT"),examId,u.id);
+                int currentCorrect = score(qs, answers);
+                boolean isSubmit = action.equals("EXAM_SUBMIT");
+                db.update("update class_exam_submissions set answers_json=?,correct_count=?,answered_count=?,submitted=?,updated_at=current_timestamp(6) where exam_id=? and user_id=?",answers.toString(),currentCorrect,answers.size(),isSubmit,examId,u.id);
+                if (isSubmit && dailyQuests != null) {
+                    dailyQuests.recordProgress(u.id, "CLASS_ASSIGNMENT", 1);
+                    if (currentCorrect > 0) dailyQuests.recordProgress(u.id, "CORRECT_COUNT", currentCorrect);
+                }
                 db.update("update class_exams set revision=revision+1 where id=?",examId);
             }
             default -> throw invalid("Action kiểm tra không được hỗ trợ");
