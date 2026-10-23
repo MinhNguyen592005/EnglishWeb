@@ -50,6 +50,14 @@ public class LiveExamService {
         try {Instant end=Instant.parse(p.path("endsAt").asText());require((p.path("closed").asBoolean(false)||end.isAfter(Instant.now()))&&end.isBefore(Instant.now().plusSeconds(604800)),"Hạn làm phải trong 7 ngày tới khi mở kiểm tra");return end;}
         catch(java.time.format.DateTimeParseException e){throw invalid("Hạn làm không hợp lệ");}
     }
+    public static boolean isTextType(String type) {
+        if (type == null) return false;
+        String t = type.trim().toUpperCase(Locale.ROOT);
+        return "FILL_BLANK".equals(t) || "ERROR_CORRECTION".equals(t) || "REWRITE".equals(t);
+    }
+    public static String normalize(String value) {
+        return value == null ? "" : value.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ").replaceAll("[.!?]+$", "").trim();
+    }
     // ID câu hỏi ổn định khi sửa; client không gửi điểm hay trạng thái đúng/sai.
     JsonNode questions(JsonNode p) {
         var input=p.path("questions");require(input.isArray()&&input.size()>0&&input.size()<=30,"Đề gồm 1–30 câu hỏi");
@@ -57,16 +65,83 @@ public class LiveExamService {
         for(var q:input) {
             String key=text(q,"id",64);require(key.matches("[a-zA-Z0-9_-]+")&&ids.add(key),"ID câu hỏi trùng hoặc không hợp lệ");
             var out=json.createObjectNode();out.put("id",key);out.put("prompt",text(q,"prompt",500));
-            var options=q.path("options");require(options.isArray()&&options.size()==4,"Mỗi câu cần 4 lựa chọn");
-            var choices=out.putArray("options");for(var choice:options){require(choice.isTextual()&&!choice.asText().isBlank()&&choice.asText().length()<=160,"Lựa chọn không hợp lệ");choices.add(choice.asText().trim());}
-            var correct=q.path("correct");require(correct.isInt()&&correct.asInt()>=0&&correct.asInt()<4,"Đáp án đúng không hợp lệ");out.put("correct",correct.asInt());result.add(out);
+
+            String qType = "";
+            if (q.hasNonNull("questionType")) qType = q.path("questionType").asText("");
+            else if (q.hasNonNull("question_type")) qType = q.path("question_type").asText("");
+            qType = qType.trim().toUpperCase(Locale.ROOT);
+
+            String accepted = "";
+            if (q.hasNonNull("acceptedAnswer")) accepted = q.path("acceptedAnswer").asText("");
+            else if (q.hasNonNull("accepted_answer")) accepted = q.path("accepted_answer").asText("");
+            accepted = accepted.trim();
+
+            boolean has4Options = q.has("options") && q.path("options").isArray() && q.path("options").size() == 4;
+
+            // Tự động nhận diện dạng tự luận nếu có đáp án mẫu và không có đủ 4 phương án trắc nghiệm
+            if (!has4Options && !accepted.isBlank() && (qType.isEmpty() || "MCQ".equals(qType))) {
+                qType = "FILL_BLANK";
+            } else if (qType.isEmpty()) {
+                qType = "MCQ";
+            }
+
+            if (isTextType(qType)) {
+                out.put("questionType", qType);
+                require(!accepted.isBlank() && accepted.length() <= 255, "Đáp án mẫu không hợp lệ cho câu tự luận/điền từ");
+                out.put("acceptedAnswer", accepted);
+                out.putArray("options");
+            } else {
+                out.put("questionType", "MCQ");
+                var options=q.path("options");require(options.isArray()&&options.size()==4,"Mỗi câu cần 4 lựa chọn");
+                var choices=out.putArray("options");for(var choice:options){require(choice.isTextual()&&!choice.asText().isBlank()&&choice.asText().length()<=160,"Lựa chọn không hợp lệ");choices.add(choice.asText().trim());}
+                var correct=q.path("correct");require(correct.isInt()&&correct.asInt()>=0&&correct.asInt()<4,"Đáp án đúng không hợp lệ");out.put("correct",correct.asInt());
+            }
+            result.add(out);
         }return result;
     }
     static int score(JsonNode questions,JsonNode answers) {
-        int correct=0;for(var q:questions){var a=answers.get(q.path("id").asText());if(a!=null&&a.isInt()&&a.asInt()==q.path("correct").asInt())correct++;}return correct;
+        int correct=0;
+        for(var q:questions){
+            String key=q.path("id").asText();
+            var a=answers.get(key);
+            if(a==null) continue;
+            String qType = "";
+            if (q.hasNonNull("questionType")) qType = q.path("questionType").asText("");
+            else if (q.hasNonNull("question_type")) qType = q.path("question_type").asText("");
+            qType = qType.trim().toUpperCase(Locale.ROOT);
+
+            if(isTextType(qType)){
+                String accepted = "";
+                if (q.hasNonNull("acceptedAnswer")) accepted = q.path("acceptedAnswer").asText("");
+                else if (q.hasNonNull("accepted_answer")) accepted = q.path("accepted_answer").asText("");
+                String userAns=a.asText("");
+                if(!userAns.isBlank()&&normalize(userAns).equals(normalize(accepted))) correct++;
+            } else {
+                if(a.isInt()&&a.asInt()==q.path("correct").asInt()) correct++;
+            }
+        }
+        return correct;
     }
     private ObjectNode validAnswers(JsonNode qs,JsonNode previous) {
-        var clean=json.createObjectNode();for(var q:qs){String key=q.path("id").asText();var a=previous.get(key);if(a!=null&&a.isInt()&&a.asInt()>=0&&a.asInt()<4)clean.set(key,a);}return clean;
+        var clean=json.createObjectNode();
+        for(var q:qs){
+            String key=q.path("id").asText();
+            var a=previous.get(key);
+            if(a==null) continue;
+            String qType = "";
+            if (q.hasNonNull("questionType")) qType = q.path("questionType").asText("");
+            else if (q.hasNonNull("question_type")) qType = q.path("question_type").asText("");
+            qType = qType.trim().toUpperCase(Locale.ROOT);
+
+            if(isTextType(qType)){
+                if(a.isTextual()&&!a.asText().trim().isEmpty()&&a.asText().length()<=255){
+                    clean.put(key, a.asText().trim());
+                }
+            } else {
+                if(a.isInt()&&a.asInt()>=0&&a.asInt()<4) clean.set(key,a);
+            }
+        }
+        return clean;
     }
     @Transactional
     public Object action(String username,String action,JsonNode p) {
@@ -105,8 +180,33 @@ public class LiveExamService {
                 var s=db.queryForMap("select answers_json,submitted from class_exam_submissions where exam_id=? and user_id=?",examId,u.id);
                 require(!Boolean.TRUE.equals(s.get("submitted")),"Bạn đã nộp bài");var answers=validAnswers(qs,parse(s.get("answers_json")));
                 if(action.equals("EXAM_ANSWER")) {
-                    String question=text(p,"questionId",64);boolean exists=false;for(var q:qs)if(q.path("id").asText().equals(question))exists=true;
-                    require(exists,"Câu hỏi không còn trong đề");var option=p.path("option");require(option.isInt()&&option.asInt()>=0&&option.asInt()<4,"Đáp án không hợp lệ");answers.put(question,option.asInt());
+                    String question=text(p,"questionId",64);
+                    JsonNode targetQ=null;
+                    for(var q:qs){
+                        if(q.path("id").asText().equals(question)){
+                            targetQ=q;
+                            break;
+                        }
+                    }
+                    require(targetQ!=null,"Câu hỏi không còn trong đề");
+                    String qType = "";
+                    if (targetQ.hasNonNull("questionType")) qType = targetQ.path("questionType").asText("");
+                    else if (targetQ.hasNonNull("question_type")) qType = targetQ.path("question_type").asText("");
+                    qType = qType.trim().toUpperCase(Locale.ROOT);
+
+                    if(isTextType(qType)){
+                        String textAns=p.has("answer")?p.path("answer").asText(""): (p.has("textAnswer")?p.path("textAnswer").asText(""):p.path("option").asText(""));
+                        textAns=textAns.trim();
+                        require(textAns.length()<=255,"Câu trả lời quá dài (tối đa 255 ký tự)");
+                        if(textAns.isEmpty()){
+                            answers.remove(question);
+                        } else {
+                            answers.put(question,textAns);
+                        }
+                    } else {
+                        var option=p.path("option");require(option.isInt()&&option.asInt()>=0&&option.asInt()<4,"Đáp án không hợp lệ");
+                        answers.put(question,option.asInt());
+                    }
                 }
                 db.update("update class_exam_submissions set answers_json=?,correct_count=?,answered_count=?,submitted=?,updated_at=current_timestamp(6) where exam_id=? and user_id=?",answers.toString(),score(qs,answers),answers.size(),action.equals("EXAM_SUBMIT"),examId,u.id);
                 db.update("update class_exams set revision=revision+1 where id=?",examId);
@@ -118,7 +218,13 @@ public class LiveExamService {
     @Transactional(readOnly=true,isolation=org.springframework.transaction.annotation.Isolation.REPEATABLE_READ)
     public Map<String,Object> view(String username,long examId) {
         User u=user(username);var e=exam(examId,false);boolean owner=access(((Number)e.get("class_id")).longValue(),u);boolean ended=ended(e);
-        JsonNode qs=parse(e.get("questions_json"));var safe=qs.deepCopy();if(!owner)for(var q:safe)((ObjectNode)q).remove("correct");
+        JsonNode qs=parse(e.get("questions_json"));var safe=qs.deepCopy();
+        if(!owner) {
+            for(var q:safe) {
+                ((ObjectNode)q).remove("correct");
+                ((ObjectNode)q).remove("acceptedAnswer");
+            }
+        }
         Map<String,Object> out=new LinkedHashMap<>();out.put("id",examId);out.put("classId",e.get("class_id"));out.put("title",e.get("title"));out.put("version",e.get("version"));out.put("revision",e.get("revision"));out.put("endsAt",((Timestamp)e.get("ends_at")).toInstant().toString());out.put("closed",ended);out.put("owner",owner);out.put("questions",safe);
         if(owner) {
             out.put("ranking",db.queryForList("select u.id as userId,u.username,u.display_name as displayName,coalesce(s.correct_count,0) as correctCount,coalesce(s.answered_count,0) as answeredCount,case when s.user_id is null then 'NOT_STARTED' when s.submitted=true then 'SUBMITTED' when ?=true then 'EXPIRED' else 'WORKING' end as status,s.updated_at as updatedAt from class_members m join users u on u.id=m.user_id left join class_exam_submissions s on s.exam_id=? and s.user_id=u.id where m.class_id=? order by correctCount desc,answeredCount desc,u.id",ended,examId,e.get("class_id")));

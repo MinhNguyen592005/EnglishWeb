@@ -18,8 +18,8 @@ spring:
       minimum-idle: 2
       connection-timeout: 3000
     url: jdbc:mysql://localhost:3306/grammar_quest?useUnicode=true&characterEncoding=utf8&connectionCollation=utf8mb4_unicode_ci
-    username: root
-    password: 123456
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:123456}
   jpa:
     hibernate:
       ddl-auto: validate

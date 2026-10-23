@@ -167,7 +167,9 @@ public class LearningService {
             String topic=chapterTopic;
             lessons.findByPublishedTrueOrderByOrdinalNoAsc().stream().filter(l -> l.topicSlug.equals(topic)).forEach(l -> chapterLessons.add(l.id));
         }
-        List<Question> common=new ArrayList<>(kind.equals("CHAPTER_BOSS") ? questions.findByPublishedTrue().stream().filter(q -> chapterLessons.contains(q.lessonId)).toList() : questions.findByLessonIdAndPublishedTrue(lesson.id));
+        List<Question> common=new ArrayList<>(kind.equals("CHAPTER_BOSS")
+            ? questions.findByPublishedTrue().stream().filter(q -> chapterLessons.contains(q.lessonId) && (q.questionType == null || q.questionType.equals("MCQ"))).toList()
+            : questions.findByLessonIdAndPublishedTrue(lesson.id).stream().filter(q -> q.questionType == null || q.questionType.equals("MCQ")).toList());
         Collections.shuffle(common);
         bank.addAll(common);
         if(bank.size()<count) throw new ApiException(HttpStatus.CONFLICT,"QUESTION_BANK_INCOMPLETE","Bộ câu hỏi chưa đủ để bắt đầu");

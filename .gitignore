@@ -13,3 +13,5 @@ source/client/artifacts/
 *.log
 *.class
 
+source/server/downloads/
+source/server/statics/
