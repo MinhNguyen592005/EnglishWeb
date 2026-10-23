@@ -1,4 +1,4 @@
-export type Profile = { id: number; username: string; displayName: string; role: string; totalXp: number; level: number; xpInLevel: number }
+export type Profile = { id: number; username: string; displayName: string; role: string; totalXp: number; level: number; xpInLevel: number; placementEligible?: boolean }
 export type Difficulty = 'BEGINNER' | 'INTERMEDIATE' | 'ADVANCED'
 export type Lesson = { id: number; topicSlug: string; topicTitle?: string; topicSortOrder?: number; title: string; summary: string; theory: string | null; ordinalNo: number; difficulty: Difficulty; status: 'LOCKED' | 'AVAILABLE' | 'COMPLETED'; chapterCompleted: boolean }
 export type Topic = { slug:string; title:string; description:string; outcome:string; sortOrder:number; planetStyle:string; unlocked:boolean; chapterCompleted:boolean; lessonCount:number }
