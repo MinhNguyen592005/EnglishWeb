@@ -1,4 +1,8 @@
 $ErrorActionPreference = 'Stop'
+if (Test-Path 'C:\Program Files\Java\jdk-21\bin\java.exe') {
+    $env:JAVA_HOME = 'C:\Program Files\Java\jdk-21'
+    $env:PATH = "$env:JAVA_HOME\bin;$env:PATH"
+}
 $configPath = Join-Path $PSScriptRoot '.env.local.ps1'
 if (-not (Test-Path -LiteralPath $configPath)) {
     throw 'Missing .env.local.ps1. Copy env.example.ps1 to .env.local.ps1 and set DB_USERNAME and DB_PASSWORD.'

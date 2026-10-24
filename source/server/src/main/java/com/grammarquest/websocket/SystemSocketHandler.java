@@ -207,14 +207,14 @@ public class SystemSocketHandler extends TextWebSocketHandler {
                     releaseArena(session.getId());sendTo(session.getId(),"ARENA_DATA",Map.of("ok",true),requestId);return;
                 }
                 Object result=arenaSocket.action(state.username,action,body.path("payload"));
-                if(java.util.Set.of("ARENA_OPEN","ARENA_CREATE","ARENA_JOIN","ARENA_READY","ARENA_START","ARENA_ANSWER").contains(action)) {
+                if(java.util.Set.of("ARENA_OPEN","ARENA_CREATE","ARENA_JOIN","ARENA_CONFIRM","ARENA_READY","ARENA_START","ARENA_ANSWER").contains(action)) {
                     if(result instanceof Map<?,?> room&&room.get("id") instanceof Number number){
                         arenaWatches.put(session.getId(),new ArenaWatch(state.username,number.longValue(),-1));
                         allocateArena(session.getId(),room);
                     }
                     else releaseArena(session.getId());
                 }
-                if(action.equals("ARENA_LEAVE"))releaseArena(session.getId());
+                if(action.equals("ARENA_LEAVE")||action.equals("ARENA_DECLINE"))releaseArena(session.getId());
                 state.touch();
                 sendTo(session.getId(),"ARENA_DATA",result,requestId);return;
             }
@@ -560,7 +560,7 @@ public class SystemSocketHandler extends TextWebSocketHandler {
         matchmaker.tick(System.currentTimeMillis()).forEach((id,data)->{
             var state=userSessions.get(id);
             if(state!=null&&"MATCHED".equals(data.get("status"))&&"MATCHMAKING".equals(state.getCurrentActivity())) {
-                state.update("PLAYING_PVP","/arena","","");
+                state.update("PLAYING_PVP","/arena","",""); if(data.get("room") instanceof Map<?,?> r && r.get("id") instanceof Number num) arenaWatches.put(id, new ArenaWatch(state.username, num.longValue(), -1));
                 networkEvents.add("INFO","Đã ghép đối thủ và bắt đầu trận PvP cho '"+state.username+"'.");
             }
             try {sendTo(id,"MATCHMAKING_UPDATE",data,"");}
