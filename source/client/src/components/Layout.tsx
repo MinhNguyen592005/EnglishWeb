@@ -4,6 +4,17 @@ import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { api } from '../services/api'
 
+const FRAME_CLASSES: Record<string, string> = {
+  FRAME_DEFAULT: 'frame-default',
+  FRAME_BRONZE: 'frame-bronze',
+  FRAME_SILVER: 'frame-silver',
+  FRAME_GOLD: 'frame-gold',
+  FRAME_PLATINUM: 'frame-platinum',
+  FRAME_DIAMOND: 'frame-diamond',
+  FRAME_MASTER: 'frame-master',
+  FRAME_STREAK_5: 'frame-streak'
+}
+
 const learnerLinks = [
   { to: '/dashboard', label: 'Tổng quan', icon: House },
   { to: '/roadmap', label: 'Lộ trình', icon: Compass },
@@ -36,6 +47,7 @@ export function Layout({ children, title }: { children: ReactNode; title: string
   const [menu, setMenu] = useState(false)
   const [logoutError, setLogoutError] = useState('')
   const [streak, setStreak] = useState<number | null>(null)
+  const frameClass = (!isAdmin && !isTeacher && user?.equippedFrame) ? (FRAME_CLASSES[user.equippedFrame] || '') : ''
   useEffect(() => {
     if (!isAdmin && !isTeacher && user) {
       api.dailyStreak().then(res => setStreak(res.currentStreak)).catch(() => {})
@@ -56,11 +68,11 @@ export function Layout({ children, title }: { children: ReactNode; title: string
     <aside className={`sidebar ${menu ? 'open' : ''}`}>
       <Link to={home} className="brand" onClick={() => setMenu(false)}><span className="brand-mark"><Rocket size={23}/></span>Grammar Quest</Link>
       <nav aria-label="Điều hướng chính" className="nav-list">{links.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenu(false)} aria-current={isLinkActive(to)?'page':undefined} className={`nav-link ${isLinkActive(to)?'active':''}`}><Icon size={21}/>{label}</Link>)}</nav>
-      <div className="sidebar-bottom"><div className="avatar">{user?.displayName.slice(0, 1).toUpperCase()}</div><div><strong>{user?.displayName}</strong><small>{isAdmin?'Quản trị viên':isTeacher?'Giáo viên':`Cấp ${user?.level}`}</small></div></div>
+      <div className="sidebar-bottom"><div className={`avatar ${frameClass}`}>{user?.displayName.slice(0, 1).toUpperCase()}</div><div><strong>{user?.displayName}</strong><small>{isAdmin?'Quản trị viên':isTeacher?'Giáo viên':`Cấp ${user?.level} · ${user?.pvpRankTitle || 'Đồng'} (${user?.pvpElo ?? 1000} ELO)`}</small></div></div>
     </aside>
     {menu && <button className="backdrop" aria-label="Đóng menu" onClick={() => setMenu(false)}/>}
     <div className="main-panel">
-      <header className="topbar"><div className="topbar-left"><button className="icon-button mobile-menu" onClick={() => setMenu(!menu)} aria-label={menu ? 'Đóng menu' : 'Mở menu'}>{menu ? <X/> : <Menu/>}</button><span className="eyebrow">{isAdmin?'QUẢN TRỊ ỨNG DỤNG':isTeacher?'KHÔNG GIAN GIẢNG DẠY':'TRẠM KHÔNG GIAN'}</span><strong>{title}</strong></div><div className="topbar-actions">{!isAdmin&&!isTeacher&&streak!==null&&<span className="streak-pill" title={`Chuỗi ngày liên tiếp: ${streak} ngày`}><Flame size={15}/> {streak}</span>}{!isAdmin&&!isTeacher&&<span className="level-pill">✦ Cấp {user?.level}</span>}<Link to={isAdmin?'/admin':'/profile'} className="avatar" aria-label={isAdmin?'Quản trị':'Hồ sơ'}>{user?.displayName.slice(0,1).toUpperCase()}</Link><button className="icon-button" title="Đăng xuất" aria-label="Đăng xuất" onClick={logout}><LogOut size={20}/></button></div></header>
+      <header className="topbar"><div className="topbar-left"><button className="icon-button mobile-menu" onClick={() => setMenu(!menu)} aria-label={menu ? 'Đóng menu' : 'Mở menu'}>{menu ? <X/> : <Menu/>}</button><span className="eyebrow">{isAdmin?'QUẢN TRỊ ỨNG DỤNG':isTeacher?'KHÔNG GIAN GIẢNG DẠY':'TRẠM KHÔNG GIAN'}</span><strong>{title}</strong></div><div className="topbar-actions">{!isAdmin&&!isTeacher&&streak!==null&&<span className="streak-pill" title={`Chuỗi ngày liên tiếp: ${streak} ngày`}><Flame size={15}/> {streak}</span>}{!isAdmin&&!isTeacher&&<span className="level-pill">✦ Cấp {user?.level}</span>}<Link to={isAdmin?'/admin':'/profile'} className={`avatar ${frameClass}`} aria-label={isAdmin?'Quản trị':'Hồ sơ'}>{user?.displayName.slice(0,1).toUpperCase()}</Link><button className="icon-button" title="Đăng xuất" aria-label="Đăng xuất" onClick={logout}><LogOut size={20}/></button></div></header>
       {logoutError && <div className="error-banner" role="alert">{logoutError}</div>}
       <main className="page-content">{children}</main>
       {!isAdmin&&<nav className="bottom-nav" aria-label="Điều hướng di động">{(isTeacher?teacherLinks:links.filter(l => ['/dashboard','/roadmap','/practice','/profile'].includes(l.to))).map(({to,label,icon:Icon}) => <NavLink key={to} to={to} end={to==='/teacher'||to==='/admin'} className={({isActive}) => isActive ? 'active' : ''}><Icon size={21}/><span>{label}</span></NavLink>)}</nav>}

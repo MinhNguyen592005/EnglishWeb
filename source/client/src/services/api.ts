@@ -1,4 +1,4 @@
-import type { AdminContent, AdminLesson, AdminQuestion, AdminUser, Attempt, Classroom, CurriculumTopic, DailyQuestOverview, Lesson, MilestoneClaimResponse, Profile, QuestClaimResponse, TeacherCurriculum, TeacherQuestion, UserStreak } from '../types'
+import type { AdminContent, AdminLesson, AdminQuestion, AdminUser, Attempt, Classroom, CurriculumTopic, DailyQuestOverview, Lesson, MilestoneClaimResponse, Profile, PvpCosmeticsResponse, PvpLeaderboardResponse, QuestClaimResponse, TeacherCurriculum, TeacherQuestion, UserStreak } from '../types'
 
 type ApiError = { code?: string; message?: string; fields?: Record<string, string> }
 let csrfToken: string | null = null
@@ -57,7 +57,7 @@ export const api = {
   teacherCreateCommonQuestionsBatch: (data: { lessonId: number; questions: Omit<AdminQuestion, 'id' | 'published' | 'lessonId'>[] }) => request<{ createdCount: number }>('/teacher/curriculum/questions/batch', { method: 'POST', body: JSON.stringify(data) }),
   teacherEditCommonQuestion: (id:number,data:Omit<AdminQuestion,'id'|'published'>) => request<{id:number}>(`/teacher/curriculum/questions/${id}`,{method:'PUT',body:JSON.stringify(data)}),
   teacherPublishCommonQuestion: (id:number,published:boolean) => request<{id:number}>(`/teacher/curriculum/questions/${id}/publication`,{method:'PATCH',body:JSON.stringify({published})}),
-  teacherCreateQuestion: (data:Omit<TeacherQuestion,'id'|'active'>) => request<TeacherQuestion>('/teacher/questions',{method:'POST',body:JSON.stringify(data)}),
+  teacherCreateQuestion: (data:Omit<TeacherQuestion,'id'|'active'>) => request<TeacherQuestion>('/teacher/questions',{method:'POST',body:JSON.stringify({ ...data })}),
   teacherCreateQuestionsBatch: (data: { lessonId: number; questions: Omit<TeacherQuestion, 'id' | 'active' | 'lessonId'>[] }) => request<{ createdCount: number }>('/teacher/questions/batch', { method: 'POST', body: JSON.stringify(data) }),
   teacherEditQuestion: (id:number,data:Omit<TeacherQuestion,'id'|'active'>) => request<TeacherQuestion>(`/teacher/questions/${id}`,{method:'PUT',body:JSON.stringify(data)}),
   teacherActivateQuestion: (id:number,active:boolean) => request<TeacherQuestion>(`/teacher/questions/${id}/active`,{method:'PATCH',body:JSON.stringify({active})}),
@@ -71,5 +71,8 @@ export const api = {
   dailyQuests: () => request<DailyQuestOverview>('/daily-quests'),
   claimDailyQuest: (id: number) => request<QuestClaimResponse>(`/daily-quests/${id}/claim`, { method: 'POST' }),
   claimDailyMilestone: () => request<MilestoneClaimResponse>('/daily-quests/claim-milestone', { method: 'POST' }),
-  dailyStreak: () => request<UserStreak>('/daily-quests/streak')
+  dailyStreak: () => request<UserStreak>('/daily-quests/streak'),
+  arenaLeaderboard: () => request<PvpLeaderboardResponse>('/arena/leaderboard'),
+  arenaCosmetics: () => request<PvpCosmeticsResponse>('/arena/cosmetics'),
+  arenaEquipCosmetic: (code: string) => request<PvpCosmeticsResponse>('/arena/cosmetics/equip', { method: 'POST', body: JSON.stringify({ code }) })
 }

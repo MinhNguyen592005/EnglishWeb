@@ -19,12 +19,8 @@ public class ArenaMatchFactory {
         for(long id:java.util.stream.LongStream.of(a.id,b.id).sorted().toArray()) users.findWithLockById(id).orElseThrow();
         var authA=new UsernamePasswordAuthenticationToken(first,null,List.of());
         var authB=new UsernamePasswordAuthenticationToken(second,null,List.of());
-        var room=arena.create(authA);
-        long id=((Number)room.get("id")).longValue();
-        arena.join(authB,new ArenaController.Join(room.get("code").toString()));
-        arena.ready(authA,id,new ArenaController.Ready(true));
-        arena.ready(authB,id,new ArenaController.Ready(true));
-        var host=arena.start(authA,id);
-        return Map.of(first,host,second,arena.get(authB,id));
+        var hostSnapshot = arena.createMatched(authA, authB);
+        long id = ((Number) hostSnapshot.get("id")).longValue();
+        return Map.of(first, hostSnapshot, second, arena.get(authB, id));
     }
 }

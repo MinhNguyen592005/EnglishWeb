@@ -57,6 +57,8 @@ public class RealtimeActions {
             Object result=switch(action.action()) {
                 case "CREATE" -> arena.create(user);
                 case "JOIN" -> arena.join(user,new ArenaController.Join(require(action.code(),"code",12)));
+                case "CONFIRM" -> arena.confirm(user,roomId(action.roomId()));
+                case "DECLINE" -> arena.decline(user,roomId(action.roomId()));
                 case "READY" -> arena.ready(user,roomId(action.roomId()),new ArenaController.Ready(Boolean.TRUE.equals(action.ready())));
                 case "START" -> arena.start(user,roomId(action.roomId()));
                 case "ANSWER" -> arena.answer(user,roomId(action.roomId()),new ArenaController.Answer(action.roundNo()==null?0:action.roundNo(),require(action.option(),"option",1)));

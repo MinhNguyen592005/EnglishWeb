@@ -3,6 +3,7 @@ package com.grammarquest.controller;
 import com.grammarquest.entity.*;
 import com.grammarquest.repository.*;
 import com.grammarquest.exception.ApiException;
+import com.grammarquest.util.PvpRankRules;
 import jakarta.servlet.http.*;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
@@ -32,8 +33,27 @@ public class AuthController {
                            @NotBlank @Size(min=2,max=120) String displayName,
                            @NotBlank @Size(min=8,max=100) String password) {}
     public record Login(@NotBlank String username, @NotBlank String password) {}
-    public record Profile(Long id, String username, String displayName, String role, long totalXp, long level, long xpInLevel,boolean placementEligible) {
-        public static Profile from(User u) { return new Profile(u.id,u.username,u.displayName,u.role,u.totalXp,u.totalXp/1000+1,u.totalXp%1000,u.placementEligible); }
+    public record Profile(
+        Long id, String username, String displayName, String role,
+        long totalXp, long level, long xpInLevel, boolean placementEligible,
+        int pvpElo, int pvpPeakElo, String pvpRankTier, String pvpRankTitle,
+        int pvpWins, int pvpLosses, int pvpDraws, int pvpWinStreak,
+        String equippedFrame, String equippedBadge
+    ) {
+        public Profile(Long id, String username, String displayName, String role, long totalXp, long level, long xpInLevel, boolean placementEligible) {
+            this(id, username, displayName, role, totalXp, level, xpInLevel, placementEligible,
+                 1000, 1000, "BRONZE", "Đồng", 0, 0, 0, 0, "FRAME_DEFAULT", null);
+        }
+        public static Profile from(User u) {
+            var rank = PvpRankRules.fromElo(u.pvpElo);
+            return new Profile(
+                u.id, u.username, u.displayName, u.role,
+                u.totalXp, u.totalXp/1000+1, u.totalXp%1000, u.placementEligible,
+                u.pvpElo, u.pvpPeakElo, rank.code(), rank.title(),
+                u.pvpWins, u.pvpLosses, u.pvpDraws, u.pvpWinStreak,
+                u.equippedFrame != null ? u.equippedFrame : "FRAME_DEFAULT", u.equippedBadge
+            );
+        }
     }
     @GetMapping("/csrf") public Map<String,String> csrf(CsrfToken token) { return Map.of("token", token.getToken()); }
     @org.springframework.transaction.annotation.Transactional
