@@ -1,5 +1,5 @@
 import { BookOpen, CircleHelp, Compass, Flame, Globe2, House, LogOut, Menu, PencilLine, Rocket, School, Swords, UserRound, UsersRound, X } from 'lucide-react'
-import { useEffect, useState, type ReactNode } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { api } from '../services/api'
@@ -45,6 +45,32 @@ export function Layout({ children, title }: { children: ReactNode; title: string
   const home=isAdmin?'/admin':isTeacher?'/teacher':'/dashboard'
   const links=isAdmin?adminLinks:isTeacher?teacherLinks:learnerLinks
   const [menu, setMenu] = useState(false)
+  const [compact,setCompact]=useState(()=>window.matchMedia('(max-width:900px)').matches)
+  const sidebar=useRef<HTMLElement>(null)
+  const menuButton=useRef<HTMLButtonElement>(null)
+  useEffect(()=>{
+    const media=window.matchMedia('(max-width:900px)')
+    const change=()=>{setCompact(media.matches);if(!media.matches)setMenu(false)}
+    media.addEventListener('change',change)
+    return()=>media.removeEventListener('change',change)
+  },[])
+  useEffect(()=>{
+    if(!menu||!compact)return
+    const previousOverflow=document.body.style.overflow
+    document.body.style.overflow='hidden'
+    const focusable=()=>Array.from(sidebar.current?.querySelectorAll<HTMLElement>('a[href],button:not(:disabled)')||[])
+    focusable()[0]?.focus()
+    const keydown=(event:KeyboardEvent)=>{
+      if(event.key==='Escape'){event.preventDefault();setMenu(false)}
+      if(event.key==='Tab'){
+        const items=focusable(),first=items[0],last=items.at(-1)
+        if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus()}
+        else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus()}
+      }
+    }
+    document.addEventListener('keydown',keydown)
+    return()=>{document.body.style.overflow=previousOverflow;document.removeEventListener('keydown',keydown);if(menuButton.current?.isConnected)menuButton.current.focus()}
+  },[menu,compact])
   const [logoutError, setLogoutError] = useState('')
   const [streak, setStreak] = useState<number | null>(null)
   const frameClass = (!isAdmin && !isTeacher && user?.equippedFrame) ? (FRAME_CLASSES[user.equippedFrame] || '') : ''
@@ -65,14 +91,15 @@ export function Layout({ children, title }: { children: ReactNode; title: string
     catch (e) { setLogoutError((e as Error).message) }
   }
   return <div className="app-layout">
-    <aside className={`sidebar ${menu ? 'open' : ''}`}>
+    <aside ref={sidebar} id="app-sidebar" inert={compact&&!menu} className={`sidebar ${menu ? 'open' : ''}`}>
       <Link to={home} className="brand" onClick={() => setMenu(false)}><span className="brand-mark"><Rocket size={23}/></span>Grammar Quest</Link>
+      {compact&&<button className="icon-button sidebar-close" type="button" aria-label="Đóng menu điều hướng" onClick={()=>setMenu(false)}><X size={20}/></button>}
       <nav aria-label="Điều hướng chính" className="nav-list">{links.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenu(false)} aria-current={isLinkActive(to)?'page':undefined} className={`nav-link ${isLinkActive(to)?'active':''}`}><Icon size={21}/>{label}</Link>)}</nav>
       <div className="sidebar-bottom"><div className={`avatar ${frameClass}`}>{user?.displayName.slice(0, 1).toUpperCase()}</div><div><strong>{user?.displayName}</strong><small>{isAdmin?'Quản trị viên':isTeacher?'Giáo viên':`Cấp tài khoản ${user?.level} · ${user?.pvpRankTitle || 'Đồng'} (${user?.pvpElo ?? 1000} ELO)`}</small></div></div>
     </aside>
     {menu && <button className="backdrop" aria-label="Đóng menu" onClick={() => setMenu(false)}/>}
-    <div className="main-panel">
-      <header className="topbar"><div className="topbar-left"><button className="icon-button mobile-menu" onClick={() => setMenu(!menu)} aria-label={menu ? 'Đóng menu' : 'Mở menu'}>{menu ? <X/> : <Menu/>}</button><span className="eyebrow">{isAdmin?'QUẢN TRỊ ỨNG DỤNG':isTeacher?'KHÔNG GIAN GIẢNG DẠY':'TRẠM KHÔNG GIAN'}</span><strong>{title}</strong></div><div className="topbar-actions">{!isAdmin&&!isTeacher&&streak!==null&&<span className="streak-pill" title={`Chuỗi ngày liên tiếp: ${streak} ngày`}><Flame size={15}/> {streak}</span>}{!isAdmin&&!isTeacher&&<span className="level-pill">✦ Cấp {user?.level}</span>}<Link to={isAdmin?'/admin':'/profile'} className={`avatar ${frameClass}`} aria-label={isAdmin?'Quản trị':'Hồ sơ'}>{user?.displayName.slice(0,1).toUpperCase()}</Link><button className="icon-button" title="Đăng xuất" aria-label="Đăng xuất" onClick={logout}><LogOut size={20}/></button></div></header>
+    <div className="main-panel" inert={compact&&menu}>
+      <header className="topbar"><div className="topbar-left"><button ref={menuButton} aria-controls="app-sidebar" aria-expanded={menu} className="icon-button mobile-menu" onClick={() => setMenu(!menu)} aria-label={menu ? 'Đóng menu' : 'Mở menu'}>{menu ? <X/> : <Menu/>}</button><span className="eyebrow">{isAdmin?'QUẢN TRỊ ỨNG DỤNG':isTeacher?'KHÔNG GIAN GIẢNG DẠY':'TRẠM KHÔNG GIAN'}</span><strong>{title}</strong></div><div className="topbar-actions">{!isAdmin&&!isTeacher&&streak!==null&&<span className="streak-pill" title={`Chuỗi ngày liên tiếp: ${streak} ngày`}><Flame size={15}/> {streak}</span>}{!isAdmin&&!isTeacher&&<span className="level-pill">✦ Cấp {user?.level}</span>}<Link to={isAdmin?'/admin':'/profile'} className={`avatar ${frameClass}`} aria-label={isAdmin?'Quản trị':'Hồ sơ'}>{user?.displayName.slice(0,1).toUpperCase()}</Link><button className="icon-button" title="Đăng xuất" aria-label="Đăng xuất" onClick={logout}><LogOut size={20}/></button></div></header>
       {logoutError && <div className="error-banner" role="alert">{logoutError}</div>}
       <main className="page-content">{children}</main>
       {!isAdmin&&<nav className="bottom-nav" aria-label="Điều hướng di động">{(isTeacher?teacherLinks:links.filter(l => ['/dashboard','/roadmap','/practice','/profile'].includes(l.to))).map(({to,label,icon:Icon}) => <NavLink key={to} to={to} end={to==='/teacher'||to==='/admin'} className={({isActive}) => isActive ? 'active' : ''}><Icon size={21}/><span>{label}</span></NavLink>)}</nav>}

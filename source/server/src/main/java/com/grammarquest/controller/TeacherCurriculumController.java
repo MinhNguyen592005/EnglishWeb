@@ -137,7 +137,9 @@ public class TeacherCurriculumController {
     }
     @PatchMapping("/lessons/{id}/publication") @Transactional public Map<String,Object> publishLesson(Authentication auth,@PathVariable long id,@RequestBody Publish body) {
         User actor=teacher(auth);requireLesson(id);
-        if(body.published() && db.queryForObject("select count(*) from questions where lesson_id=? and published=true and owner_id is null",Integer.class,id)<10)
+        if(body.published() && db.queryForObject("select count(*) from lessons where id=? and admin_blocked=true",Integer.class,id)>0)
+            throw new ApiException(HttpStatus.CONFLICT,"CONTENT_BLOCKED","Bài học đang bị admin chặn");
+        if(body.published() && db.queryForObject("select count(*) from questions where lesson_id=? and published=true and owner_id is null and deleted=false and admin_blocked=false and (question_type is null or question_type='MCQ')",Integer.class,id)<10)
             throw new ApiException(HttpStatus.CONFLICT,"QUESTION_BANK_INCOMPLETE","Cần ít nhất 10 câu hỏi chung đã xuất bản trước khi mở bài học");
         db.update("update lessons set published=? where id=?",body.published(),id);
         audit(actor,"LESSON_PUBLICATION","LESSON",id,Boolean.toString(body.published()));return Map.of("id",id,"published",body.published());
@@ -208,6 +210,8 @@ public class TeacherCurriculumController {
     }
     @PatchMapping("/questions/{id}/publication") @Transactional public Map<String,Object> publishQuestion(Authentication auth,@PathVariable long id,@RequestBody Publish body) {
         User actor=teacher(auth);requireQuestion(id);
+        if(body.published() && db.queryForObject("select count(*) from questions where id=? and admin_blocked=true",Integer.class,id)>0)
+            throw new ApiException(HttpStatus.CONFLICT,"CONTENT_BLOCKED","Câu hỏi đang bị admin chặn");
         if(!body.published() && db.queryForObject("select count(*) from questions q join lessons l on l.id=q.lesson_id where q.id=? and l.published=true and q.published=true",Integer.class,id)>0) {
             int count=db.queryForObject("select count(*) from questions where lesson_id=(select lesson_id from questions where id=?) and published=true and owner_id is null",Integer.class,id);
             if(count<=10) throw new ApiException(HttpStatus.CONFLICT,"QUESTION_BANK_INCOMPLETE","Ẩn bài học trước khi giảm số câu hỏi xuống dưới 10");

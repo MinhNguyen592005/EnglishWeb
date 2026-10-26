@@ -16,14 +16,15 @@ public class ArenaMatchmaker {
     private final UserRepository users;
     private final JdbcTemplate db;
     private final ArenaMatchFactory factory;
+    private final RankedPairRules pairRules;
     private final LinkedHashMap<String,Entry> queue=new LinkedHashMap<>();
     private static class Entry {
-        String username,socket; long level,joined; int elo; Map<String,Object> room; String error;
+        String username,socket; long userId,level,joined; int elo; Map<String,Object> room; String error,notice;
         Entry(String username,String socket,long level,int elo,long now){
             this.username=username;this.socket=socket;this.level=level;this.elo=elo;this.joined=now;
         }
     }
-    public ArenaMatchmaker(UserRepository users,JdbcTemplate db,ArenaMatchFactory factory){this.users=users;this.db=db;this.factory=factory;}
+    public ArenaMatchmaker(UserRepository users,JdbcTemplate db,ArenaMatchFactory factory){this.users=users;this.db=db;this.factory=factory;this.pairRules=new RankedPairRules(db);}
     public static int allowedGap(long joined,long now){return now-joined>=30_000?2:now-joined>=15_000?1:0;}
     public static int allowedEloGap(long joined,long now){return now-joined>=30_000?600:now-joined>=15_000?300:150;}
     private ApiException bad(String code,String message){return new ApiException(HttpStatus.CONFLICT,code,message);}
@@ -44,6 +45,7 @@ public class ArenaMatchmaker {
         if(qCount == null || qCount < 10)throw bad("QUESTION_BANK_INCOMPLETE","Chưa đủ 10 câu hỏi để tìm trận");
         long now = System.currentTimeMillis();
         var entry=new Entry(username,socket,user.totalXp/1000+1,user.pvpElo,now);
+        entry.userId=user.id;
         queue.put(username,entry);
         return view(entry,now);
     }
@@ -83,10 +85,17 @@ public class ArenaMatchmaker {
             }
         }
         var waiting=queue.values().stream().filter(e->e.room==null&&e.error==null).toList();
+        var blockedPairs=pairRules.blockedPairs(waiting.stream().map(e->e.userId).toList(),nowInstant);
+        waiting.forEach(e->e.notice=null);
         for(var a:waiting){
             if(a.room!=null||a.error!=null)continue;
             var b=waiting.stream().filter(e->e!=a&&e.room==null&&e.error==null)
                 .filter(e->Math.abs(e.elo-a.elo)<=Math.min(allowedEloGap(a.joined,now),allowedEloGap(e.joined,now)))
+                .filter(e->{
+                    boolean allowed=!blockedPairs.contains(RankedPairRules.pairKey(a.userId,e.userId));
+                    if(!allowed){a.notice=RankedPairRules.NOTICE;e.notice=RankedPairRules.NOTICE;}
+                    return allowed;
+                })
                 .min(Comparator.<Entry>comparingInt(e->Math.abs(e.elo-a.elo))
                     .thenComparingLong(e->e.joined)).orElse(null);
             if(b==null)continue;
@@ -132,6 +141,7 @@ public class ArenaMatchmaker {
         result.put("allowedEloGap",allowedEloGap(entry.joined,now));
         result.put("room",entry.room);
         result.put("message",entry.error);
+        result.put("pairingNotice",entry.notice);
         users.findByUsernameIgnoreCase(entry.username).ifPresent(u -> enrichUserMeta(result, u));
         return result;
     }

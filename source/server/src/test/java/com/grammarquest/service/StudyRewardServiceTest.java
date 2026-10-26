@@ -18,10 +18,9 @@ class StudyRewardServiceTest {
         user.id=7L;user.totalXp=100;
         when(users.findWithLockById(7L)).thenReturn(Optional.of(user));
         when(db.queryForObject("select total_xp from users where id=? for update",Long.class,7L)).thenReturn(100L);
-        when(db.queryForObject(eq("select count(*) from xp_ledger where user_id=? and reward_key=?"),eq(Integer.class),eq(7L),anyString())).thenReturn(0);
     }
     @Test void firstPassRewardsAreOncePerReferenceAcrossDifferentAttempts(){
-        when(db.queryForObject("select count(*) from xp_ledger where user_id=? and reward_key=?",Integer.class,7L,"STUDY_FIRST:LESSON:1.1")).thenReturn(0,1);
+        when(db.queryForList("select id from xp_ledger where user_id=? and reward_key=? for update",Long.class,7L,"STUDY_FIRST:LESSON:1.1")).thenReturn(java.util.List.of(),java.util.List.of(1L));
         assertEquals(20,rewards.award(7L,"LESSON","1.1",1));
         assertEquals(120,user.totalXp);
         assertEquals(0,rewards.award(7L,"LESSON","1.1",2));
@@ -32,7 +31,7 @@ class StudyRewardServiceTest {
         order.verify(db).queryForObject("select total_xp from users where id=? for update",Long.class,7L);
     }
     @Test void legacyAndCourseReviewsShareThirtyXpDailyCap(){
-        when(db.queryForObject(startsWith("select coalesce(sum(amount)"),eq(Integer.class),eq(7L),anyString())).thenReturn(0,10,20,30);
+        when(db.queryForList(startsWith("select amount from xp_ledger"),eq(Integer.class),eq(7L),anyString())).thenReturn(java.util.List.of(),java.util.List.of(10),java.util.List.of(10,10),java.util.List.of(10,10,10));
         assertEquals(10,rewards.award(7L,"MODULE_REVIEW","m1",1));
         assertEquals(10,rewards.award(7L,"PRACTICE","",2));
         assertEquals(10,rewards.award(7L,"LEVEL_REVIEW","1",3));
@@ -40,8 +39,8 @@ class StudyRewardServiceTest {
         verify(users,times(3)).save(user);
     }
     @Test void repeatedReviewAttemptCannotEarnTwice(){
-        when(db.queryForObject(startsWith("select coalesce(sum(amount)"),eq(Integer.class),eq(7L),anyString())).thenReturn(0,10);
-        when(db.queryForObject(eq("select count(*) from xp_ledger where user_id=? and reward_key=?"),eq(Integer.class),eq(7L),anyString())).thenReturn(0,1);
+        when(db.queryForList(startsWith("select amount from xp_ledger"),eq(Integer.class),eq(7L),anyString())).thenReturn(java.util.List.of(),java.util.List.of(10));
+        when(db.queryForList(eq("select id from xp_ledger where user_id=? and reward_key=? for update"),eq(Long.class),eq(7L),anyString())).thenReturn(java.util.List.of(),java.util.List.of(1L));
         assertEquals(10,rewards.award(7L,"LEVEL_REVIEW","1",42));
         assertEquals(0,rewards.award(7L,"LEVEL_REVIEW","1",42));
         verify(users,times(1)).save(user);

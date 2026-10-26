@@ -1,3 +1,4 @@
+import { useSystemSocket } from '../app/SystemSocketContext'
 import { CheckSquare, ExternalLink, FileText, Globe, PencilLine, Plus, Radio, RotateCcw, Sparkles, X } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
@@ -24,6 +25,8 @@ const blank: Omit<TeacherQuestion, 'id' | 'active'> = {
 }
 
 export function TeacherQuestionsPage() {
+  const {subscribe,connected}=useSystemSocket()
+  useEffect(()=>{if(connected)void reload().catch(e=>setError(e.message));return subscribe(message=>{if(message.action==='CURRICULUM_CHANGED')void reload().catch(e=>setError(e.message))})},[subscribe,connected])
   const [questions, setQuestions] = useState<TeacherQuestion[] | null>(null)
   const [lessons, setLessons] = useState<Lesson[]>([])
   const [classes, setClasses] = useState<Classroom[]>([])
@@ -234,7 +237,7 @@ export function TeacherQuestionsPage() {
 
   async function handlePromoteSelected() {
     if (selectedIds.size === 0) return
-    const ids = Array.from(selectedIds)
+    const ids = Array.from(selectedIds).filter(id => questions?.some(q => q.id===id && q.active && !q.adminBlocked))
     const selectedQuestions = questions?.filter(q => ids.includes(q.id)) || []
     const mcqQuestions = selectedQuestions.filter(q => !q.questionType || q.questionType === 'MCQ')
     const nonMcqCount = selectedQuestions.length - mcqQuestions.length
@@ -305,7 +308,7 @@ export function TeacherQuestionsPage() {
       setError('Vui lòng chọn lớp học để tạo bài kiểm tra trực tiếp.')
       return
     }
-    const ids = Array.from(selectedIds)
+    const ids = Array.from(selectedIds).filter(id => questions?.some(q => q.id===id && q.active && !q.adminBlocked))
     if (ids.length === 0) {
       setError('Vui lòng chọn ít nhất một câu hỏi.')
       return
@@ -759,7 +762,7 @@ export function TeacherQuestionsPage() {
                     <span className="tag">{labels[q.questionType || 'MCQ']}</span>
                     <span>Bài học #{q.lessonId}</span>
                     <span>·</span>
-                    <span>{q.active ? 'Đang dùng trong nhiệm vụ' : 'Đã lưu trữ'}</span>
+                    <span>{q.adminBlocked ? 'B\u1ecb admin ch\u1eb7n' : q.active ? 'Đang dùng trong nhiệm vụ' : 'Đã lưu trữ'}</span>
                   </div>
                   {q.questionType === 'MCQ' || !q.questionType ? (
                     <div className="question-options-preview">
@@ -792,7 +795,7 @@ export function TeacherQuestionsPage() {
                     <button
                       type="button"
                       className="button secondary"
-                      disabled={busy}
+                      disabled={busy || !q.active || q.adminBlocked}
                       title="Đưa câu hỏi trắc nghiệm này vào ngân hàng câu hỏi chung"
                       onClick={() => handlePromoteSingle(q)}
                     >
@@ -804,6 +807,7 @@ export function TeacherQuestionsPage() {
                     type="button"
                     className="button secondary"
                     title="Tạo bài kiểm tra trực tiếp cho lớp với câu hỏi này"
+                    disabled={busy || !q.active || q.adminBlocked}
                     onClick={() => openLiveExamModal([q.id])}
                   >
                     <Radio size={14} style={{ display: 'inline', marginRight: 4, verticalAlign: 'text-bottom' }} />
@@ -815,10 +819,10 @@ export function TeacherQuestionsPage() {
                   <button
                     type="button"
                     className="button secondary"
-                    disabled={busy}
+                    disabled={busy || q.adminBlocked}
                     onClick={() => active(q)}
                   >
-                    {q.active ? 'Lưu trữ' : 'Bật lại'}
+                    {q.adminBlocked ? 'B\u1ecb admin ch\u1eb7n' : q.active ? 'Lưu trữ' : 'Bật lại'}
                   </button>
                 </div>
               </div>

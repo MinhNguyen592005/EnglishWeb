@@ -15,8 +15,7 @@ import java.util.*;
 public class LearningService {
     @org.springframework.beans.factory.annotation.Autowired
     private PlacementService placement;
-    @org.springframework.beans.factory.annotation.Autowired
-    private StudyRewardService studyRewards;
+    private final StudyRewardService studyRewards;
     private final UserRepository users;
     private final LessonRepository lessons;
     private final QuestionRepository questions;
@@ -27,15 +26,19 @@ public class LearningService {
     private final DailyQuestService dailyQuests;
     public LearningService(UserRepository users, LessonRepository lessons, QuestionRepository questions,
                            AttemptRepository attempts, AttemptItemRepository items, XpLedgerRepository xp, JdbcTemplate db) {
-        this.users=users; this.lessons=lessons; this.questions=questions; this.attempts=attempts; this.items=items; this.xp=xp; this.db=db;
-        this.dailyQuests=null;
+        this(users,lessons,questions,attempts,items,xp,db,null,new StudyRewardService(db,users));
+    }
+    public LearningService(UserRepository users, LessonRepository lessons, QuestionRepository questions,
+                           AttemptRepository attempts, AttemptItemRepository items, XpLedgerRepository xp, JdbcTemplate db,
+                           DailyQuestService dailyQuests) {
+        this(users,lessons,questions,attempts,items,xp,db,dailyQuests,new StudyRewardService(db,users));
     }
     @org.springframework.beans.factory.annotation.Autowired
     public LearningService(UserRepository users, LessonRepository lessons, QuestionRepository questions,
                            AttemptRepository attempts, AttemptItemRepository items, XpLedgerRepository xp, JdbcTemplate db,
-                           DailyQuestService dailyQuests) {
+                           DailyQuestService dailyQuests,StudyRewardService studyRewards) {
         this.users=users; this.lessons=lessons; this.questions=questions; this.attempts=attempts; this.items=items; this.xp=xp; this.db=db;
-        this.dailyQuests=dailyQuests;
+        this.dailyQuests=dailyQuests;this.studyRewards=studyRewards;
     }
     public record LessonView(Long id, String topicSlug, String topicTitle, int topicSortOrder, String title, String summary, String theory, int ordinalNo,
                              String difficulty, String status, boolean chapterCompleted) {}
@@ -283,18 +286,13 @@ public class LearningService {
                 }
             } catch (Exception ignored) {}
         }
-        if(a.kind.equals("PRACTICE")&&a.correctCount>=((a.totalQuestions*4+4)/5)&&studyRewards!=null)
+        if(a.kind.equals("PRACTICE")&&a.correctCount>=((a.totalQuestions*4+4)/5))
             a.awardedXp=studyRewards.award(a.userId,"PRACTICE","",a.id);
         if(won&&!a.kind.equals("PRACTICE")) {
             String key=a.kind.equals("CHAPTER_BOSS")
                 ? chapterRewardKey(a.lessonId==null?"conditionals":lessons.findById(a.lessonId).orElseThrow().topicSlug)
                 : a.kind+":"+a.lessonId;
-            User user=users.findWithLockById(a.userId).orElseThrow();
-            if(!xp.existsByUserIdAndRewardKey(user.id,key)) {
-                a.awardedXp=BossRules.firstWinXp(a.kind);
-                xp.save(new XpLedger(user.id,key,a.awardedXp));
-                user.totalXp+=a.awardedXp;
-            }
+            a.awardedXp=studyRewards.awardFirstWin(a.userId,key,BossRules.firstWinXp(a.kind));
         }
     }
     @Transactional(readOnly=true)

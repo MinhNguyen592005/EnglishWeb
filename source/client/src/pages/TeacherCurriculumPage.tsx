@@ -1,3 +1,4 @@
+import { useSystemSocket } from '../app/SystemSocketContext'
 import { BookOpen, Globe2, Plus, Save, Sparkles } from 'lucide-react'
 import { useEffect, useState, type FormEvent } from 'react'
 import { useSearchParams } from 'react-router-dom'
@@ -17,6 +18,8 @@ const blankQuestion: QuestionDraft = { lessonId: 0, prompt: '', optionA: '', opt
 const styles = [['aqua', 'Đại dương'], ['violet', 'Tím thiên hà'], ['coral', 'San hô'], ['gold', 'Vàng sao'], ['mint', 'Xanh ngọc']]
 
 export function TeacherCurriculumPage() {
+  const {subscribe,connected}=useSystemSocket()
+  useEffect(()=>{if(connected)void reload();return subscribe(message=>{if(message.action==='CURRICULUM_CHANGED')void reload()})},[subscribe,connected])
   const [data, setData] = useState<TeacherCurriculum | null>(null)
   const [search, setSearch] = useSearchParams()
   const tab = (['topics', 'lessons', 'questions'].includes(search.get('tab') || '') ? search.get('tab') : 'topics') as 'topics' | 'lessons' | 'questions'

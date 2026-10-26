@@ -112,7 +112,7 @@ public class RoadmapCourseService {
         var passed=new HashSet<>(db.queryForList("select distinct reference_id from study_attempts where user_id=? and kind='LEVEL_TEST' and status='PASSED'",String.class,userId));
         var mastered=new HashSet<>(db.queryForList("select module_id from study_module_mastery where user_id=?",String.class,userId));
         var modules=db.queryForList("select id,level_id as levelId,ordinal_no as ordinalNo,title from study_modules order by level_id,ordinal_no");
-        var lessons=db.queryForList("select l.id,l.module_id as moduleId,l.ordinal_no as ordinalNo,l.title,p.opened_at as openedAt,p.completed_at as completedAt from study_lessons l left join study_progress p on p.lesson_id=l.id and p.user_id=? order by l.module_id,l.ordinal_no",userId);
+        var lessons=db.queryForList("select l.id,l.module_id as moduleId,l.ordinal_no as ordinalNo,l.title,l.published,p.opened_at as openedAt,p.completed_at as completedAt from study_lessons l left join study_progress p on p.lesson_id=l.id and p.user_id=? order by l.module_id,l.ordinal_no",userId);
         var levels=db.queryForList("select id,title,outcome,planet_style as planetStyle from study_levels order by id");
         int starting=Math.max(1,placement.startingLevel(userId));boolean open=true;
         for(var level:levels){
@@ -122,7 +122,7 @@ public class RoadmapCourseService {
                 var moduleLessons=new ArrayList<Map<String,Object>>();int moduleDone=0;
                 for(var lesson:lessons)if(lesson.get("moduleId").equals(module.get("id"))){
                     boolean completed=lesson.get("completedAt")!=null;
-                    var item=new LinkedHashMap<String,Object>();item.put("id",lesson.get("id"));item.put("title",lesson.get("title"));item.put("ordinalNo",lesson.get("ordinalNo"));
+                    var item=new LinkedHashMap<String,Object>();item.put("published",lesson.get("published"));item.put("id",lesson.get("id"));item.put("title",lesson.get("title"));item.put("ordinalNo",lesson.get("ordinalNo"));
                     item.put("status",completed?"COMPLETED":lesson.get("openedAt")!=null?"IN_PROGRESS":"NOT_STARTED");moduleLessons.add(item);if(completed)moduleDone++;
                 }
                 var item=new LinkedHashMap<String,Object>(module);item.put("lessons",moduleLessons);item.put("completedCount",moduleDone);item.put("lessonCount",moduleLessons.size());item.put("unlocked",moduleOpen);
@@ -140,20 +140,25 @@ public class RoadmapCourseService {
         db.update("insert ignore into study_enrollments(user_id) values(?)",userId);
         db.queryForObject("select user_id from study_enrollments where user_id=? for update",Long.class,userId);
     }
+    private void requirePublished(Map<String,Object> lesson) {
+        if(Boolean.FALSE.equals(lesson.get("published")) || (lesson.get("published") instanceof Number n && n.intValue()==0))
+            throw new ApiException(HttpStatus.CONFLICT,"CONTENT_HIDDEN","Bài học đang tạm ẩn để kiểm duyệt. Vui lòng quay lại sau.");
+    }
     private Object openLesson(User u,String id){
-        var lesson=lessonRow(id);moduleUnlocked(u.id,lesson.get("module_id").toString());lockEnrollment(u.id);
+        var lesson=lessonRow(id);requirePublished(lesson);moduleUnlocked(u.id,lesson.get("module_id").toString());lockEnrollment(u.id);
         db.update("insert ignore into study_progress(user_id,lesson_id) values(?,?)",u.id,id);
         placement.recordLesson(u.id,id,((Number)lesson.get("level_id")).intValue());
         var latest=db.queryForList("select id from study_attempts where user_id=? and kind='LESSON' and reference_id=? order by id desc limit 1",Long.class,u.id,id);
         Object attempt=latest.isEmpty()?create(u,"LESSON",id,UUID.randomUUID().toString()):view(u,latest.getFirst());
         var barrier=firstUnfinishedModule(u.id,((Number)lesson.get("level_id")).intValue());
-        var next=db.queryForList("select l.id from study_lessons l join study_modules m on m.id=l.module_id join study_modules current_module on current_module.id=? where m.level_id=current_module.level_id and m.ordinal_no<=? and (m.ordinal_no>current_module.ordinal_no or (m.id=current_module.id and l.ordinal_no>?)) order by m.ordinal_no,l.ordinal_no limit 1",String.class,lesson.get("module_id"),barrier==null?Integer.MAX_VALUE:barrier.ordinal(),lesson.get("ordinal_no"));
+        var next=db.queryForList("select l.id from study_lessons l join study_modules m on m.id=l.module_id join study_modules current_module on current_module.id=? where l.published=true and m.level_id=current_module.level_id and m.ordinal_no<=? and (m.ordinal_no>current_module.ordinal_no or (m.id=current_module.id and l.ordinal_no>?)) order by m.ordinal_no,l.ordinal_no limit 1",String.class,lesson.get("module_id"),barrier==null?Integer.MAX_VALUE:barrier.ordinal(),lesson.get("ordinal_no"));
         var out=new LinkedHashMap<String,Object>();out.put("id",id);out.put("title",lesson.get("title"));out.put("moduleId",lesson.get("module_id"));out.put("moduleTitle",lesson.get("module_title"));out.put("levelId",lesson.get("level_id"));out.put("content",parse(lesson.get("content_json")));out.put("attempt",attempt);out.put("nextLessonId",next.isEmpty()?null:next.getFirst());
         out.put("completed",db.queryForObject("select count(*) from study_progress where user_id=? and lesson_id=? and completed_at is not null",Integer.class,u.id,id)>0);return out;
     }
     private Object start(User u,JsonNode p){
         String kind=text(p,"kind"),reference=text(p,"referenceId"),key=text(p,"requestKey");
         require(Set.of("LESSON","MODULE_REVIEW","MODULE_TEST","LEVEL_REVIEW","LEVEL_TEST").contains(kind),"Loại lượt làm không hợp lệ");
+        if(kind.equals("LESSON"))requirePublished(lessonRow(reference));
         referenceUnlocked(u.id,kind,reference);lockEnrollment(u.id);
         var existing=db.queryForList("select id,kind,reference_id from study_attempts where user_id=? and request_key=?",u.id,key);
         if(!existing.isEmpty()){
@@ -169,16 +174,38 @@ public class RoadmapCourseService {
         return create(u,kind,reference,key);
     }
     private Object create(User u,String kind,String reference,String key){
+        if(kind.endsWith("TEST"))return createExam(u,kind,reference,key);
         String condition=kind.equals("LESSON")?"l.id=?":kind.startsWith("MODULE_")?"m.id=?":"m.level_id=?";
-        var rows=db.queryForList("select l.id,l.title,l.questions_json,m.id as module_id,m.title as module_title,m.ordinal_no as module_ordinal from study_lessons l join study_modules m on m.id=l.module_id where "+condition+" order by m.ordinal_no,l.ordinal_no",reference);
+        var rows=db.queryForList("select l.id,l.title,l.questions_json,m.id as module_id,m.title as module_title,m.ordinal_no as module_ordinal from study_lessons l join study_modules m on m.id=l.module_id where l.published=true and "+condition+" order by m.ordinal_no,l.ordinal_no",reference);
         if(kind.equals("LEVEL_REVIEW")){
             var barrier=firstUnfinishedModule(u.id,Integer.parseInt(reference));
             if(barrier!=null)rows.removeIf(row->((Number)row.get("module_ordinal")).intValue()>barrier.ordinal());
         }
         var banks=new LinkedHashMap<String,List<JsonNode>>();
-        for(var row:rows){for(var question:parse(row.get("questions_json"))){var q=question.deepCopy();((ObjectNode)q).put("lessonId",row.get("id").toString());((ObjectNode)q).put("lessonTitle",row.get("title").toString());((ObjectNode)q).put("moduleTitle",row.get("module_title").toString());banks.computeIfAbsent(row.get("module_id").toString(),k->new ArrayList<>()).add(q);}}
+        var blocked=new HashSet<String>();
+        for(var b:db.queryForList("select lesson_id,question_id from study_question_blocks"))blocked.add(b.get("lesson_id")+":"+b.get("question_id"));
+        for(var row:rows){for(var question:parse(row.get("questions_json"))){if(blocked.contains(row.get("id")+":"+question.path("id").asText()))continue;var q=question.deepCopy();((ObjectNode)q).put("lessonId",row.get("id").toString());((ObjectNode)q).put("lessonTitle",row.get("title").toString());((ObjectNode)q).put("moduleTitle",row.get("module_title").toString());banks.computeIfAbsent(row.get("module_id").toString(),k->new ArrayList<>()).add(q);}}
         List<JsonNode> selected=kind.equals("LESSON")?banks.values().stream().flatMap(Collection::stream).toList():selectBalanced(banks,10);
-        require(!selected.isEmpty()&&(!kind.equals("LEVEL_TEST")||selected.size()==10),"Bộ câu hỏi chưa đủ để bắt đầu");
+        require(!selected.isEmpty(),"Bộ câu hỏi chưa đủ để bắt đầu");
+        return createSnapshot(u,kind,reference,key,selected);
+    }
+    private Object createExam(User u,String kind,String reference,String key){
+        String condition=kind.equals("LEVEL_TEST")?"m.level_id=?":"m.id=?";
+        var rows=db.queryForList("select q.id,q.module_id,q.prompt,q.options_json,q.correct_option,q.explanation,m.title as module_title from study_exam_questions q join study_modules m on m.id=q.module_id where q.active=true and "+condition+" order by m.ordinal_no,q.id",reference);
+        var banks=new LinkedHashMap<String,List<JsonNode>>();
+        for(var row:rows){
+            var q=json.createObjectNode().put("id",row.get("id").toString()).put("prompt",row.get("prompt").toString())
+                .put("correctOption",row.get("correct_option").toString()).put("explanation",row.get("explanation").toString())
+                .put("moduleId",row.get("module_id").toString()).put("moduleTitle",row.get("module_title").toString());
+            q.set("options",parse(row.get("options_json")));
+            banks.computeIfAbsent(row.get("module_id").toString(),k->new ArrayList<>()).add(q);
+        }
+        var selected=selectBalanced(banks,10);
+        int expectedModules=kind.equals("LEVEL_TEST")?db.queryForObject("select count(*) from study_modules where level_id=?",Integer.class,reference):1;
+        require(banks.size()==expectedModules&&selected.size()==10,"Ngân hàng kiểm tra cần đủ 10 câu mới và bao phủ các module để bắt đầu; không dùng câu luyện tập thay thế");
+        return createSnapshot(u,kind,reference,key,selected);
+    }
+    private Object createSnapshot(User u,String kind,String reference,String key,List<JsonNode> selected){
         int required=requiredCorrect(kind,selected.size());var snapshot=json.createArrayNode();selected.forEach(snapshot::add);
         var keys=new GeneratedKeyHolder();db.update(c->{var s=c.prepareStatement("insert into study_attempts(user_id,kind,reference_id,request_key,required_correct,questions_json,answers_json) values(?,?,?,?,?,?,'{}')",Statement.RETURN_GENERATED_KEYS);s.setLong(1,u.id);s.setString(2,kind);s.setString(3,reference);s.setString(4,key);s.setInt(5,required);s.setString(6,snapshot.toString());return s;},keys);
         return view(u,Objects.requireNonNull(keys.getKey()).longValue());

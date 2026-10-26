@@ -5,3 +5,6 @@
 .client-detail-grid dd{margin:6px 0;overflow-wrap:anywhere}
 .system-alert{padding:12px;margin:10px 0;border-left:4px solid #f59e0b;background:#fffbeb;color:#78350f;border-radius:8px;overflow-wrap:anywhere}
 .system-alert.critical{border-color:#ef4444;background:#fef2f2;color:#991b1b}
+.monitor-capacity{margin:-4px 0 20px;color:var(--muted);font-size:.8rem}.monitor-capacity summary{cursor:pointer}.monitor-capacity p{margin:10px 0 0}
+.monitor-disclosure>summary{display:flex;align-items:center;gap:12px;cursor:pointer;font-size:.95rem;font-weight:700;list-style:none}.monitor-disclosure>summary::before{content:'▸';color:var(--muted)}.monitor-disclosure[open]>summary::before{content:'▾'}.monitor-disclosure>summary span{margin-left:auto;color:var(--muted);font-size:.72rem;font-weight:400}.monitor-disclosure[open]>summary{margin-bottom:22px}.monitor-disclosure .panel-heading h2{display:none}.monitor-disclosure .panel-heading p{margin:0;font-size:.82rem}
+@media(max-width:650px){.monitor-disclosure>summary{align-items:flex-start;flex-wrap:wrap}.monitor-disclosure>summary span{margin-left:0}.monitor-disclosure .panel-heading{align-items:flex-start;flex-wrap:wrap}.monitor-heading small{font-size:.72rem}.monitor-metric{padding:18px;gap:12px}}

@@ -3,7 +3,7 @@ package com.grammarquest.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 
-@Entity @Table(name="users")
+@Entity @Table(name="users") @org.hibernate.annotations.DynamicUpdate
 public class User {
     @Id @GeneratedValue(strategy=GenerationType.IDENTITY) public Long id;
     @Column(nullable=false, unique=true) public String username;

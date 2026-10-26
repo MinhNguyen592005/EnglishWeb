@@ -1,9 +1,9 @@
-export type StudyLesson = { id:string;title:string;ordinalNo:number;status:'NOT_STARTED'|'IN_PROGRESS'|'COMPLETED' }
+export type StudyLesson = { published?:boolean;id:string;title:string;ordinalNo:number;status:'NOT_STARTED'|'IN_PROGRESS'|'COMPLETED' }
 export type StudyModule = { id:string;title:string;ordinalNo:number;levelId:number;lessons:StudyLesson[];completedCount:number;lessonCount:number;unlocked:boolean;passed:boolean;lockReason:string|null }
 export type StudyLevel = { id:number;title:string;outcome:string;planetStyle:string;unlocked:boolean;passed:boolean;placementPassed?:boolean;examReady:boolean;completedCount:number;lessonCount:number;modules:StudyModule[] }
 export type StudyCourse = {levels:StudyLevel[]}
 export type StudyHistoryEntry = {id:number;kind:StudyKind;referenceId:string;title:string;levelId:number;status:StudyAttempt['status'];totalQuestions:number;correctCount:number|null;createdAt:string;submittedAt:string|null}
-export type StudyQuestion = {id:string;prompt:string;options:string[];lessonId:string;lessonTitle:string;moduleTitle:string;correctOption?:string;explanation?:string;answer?:string;correct?:boolean}
+export type StudyQuestion = {id:string;prompt:string;options:string[];lessonId?:string;lessonTitle?:string;moduleId?:string;moduleTitle:string;correctOption?:string;explanation?:string;answer?:string;correct?:boolean}
 export type StudyKind = 'LESSON'|'MODULE_REVIEW'|'MODULE_TEST'|'LEVEL_REVIEW'|'LEVEL_TEST'
 export type StudyAttempt = {id:number;kind:StudyKind;referenceId:string;title:string;levelId:number;status:'IN_PROGRESS'|'COMPLETED'|'PASSED'|'FAILED';requiredCorrect:number;totalQuestions:number;correctCount?:number;awardedXp?:number;questions:StudyQuestion[];answers:Record<string,string>}
 export type StudyContent = {objective:string;prerequisites:{id:string;title:string}[];sections:{title:string;body:string}[];examples:{english:string;vietnamese:string}[];mistakes:{wrong:string;right:string;explanation:string}[];application:string;summary:string}

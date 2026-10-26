@@ -304,6 +304,7 @@ public class ArenaController {
         User b = current(authB);
         noActive(a.id);
         noActive(b.id);
+        new com.grammarquest.service.RankedPairRules(db).requireAllowed(a.id,b.id);
         String code = generateRoomCode();
         Instant confirmDeadline = Instant.now().plusSeconds(PvpRankRules.CONFIRM_TIMEOUT_SECONDS);
         var key = new GeneratedKeyHolder();
@@ -538,7 +539,7 @@ public class ArenaController {
         Long guestId = r.get("guest_id") == null ? null : ((Number) r.get("guest_id")).longValue();
         db.update("update arena_rooms set status='FINISHED',host_score=?,guest_score=?,winner_id=?,round_deadline_at=null,pause_started_at=null,paused_user_id=null,state_version=state_version+1 where id=?",
             hostScore, guestScore, winnerId, id);
-        db.update("update arena_rooms set result_type=?,elo_settled=true where id=?",resultType,id);
+        db.update("update arena_rooms set result_type=?,elo_settled=true,settled_at=current_timestamp(6) where id=?",resultType,id);
 
         if (guestId != null && Boolean.TRUE.equals(r.get("is_matchmade")) && !Boolean.TRUE.equals(r.get("elo_settled"))) {
             long firstId = Math.min(hostId, guestId);

@@ -1,6 +1,7 @@
 package com.grammarquest.service;
 
 import com.grammarquest.repository.UserRepository;
+import com.grammarquest.entity.User;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,15 +28,34 @@ public class StudyRewardService {
             default -> review?10:0;
         };
         if(amount==0)return 0;
-        String key=review?"STUDY_REVIEW:"+LocalDate.now(STUDY_ZONE)+":"+kind+":"+attemptId
+        LocalDate day=LocalDate.now(STUDY_ZONE);
+        String key=review?"STUDY_REVIEW:"+day+":"+kind+":"+attemptId
             :"STUDY_FIRST:"+kind+":"+reference;
-        if(db.queryForObject("select count(*) from xp_ledger where user_id=? and reward_key=?",Integer.class,userId,key)>0)return 0;
+        if(alreadyAwarded(userId,key))return 0;
         if(review) {
-            Integer used=db.queryForObject("select coalesce(sum(amount),0) from xp_ledger where user_id=? and reward_key like ?",Integer.class,userId,"STUDY_REVIEW:"+LocalDate.now(STUDY_ZONE)+":%");
+            int used=db.queryForList("select amount from xp_ledger where user_id=? and reward_key like ? for update",Integer.class,userId,"STUDY_REVIEW:"+day+":%").stream().mapToInt(Integer::intValue).sum();
             amount=Math.min(amount,Math.max(0,30-used));
         }
         if(amount==0)return 0;
-        // The account lock prevents a concurrent claim or another attempt bypassing the cap.
+        return credit(user,key,amount,balance);
+    }
+
+    /** Preserve legacy reward keys, while reading the balance after the account lock. */
+    @Transactional
+    public int awardFirstWin(long userId,String rewardKey,int amount) {
+        if(amount<=0)return 0;
+        var user=users.findWithLockById(userId).orElseThrow();
+        long balance=db.queryForObject("select total_xp from users where id=? for update",Long.class,userId);
+        if(alreadyAwarded(userId,rewardKey))return 0;
+        return credit(user,rewardKey,amount,balance);
+    }
+
+    private boolean alreadyAwarded(long userId,String key){
+        // Locking reads also see commits newer than an enclosing transaction's read snapshot.
+        return !db.queryForList("select id from xp_ledger where user_id=? and reward_key=? for update",Long.class,userId,key).isEmpty();
+    }
+    private int credit(User user,String key,int amount,long balance){
+        long userId=user.id;
         db.update("insert into xp_ledger(user_id,reward_key,amount) values(?,?,?)",userId,key,amount);
         user.totalXp=balance+amount;
         users.save(user);

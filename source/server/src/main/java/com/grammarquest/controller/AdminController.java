@@ -51,6 +51,9 @@ public class AdminController {
         db.update("insert into audit_logs(actor_id,action,target_type,target_id,detail) values(?,?,?,?,?)",actor.id,action,type,id,detail);
         if(events!=null && Set.of("TOPIC","LESSON","QUESTION").contains(type)) events.publishEvent(new com.grammarquest.service.CurriculumChanged());
     }
+    private void hideIncompleteLesson(long lessonId) {
+        db.update("update lessons set published=false where id=? and published=true and (select count(*) from questions where lesson_id=? and owner_id is null and published=true and deleted=false and admin_blocked=false and (question_type is null or question_type='MCQ'))<10",lessonId,lessonId);
+    }
     private void ensureTopic(String slug,String title) {
         if(db.queryForObject("select count(*) from topics where slug=?",Integer.class,slug)==0)
             db.update("insert into topics(slug,title,description,outcome,sort_order,planet_style,published) values(?,?,?, ?, (select coalesce(max(t.sort_order),0)+1 from (select sort_order from topics) t),'aqua',true)",
@@ -99,6 +102,8 @@ public class AdminController {
         User actor=admin(auth);
         if(db.update("update questions set published=false,teacher_active=false,deleted=true where id=? and deleted=false",id)==0)
             throw new ApiException(HttpStatus.NOT_FOUND,"QUESTION_NOT_FOUND","Câu hỏi không tồn tại hoặc đã xóa");
+        var lessonIds=db.queryForList("select lesson_id from questions where id=?",Long.class,id);
+        lessonIds.forEach(this::hideIncompleteLesson);
         audit(actor,"QUESTION_DELETE","QUESTION",id,"Xóa mềm; giữ snapshot lịch sử");
         return Map.of("id",id,"deleted",true);
     }
@@ -144,7 +149,7 @@ public class AdminController {
     }
     @GetMapping("/content") public Map<String,Object> content(Authentication auth) {
         admin(auth);
-        var questions=db.queryForList("select id,lesson_id as lessonId,prompt,option_a as optionA,option_b as optionB,option_c as optionC,option_d as optionD,correct_option as correctOption,explanation,owner_id as ownerId,question_type as questionType,accepted_answer as acceptedAnswer,case when owner_id is null then published else teacher_active end as published from questions where deleted=false order by id desc");
+        var questions=db.queryForList("select id,lesson_id as lessonId,prompt,option_a as optionA,option_b as optionB,option_c as optionC,option_d as optionD,correct_option as correctOption,explanation,owner_id as ownerId,question_type as questionType,accepted_answer as acceptedAnswer,admin_blocked as adminBlocked,case when owner_id is null then published else not admin_blocked end as published from questions where deleted=false order by id desc");
         questions.forEach(q->{var value=q.get("published");q.put("published",value instanceof Boolean?value:((Number)value).intValue()!=0);});
         return Map.of("lessons",db.queryForList("select id,topic_slug as topicSlug,title,summary,theory,difficulty,published,ordinal_no as ordinalNo from lessons where deleted=false order by topic_slug,ordinal_no"),
                       "questions",questions);
@@ -187,24 +192,25 @@ public class AdminController {
         if(db.queryForObject("select count(*) from lessons where id=? and deleted=false",Integer.class,id)==0)
             throw new ApiException(HttpStatus.NOT_FOUND,"LESSON_NOT_FOUND","Không tìm thấy bài học");
         if(body.published()) {
-            Integer available=db.queryForObject("select count(*) from questions where lesson_id=? and published=true and owner_id is null",Integer.class,id);
+            Integer available=db.queryForObject("select count(*) from questions where lesson_id=? and published=true and owner_id is null and deleted=false and admin_blocked=false and (question_type is null or question_type='MCQ')",Integer.class,id);
             if(available==null||available<10) throw new ApiException(HttpStatus.CONFLICT,"QUESTION_BANK_INCOMPLETE","Cần ít nhất 10 câu hỏi chung đã xuất bản trước khi mở bài học");
         }
-        if(db.update("update lessons set published=? where id=?",body.published(),id)==0) throw new ApiException(HttpStatus.NOT_FOUND,"LESSON_NOT_FOUND","Không tìm thấy bài học");
+        if(db.update("update lessons set published=?,admin_blocked=? where id=?",body.published(),!body.published(),id)==0) throw new ApiException(HttpStatus.NOT_FOUND,"LESSON_NOT_FOUND","Không tìm thấy bài học");
         audit(actor,"LESSON_PUBLICATION","LESSON",id,Boolean.toString(body.published()));
         return Map.of("id",id,"published",body.published());
     }
     @PatchMapping("/questions/{id}/publication") @Transactional public Map<String,Object> questionPublication(Authentication auth,@PathVariable long id,@Valid @RequestBody Publish body) {
         User actor=admin(auth);
-        var owned=db.queryForList("select owner_id from questions where id=? and deleted=false",id);
+        var owned=db.queryForList("select owner_id,lesson_id from questions where id=? and deleted=false",id);
         if(!owned.isEmpty() && owned.getFirst().get("owner_id")!=null) {
-            db.update("update questions set teacher_active=? where id=?",body.published(),id);
+            db.update("update questions set admin_blocked=? where id=?",!body.published(),id);
             audit(actor,"PRIVATE_QUESTION_MODERATE","QUESTION",id,"active="+body.published());
             return Map.of("id",id,"published",body.published());
         }
         if(db.queryForObject("select count(*) from questions where id=? and deleted=false and owner_id is null",Integer.class,id)==0)
             throw new ApiException(HttpStatus.NOT_FOUND,"QUESTION_NOT_FOUND","Không tìm thấy câu hỏi chung");
-        if(db.update("update questions set published=? where id=? and owner_id is null",body.published(),id)==0) throw new ApiException(HttpStatus.NOT_FOUND,"QUESTION_NOT_FOUND","Không tìm thấy câu hỏi");
+        if(db.update("update questions set published=?,admin_blocked=? where id=? and owner_id is null",body.published(),!body.published(),id)==0) throw new ApiException(HttpStatus.NOT_FOUND,"QUESTION_NOT_FOUND","Không tìm thấy câu hỏi");
+        if(!body.published()) hideIncompleteLesson(((Number)owned.getFirst().get("lesson_id")).longValue());
         audit(actor,"QUESTION_PUBLICATION","QUESTION",id,Boolean.toString(body.published()));
         return Map.of("id",id,"published",body.published());
     }

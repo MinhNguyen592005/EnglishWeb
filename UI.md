@@ -370,3 +370,7 @@ Sau khi làm, báo file thay đổi, cách kiểm tra và phần còn thiếu.
 - Đầu vào mới 25 câu; giao diện lấy tổng số câu từ snapshot/kết quả để vẫn hỗ trợ lượt 10 câu cũ.
 - PvP ghi rõ ghép tự động là xếp hạng, phòng tự tạo là giao hữu. Giao hữu không hiển thị biến động Elo; thông báo rời trận không nói sẽ mất Elo.
 - Hiển thị phạm vi tìm trận theo Elo; cấp tài khoản chỉ là thông tin hồ sơ. Bằng số câu đúng thì hòa.
+
+- Nhiệm vụ/streak tự làm mới lúc 00:00 UTC+7, khi quay lại tab hoặc có mạng lại; tải lỗi phải có “Thử lại nhiệm vụ”, không ẩn toàn bộ widget. Hồ sơ không dùng thao tác nhận rương làm thông báo giữ chuỗi.
+- Hàng đợi hiển thị lý do bỏ qua cặp đã đấu 3 trận xếp hạng trong 24 giờ; tiếp tục tìm đối thủ khác và vẫn cho hủy để đấu giao hữu.
+- Kiểm tra module/level dùng ngân hàng câu mới độc lập; nếu chưa đủ đề hoặc thiếu module thì báo lỗi, không thay bằng câu luyện tập.

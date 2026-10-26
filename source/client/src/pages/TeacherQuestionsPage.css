@@ -66,6 +66,19 @@
 .question-item-content {
   flex: 1;
   min-width: 0;
+  overflow-wrap: anywhere;
+}
+.question-checkbox { flex-shrink: 0; }
+.question-item-row > .stack-actions { flex: 0 0 190px; }
+.bank-filter-group { min-width: 0; }
+.bank-filter-group select, .bank-filter-group input { min-width: 0; width: 100%; }
+.range-inputs { flex-wrap: wrap; }
+@media (max-width: 650px) {
+  .question-item-row { flex-wrap: wrap; }
+  .question-item-content { flex-basis: calc(100% - 32px); }
+  .question-item-row > .stack-actions { flex-basis: 100%; padding-left: 32px; }
+  .question-item-row .question-options-preview { grid-template-columns: 1fr; }
+  .bank-filter-group { flex-wrap: wrap; }
 }
 .question-item-content strong {
   display: block;

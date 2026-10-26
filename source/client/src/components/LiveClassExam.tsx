@@ -111,6 +111,9 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
   const [now, setNow] = useState(Date.now())
   const [textAnswers, setTextAnswers] = useState<Record<string, string>>({})
 
+  const answerQueue = useRef<Promise<unknown>>(Promise.resolve())
+  const submitting = useRef(false)
+  const pendingAnswers = useRef(0)
   const current = useRef<Exam | null>(null)
   const mounted = useRef(true)
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
@@ -121,6 +124,11 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
     if (old?.id === next.id && (old.revision > next.revision || (old.revision === next.revision && old.closed && !next.closed))) return
     if (old?.id === next.id && next.version > old.version && !next.owner) {
       setNotice('Giáo viên vừa cập nhật đề. Nội dung mới đã được áp dụng; hãy kiểm tra lại các câu trả lời của bạn.')
+    }
+    if (old?.id !== next.id) {
+      for (const timer of Object.values(debounceTimers.current)) clearTimeout(timer)
+      debounceTimers.current = {}
+      setTextAnswers({})
     }
     current.current = next
     setExam(next)
@@ -160,6 +168,8 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
     })
     return () => {
       mounted.current = false
+      for (const timer of Object.values(debounceTimers.current)) clearTimeout(timer)
+      debounceTimers.current = {}
       off()
       current.current = null
       request('EXAM_UNWATCH', 'EXAM_DATA').catch(() => {})
@@ -249,34 +259,31 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
     }
   }
 
-  async function answer(questionId: string, val: number | string) {
+  function answer(questionId: string, val: number | string): Promise<void> {
     const active = current.current
-    if (!active || saving) return
+    if (!active) return Promise.reject(new Error('No active exam'))
+    pendingAnswers.current++
     setSaving(true)
     setError('')
-    try {
+    const task = answerQueue.current.catch(() => {}).then(async () => {
+      if (!mounted.current || current.current?.id !== active.id) throw new Error('Exam changed')
       const payload: Record<string, unknown> = {
-        examId: active.id,
-        version: active.version,
-        questionId
+        examId: active.id, version: active.version, questionId,
+        ...(typeof val === 'number' ? { option: val } : { answer: val })
       }
-      if (typeof val === 'number') {
-        payload.option = val
-      } else {
-        payload.option = 0
-        payload.answer = val
-        payload.textAnswer = val
+      try {
+        const next = await request<Exam>('EXAM_ANSWER', 'EXAM_DATA', payload)
+        if (current.current?.id === active.id) apply(next)
+      } catch (e) {
+        if (mounted.current && current.current?.id === active.id) setError((e as Error).message)
+        throw e
       }
-      const next = await request<Exam>('EXAM_ANSWER', 'EXAM_DATA', payload)
-      if (current.current?.id === active.id) apply(next)
-    } catch (e) {
-      setError((e as Error).message)
-      request<Exam>('EXAM_SYNC', 'EXAM_DATA', { examId: active.id })
-        .then(next => { if (current.current?.id === active.id) apply(next) })
-        .catch(() => {})
-    } finally {
-      setSaving(false)
-    }
+    }).finally(() => {
+      pendingAnswers.current--
+      if (mounted.current && !submitting.current) setSaving(pendingAnswers.current > 0)
+    })
+    answerQueue.current = task
+    return task
   }
 
   const handleTextChange = (questionId: string, val: string) => {
@@ -286,7 +293,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
     }
     debounceTimers.current[questionId] = setTimeout(() => {
       delete debounceTimers.current[questionId]
-      answer(questionId, val.trim())
+      void answer(questionId, val.trim()).catch(() => {})
     }, 600)
   }
 
@@ -298,32 +305,35 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
     const currentVal = (textAnswers[questionId] ?? (exam?.answers?.[questionId] as string ?? '')).trim()
     const serverVal = (exam?.answers?.[questionId] as string ?? '').trim()
     if (currentVal !== serverVal) {
-      answer(questionId, currentVal)
+      void answer(questionId, currentVal).catch(() => {})
     }
-  }
-
-  const flushTextTimers = () => {
-    for (const [qId, timer] of Object.entries(debounceTimers.current)) {
-      clearTimeout(timer)
-      const currentVal = (textAnswers[qId] ?? '').trim()
-      answer(qId, currentVal)
-    }
-    debounceTimers.current = {}
   }
 
   async function submit() {
-    if (!exam) return
-    flushTextTimers()
+    const active = current.current
+    if (!active || submitting.current) return
     if (!window.confirm('Nộp bài? Sau khi nộp bạn không thể đổi đáp án.')) return
+    submitting.current = true
     setSaving(true)
     setError('')
+    for (const timer of Object.values(debounceTimers.current)) clearTimeout(timer)
+    debounceTimers.current = {}
     try {
-      apply(await request<Exam>('EXAM_SUBMIT', 'EXAM_DATA', { examId: exam.id, version: exam.version }))
+      await answerQueue.current
+      // Flush every local text draft, including edits whose previous save failed.
+      for (const q of active.questions) {
+        if (isTextType(q.questionType) && textAnswers[q.id] !== undefined) {
+          await answer(q.id, textAnswers[q.id].trim())
+        }
+      }
+      if (current.current?.id !== active.id) return
+      apply(await request<Exam>('EXAM_SUBMIT', 'EXAM_DATA', { examId: active.id, version: active.version }))
       setNotice('Đã nộp bài. Giáo viên đã nhận được kết quả.')
     } catch (e) {
       setError((e as Error).message)
     } finally {
-      setSaving(false)
+      submitting.current = false
+      setSaving(pendingAnswers.current > 0)
     }
   }
 
@@ -373,7 +383,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
     setError('')
     try {
       const data = await api.teacherQuestions()
-      setBankQuestions(data)
+      setBankQuestions(data.filter(q => q.active && !q.adminBlocked))
       setBankSelected(new Set())
       setBankOpen(true)
     } catch (e) {
@@ -542,7 +552,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
               </p>
 
               {exam.questions.map((q, i) => (
-                <fieldset className="live-exam-question" key={q.id} disabled={readonly || saving || !connected}>
+                <fieldset className="live-exam-question" key={q.id} disabled={readonly || submitting.current || !connected}>
                   <legend>
                     <span className={typeBadgeClass(q.questionType)}>{typeLabel(q.questionType)}</span>
                     {i + 1}. {q.prompt}
@@ -577,7 +587,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
                           type="radio"
                           name={`exam-${exam.id}-${q.id}`}
                           checked={exam.answers?.[q.id] === index}
-                          onChange={() => answer(q.id, index)}
+                          onChange={() => { void answer(q.id, index).catch(() => {}) }}
                         />
                         <span>{String.fromCharCode(65 + index)}. {option}</span>
                       </label>
@@ -587,7 +597,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
               ))}
 
               {!readonly && (
-                <button className="button primary" disabled={saving || !connected} onClick={submit}>
+                <button className="button primary" disabled={submitting.current || !connected} onClick={submit}>
                   Nộp bài kiểm tra
                 </button>
               )}

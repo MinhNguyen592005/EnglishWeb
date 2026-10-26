@@ -156,7 +156,7 @@ public class LiveExamService {
         if(action.equals("EXAM_CREATE")) {
             long classId=id(p,"classId");require(access(classId,u),"Chỉ giáo viên của lớp được tạo kiểm tra");
             String title=text(p,"title",160);JsonNode qs=questions(p);Instant end=endTime(p);var key=new GeneratedKeyHolder();
-            db.update(c->{var s=c.prepareStatement("insert into class_exams(class_id,title,questions_json,ends_at) values(?,?,?,?)",Statement.RETURN_GENERATED_KEYS);s.setLong(1,classId);s.setString(2,title);s.setString(3,qs.toString());s.setTimestamp(4,Timestamp.from(end));return s;},key);
+            db.update(c->{var s=c.prepareStatement("insert into class_exams(class_id,title,questions_json,ends_at,closed) values(?,?,?,?,?)",Statement.RETURN_GENERATED_KEYS);s.setLong(1,classId);s.setString(2,title);s.setString(3,qs.toString());s.setTimestamp(4,Timestamp.from(end));s.setBoolean(5,p.path("closed").asBoolean(false));return s;},key);
             return view(username,Objects.requireNonNull(key.getKey()).longValue());
         }
         long examId=id(p,"examId");var e=exam(examId,true);boolean owner=access(((Number)e.get("class_id")).longValue(),u);

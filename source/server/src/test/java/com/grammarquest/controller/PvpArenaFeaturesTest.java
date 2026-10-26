@@ -39,7 +39,7 @@ class PvpArenaFeaturesTest {
         assertEquals(1000,f.host.pvpElo);assertEquals(1200,f.guest.pvpElo);
         assertEquals(0,f.host.pvpWins);assertEquals(0,f.guest.pvpLosses);
         verify(f.users,never()).save(any());
-        verify(f.db).update("update arena_rooms set result_type=?,elo_settled=true where id=?","SCORE",99L);
+        verify(f.db).update("update arena_rooms set result_type=?,elo_settled=true,settled_at=current_timestamp(6) where id=?","SCORE",99L);
     }
     @Test void equalCorrectAnswersDrawWithoutSpeedTiebreaker(){
         var f=finalRound(true,7,7,1000,1000);f.controller.advance(99L);

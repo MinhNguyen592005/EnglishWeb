@@ -6,7 +6,7 @@ export function summarizeStudyProgress(course: StudyCourse) {
   const passedLevels = course.levels.filter(level => level.passed).length
   const nextLevel = course.levels.find(level => level.unlocked && !level.passed) || course.levels.at(-1)
   const nextModule = nextLevel?.modules.find(module => module.unlocked && (!module.passed || module.completedCount < module.lessonCount))
-  const nextLesson = nextModule?.lessons.find(lesson => lesson.status !== 'COMPLETED')
+  const nextLesson = nextModule?.lessons.find(lesson => lesson.published !== false && lesson.status !== 'COMPLETED')
   const params = new URLSearchParams()
   if (nextLevel) params.set('planet', `level-${nextLevel.id}`)
   if (nextModule) params.set('module', nextModule.id)

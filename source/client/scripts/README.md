@@ -1,5 +1,11 @@
 # Script kiểm tra giao diện
 
+`check-client-monitor.mjs` kiểm tra khu vực quản lý client mới: tìm kiếm, lọc trạng thái, phân trang, chi tiết tại chỗ, gửi lời nhắc/ngắt kết nối, nhật ký thu gọn và bố cục mobile. Dùng Vite cổng 5175 với API/socket giả lập; ảnh trong `artifacts/client-monitor`.
+
+`check-responsive-ui.mjs` kiểm tra 7 màn hình ở chiều rộng 320, 390 và 1440 px với tên/nội dung dài; kiểm tra menu bằng bàn phím, focus, khóa cuộn và việc menu/hộp thoại che đúng nút hỗ trợ. Chạy Vite cổng 5175; API/socket giả lập. Ảnh nằm trong `artifacts/responsive`.
+
+`check-admin-moderation.mjs` kiểm tra chặn/mở câu hỏi riêng, đồng bộ giữa hai admin và giáo viên, kiểm duyệt bài học/câu luyện tập/câu kiểm tra của lộ trình mới và giao diện mobile. Chạy Vite cổng 5175 trước khi chạy script; dữ liệu API/socket được giả lập.
+
 Chạy từ `source/client`. Các script dùng Playwright và Microsoft Edge; script kiểm tra giao diện không được tính là kiểm thử toàn bộ backend.
 
 | Nhóm | Mục đích |
@@ -11,6 +17,7 @@ Chạy từ `source/client`. Các script dùng Playwright và Microsoft Edge; sc
 | `check-account-realtime.mjs` | Đồng bộ tài khoản và thông báo báo cáo giả lập |
 | `check-study-progress.mjs` | Đồng bộ tiến độ dashboard/lộ trình/hồ sơ, lịch sử lộ trình, cập nhật WebSocket và level vượt qua nhờ đầu vào; API/socket giả lập |
 | `check-study-gamification.mjs` | Bài chưa đạt, làm lại nhận EXP, kiểm tra module và mở khóa module kế tiếp; API/socket giả lập |
+| `check-learning-refresh.mjs` | Khôi phục nhiệm vụ sau lỗi mạng, đổi ngày UTC+7, quay lại tab và đồng bộ streak hồ sơ; đồng hồ/API/socket giả lập |
 | `check-real-backend.mjs` | Kết nối backend thật trong phiên `FullRealtimeIntegrationTest`, nhận fixture tạm do test Java tạo |
 | `smoke-*.mjs`, `visual-*.mjs`, `offline-check.mjs` | Các kịch bản bổ trợ/được lưu từ những giai đoạn trước; xem URL, tài khoản và yêu cầu môi trường ở đầu từng script trước khi chạy |
 

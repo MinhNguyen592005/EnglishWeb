@@ -728,11 +728,11 @@ Cập nhật ngày 26/10/2026: tách cấp tài khoản, level học và Elo.
    Có thể học các bài trong module đang mở. Đạt toàn bộ bài mới mở kiểm tra module.
    Kiểm tra module lấy tối đa 10 câu từ nội dung module; đạt ít nhất 80% để mở module tiếp theo.
    Đạt bài học và kiểm tra tất cả module mới mở kiểm tra cuối level. Kiểm tra level có 10 câu phân bố giữa các module, đạt ít nhất 8/10 để mở level tiếp theo.
-   Các bài kiểm tra hiện vẫn dùng ngân hàng câu hỏi của bài học. Ngân hàng kiểm tra độc lập cần được biên soạn riêng nếu muốn đo khả năng vận dụng trên câu mới.
+   Kiểm tra module và level dùng ngân hàng độc lập study_exam_questions: 280 câu, 10 câu/module, không trùng câu luyện tập. Ôn tập vẫn dùng câu trong bài học. Mỗi đề kiểm tra có 10 câu; đề level bao phủ các module.
    Không dùng EXP hoặc Elo để mở nội dung học.
 
 3. Đầu vào
-   Lượt mới có 25 câu, ngẫu nhiên 5 câu mỗi level từ ngân hàng đầu vào riêng.
+   Lượt mới có 25 câu, ngẫu nhiên 5 câu mỗi level từ ngân hàng đầu vào riêng. Từ V29, ngân hàng đầu vào có 50 câu chọn từ ngân hàng đánh giá độc lập, không lấy câu luyện tập.
    Xét các nhóm từ level 1 đến level 4 theo thứ tự: phải đạt ít nhất 4/5 ở từng nhóm trước mới được bỏ qua nhóm đó. Nhóm chưa đạt đầu tiên quyết định level bắt đầu; tối đa bắt đầu level 5.
    Kết quả đầu vào đã chốt được giữ nguyên. Lượt 10 câu đang làm dở giữ snapshot cũ; chỉ nhóm có ít nhất 3 câu và đạt 80% mới cho bỏ qua level. Không ghi nhận các bài riêng lẻ là đã hoàn thành do miễn level.
 
@@ -750,7 +750,7 @@ Cập nhật ngày 26/10/2026: tách cấp tài khoản, level học và Elo.
    Mốc ngày dùng UTC+7 (Asia/Bangkok) cho nhiệm vụ, rương, streak và giới hạn EXP ôn tập.
 
 6. PvP
-   Ghép tự động là xếp hạng, chỉ dựa trên Elo: ±150 lúc đầu, ±300 sau 15 giây, ±600 sau 30 giây; cả hai người phải chấp nhận phạm vi tương ứng. Cấp tài khoản không giới hạn ghép trận.
+   Ghép tự động là xếp hạng, chỉ dựa trên Elo: ±150 lúc đầu, ±300 sau 15 giây, ±600 sau 30 giây; cả hai người phải chấp nhận phạm vi tương ứng. Cấp tài khoản không giới hạn ghép trận. Mỗi cặp tài khoản tối đa 3 trận xếp hạng đã kết thúc trong 24 giờ; khi đạt giới hạn, hệ thống tìm đối thủ khác. Trận giao hữu/hủy xác nhận không tính vào giới hạn.
    Phòng tự tạo là giao hữu: không đổi Elo, thành tích xếp hạng hoặc vật phẩm theo hạng/chuỗi thắng.
    Số câu đúng quyết định thắng/thua; bằng số câu đúng thì hòa, không dùng tốc độ để phân thắng.
    Giữ Elo khởi đầu 1.000, K=32, sàn 100. Lịch sử lưu chênh lệch thực tế sau khi áp dụng sàn. PvP không thưởng EXP học tập trực tiếp.
@@ -758,3 +758,5 @@ Cập nhật ngày 26/10/2026: tách cấp tài khoản, level học và Elo.
 7. Chuyển đổi dữ liệu
    Migration V28 giữ tổng EXP, các lần nhận thưởng và các bài đã hoàn thành. Module đã hoàn thành toàn bộ bài trước cập nhật được công nhận đã đạt để bảo toàn đường học đã mở.
    Không tự động cộng bù EXP cho dữ liệu cũ. Quy tắc mới áp dụng khi nộp lượt còn đang làm hoặc tạo lượt mới.
+   V29 bổ sung ngân hàng kiểm tra, đổi nguồn câu đầu vào và lưu thời điểm kết thúc PvP. Đề đang làm/đã nộp giữ snapshot, không thay câu giữa lượt. Thưởng boss cũ giữ reward key cũ và dùng cùng dịch vụ khóa/cộng EXP.
+   Nhiệm vụ và streak giao diện làm mới qua nửa đêm UTC+7, khi quay lại tab, có mạng lại hoặc tiến độ thay đổi. Lỗi tải có nút thử lại và không che dữ liệu đã tải.

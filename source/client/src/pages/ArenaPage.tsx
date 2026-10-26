@@ -6,6 +6,7 @@ import { Layout } from '../components/Layout'
 import type { ArenaHistory, ArenaMessage, ArenaRoom, PvpCosmeticItem, PvpCosmeticsResponse, PvpLeaderboardResponse } from '../types'
 
 type QueueState = {
+  pairingNotice?: string;
   status: 'IDLE' | 'WAITING' | 'MATCHED' | 'ERROR';
   level?: number;
   elo?: number;
@@ -610,7 +611,7 @@ export function ArenaPage() {
             <h2>Tìm và ghép đối thủ cùng trình độ</h2>
             <p>
               Cấp tài khoản: <strong>{queue.level ?? user?.level}</strong> · Điểm ELO: <strong>{myElo} ({myRankTitle})</strong>.
-              Ghép trận xếp hạng theo ELO: ban đầu ±150, sau 15 giây ±300, sau 30 giây ±600. Cấp tài khoản không giới hạn đối thủ.
+              Ghép trận xếp hạng theo ELO: ban đầu ±150, sau 15 giây ±300, sau 30 giây ±600. Cấp tài khoản không giới hạn đối thủ. Mỗi cặp tài khoản được đấu tối đa 3 trận xếp hạng trong 24 giờ.
             </p>
 
             {banSecondsLeft > 0 && (
@@ -632,6 +633,7 @@ export function ArenaPage() {
                   Đang tìm trận · {Math.max(0, Math.floor((queueNow - (queue.queuedAt || queueNow)) / 1000))} giây · Chênh lệch tối đa ±{queue.allowedEloGap ?? 150} ELO
                 </p>
                 <p className="muted">Bạn có thể hủy bất cứ lúc nào. Khi tìm thấy đối thủ, cả hai người chơi sẽ có 15 giây để xác nhận tham gia trận đấu.</p>
+                {queue.pairingNotice&&<p className="muted" role="status">{queue.pairingNotice}</p>}
                 <button className="button secondary" disabled={busy} onClick={cancelMatch}>Hủy tìm trận</button>
               </>
             ) : (

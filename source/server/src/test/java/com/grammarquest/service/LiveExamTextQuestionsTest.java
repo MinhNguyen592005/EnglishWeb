@@ -22,6 +22,40 @@ class LiveExamTextQuestionsTest {
     private final ObjectMapper json = new ObjectMapper();
 
     @Test
+    void createPreservesClosedState() throws Exception {
+        var db = mock(JdbcTemplate.class);
+        var users = mock(UserRepository.class);
+        var teacher = new User("teacher", "Teacher", "hash");
+        teacher.id = 1L;
+        teacher.role = "TEACHER";
+        when(users.findByUsernameIgnoreCase("teacher")).thenReturn(Optional.of(teacher));
+        when(db.queryForList("select teacher_id from classrooms where id=?", Long.class, 5L))
+            .thenReturn(List.of(1L));
+        var connection = mock(java.sql.Connection.class);
+        var statement = mock(java.sql.PreparedStatement.class);
+        when(connection.prepareStatement(anyString(), anyInt())).thenReturn(statement);
+        when(db.update(any(org.springframework.jdbc.core.PreparedStatementCreator.class),
+                any(org.springframework.jdbc.support.GeneratedKeyHolder.class))).thenAnswer(invocation -> {
+            invocation.getArgument(0, org.springframework.jdbc.core.PreparedStatementCreator.class)
+                .createPreparedStatement(connection);
+            invocation.getArgument(1, org.springframework.jdbc.support.GeneratedKeyHolder.class)
+                .getKeyList().add(Map.of("id", 9L));
+            return 1;
+        });
+        var service = spy(new LiveExamService(db, users, json));
+        doReturn(Map.of("id", 9L)).when(service).view("teacher", 9L);
+        var payload = json.readTree("""
+            {"classId":5,"title":"Draft","closed":true,"endsAt":"2000-01-01T00:00:00Z",
+             "questions":[{"id":"q1","prompt":"Fill","questionType":"FILL_BLANK","acceptedAnswer":"went"}]}
+            """);
+        service.action("teacher", "EXAM_CREATE", payload);
+        verify(statement).setBoolean(5, true);
+        verify(connection).prepareStatement(
+            "insert into class_exams(class_id,title,questions_json,ends_at,closed) values(?,?,?,?,?)",
+            java.sql.Statement.RETURN_GENERATED_KEYS);
+    }
+
+    @Test
     void isTextTypeCorrectlyIdentifiesTextQuestions() {
         assertTrue(LiveExamService.isTextType("FILL_BLANK"));
         assertTrue(LiveExamService.isTextType("ERROR_CORRECTION"));
@@ -123,7 +157,7 @@ class LiveExamTextQuestionsTest {
         textQ.put("question_type", "REWRITE");
         textQ.put("accepted_answer", "I went home.");
 
-        when(db.queryForList("select * from questions where id=? and owner_id=? and deleted=false", 101L, 10L))
+        when(db.queryForList("select * from questions where id=? and owner_id=? and deleted=false and admin_blocked=false and teacher_active=true", 101L, 10L))
             .thenReturn(List.of(textQ));
 
         final String[] savedJson = new String[1];

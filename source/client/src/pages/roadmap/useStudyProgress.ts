@@ -9,7 +9,7 @@ function useStudyData<T>(action: 'ROADMAP_OPEN' | 'ROADMAP_HISTORY') {
   const [revision, setRevision] = useState(0)
   const reload = useCallback(() => setRevision(value => value + 1), [])
   useEffect(() => subscribe(message => {
-    if (['ROADMAP_PROGRESS_CHANGED', 'PLACEMENT_COMPLETED'].includes(message.action)) reload()
+    if (['ROADMAP_PROGRESS_CHANGED', 'PLACEMENT_COMPLETED', 'CURRICULUM_CHANGED'].includes(message.action)) reload()
   }), [subscribe, reload])
   useEffect(() => {
     if (!connected) return

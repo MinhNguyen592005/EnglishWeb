@@ -15,15 +15,13 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../app/AuthContext'
 import { api } from '../services/api'
-import { useSystemSocket } from '../app/SystemSocketContext'
+import { useLearningRefresh } from '../app/useLearningRefresh'
 import type { DailyQuest, DailyQuestOverview } from '../types'
 import './DailyQuestsWidget.css'
 
 export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak: number) => void }) {
   const { setUser } = useAuth()
-  const { subscribe } = useSystemSocket()
-  const [revision,setRevision]=useState(0)
-  useEffect(()=>subscribe(message=>{if(message.action==='ROADMAP_PROGRESS_CHANGED')setRevision(v=>v+1)}),[subscribe])
+  const { revision,reload } = useLearningRefresh()
   const [data, setData] = useState<DailyQuestOverview | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -36,6 +34,7 @@ export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak
     api.dailyQuests()
       .then(res => {
         if (!active) return
+        setError('')
         setData(res)
         if (onStreakUpdate && res.streak) {
           onStreakUpdate(res.streak.currentStreak)
@@ -134,14 +133,15 @@ export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak
     )
   }
 
-  if (error || !data) {
-    return null
+  if (!data) {
+    return <section className="daily-quests-card" role="alert"><p>{error||'Chưa có dữ liệu nhiệm vụ ngày.'}</p><button className="button secondary" onClick={reload}>Thử lại nhiệm vụ</button></section>
   }
 
   const { quests, milestone, streak } = data
 
   return (
     <div className="daily-quests-card">
+      {error&&<div className="error-banner" role="alert">{error} <button className="text-button" onClick={reload}>Thử lại nhiệm vụ</button></div>}
       {toastMessage && (
         <div style={{
           position: 'absolute',

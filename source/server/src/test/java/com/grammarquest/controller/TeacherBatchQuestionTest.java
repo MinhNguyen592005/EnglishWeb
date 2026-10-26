@@ -153,7 +153,7 @@ class TeacherBatchQuestionTest {
         teacher.role = "TEACHER";
         when(users.findByUsernameIgnoreCase("teacher")).thenReturn(Optional.of(teacher));
 
-        when(db.queryForList(eq("select * from questions where id=? and owner_id=? and deleted=false"), eq(10L), eq(5L)))
+        when(db.queryForList(eq("select * from questions where id=? and owner_id=? and deleted=false and admin_blocked=false and teacher_active=true"), eq(10L), eq(5L)))
             .thenReturn(List.of(Map.of(
                 "id", 10L, "lesson_id", 1L, "prompt", "Question in bank",
                 "option_a", "A", "option_b", "B", "option_c", "C", "option_d", "D",
@@ -188,7 +188,7 @@ class TeacherBatchQuestionTest {
 
         when(db.queryForList("select teacher_id from classrooms where id=?", Long.class, 12L)).thenReturn(List.of(5L));
 
-        when(db.queryForList(eq("select * from questions where id=? and owner_id=? and deleted=false"), eq(10L), eq(5L)))
+        when(db.queryForList(eq("select * from questions where id=? and owner_id=? and deleted=false and admin_blocked=false and teacher_active=true"), eq(10L), eq(5L)))
             .thenReturn(List.of(Map.of(
                 "id", 10L, "prompt", "Question for exam",
                 "option_a", "opt 1", "option_b", "opt 2", "option_c", "opt 3", "option_d", "opt 4",

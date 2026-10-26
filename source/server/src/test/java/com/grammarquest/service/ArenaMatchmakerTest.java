@@ -62,4 +62,17 @@ class ArenaMatchmakerTest {
         when(factory.create("a","b")).thenThrow(new IllegalStateException("database failure"));
         assertEquals("ERROR",queue.tick(System.currentTimeMillis()).get("s1").get("status"));
     }
+    @Test void repeatPairIsSkippedButOtherOpponentsStillMatch(){
+        user("a",1,1);user("b",2,1);
+        when(db.queryForList(startsWith("select least(host_id,guest_id)"),any(Object[].class))).thenReturn(List.of(Map.of("firstId",1L,"secondId",2L)));
+        queue.join("a","s1");queue.join("b","s2");
+        var blocked=queue.tick(System.currentTimeMillis());
+        assertEquals("WAITING",blocked.get("s1").get("status"));
+        assertEquals(RankedPairRules.NOTICE,blocked.get("s1").get("pairingNotice"));
+        verifyNoInteractions(factory);
+        user("c",3,1);matched("a","c");queue.join("c","s3");
+        assertEquals("MATCHED",queue.tick(System.currentTimeMillis()).get("s1").get("status"));
+        verify(factory).create("a","c");
+        verify(factory,never()).create("a","b");
+    }
 }

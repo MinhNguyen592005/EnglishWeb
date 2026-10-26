@@ -44,6 +44,54 @@ class StudyRoadmapIntegrationTest {
     }
     JsonNode start(String kind,String ref){return call("ROADMAP_START",Map.of("kind",kind,"referenceId",ref,"requestKey",UUID.randomUUID().toString()));}
     JsonNode submit(long id,int right){return call("ROADMAP_SUBMIT",Map.of("attemptId",id,"answers",answers(id,right)));}
+    @Test void staleJpaAccountCannotLoseLegacyXpOrOverwriteNewerElo(){
+        var users=app.getBean(UserRepository.class);var rewards=app.getBean(StudyRewardService.class);
+        var fixture=new User("mixed_rewards","Mixed rewards","unused");fixture.totalXp=100;long userId=users.save(fixture).id;
+        var manager=app.getBean(org.springframework.transaction.PlatformTransactionManager.class);
+        var outer=new org.springframework.transaction.support.TransactionTemplate(manager);
+        var inner=new org.springframework.transaction.support.TransactionTemplate(manager);
+        inner.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        outer.execute(status->{
+            var cached=users.findByUsernameIgnoreCase("mixed_rewards").orElseThrow();assertEquals(100,cached.totalXp);
+            inner.execute(other->{rewards.award(userId,"LESSON","audit-lesson",1);db.update("update users set pvp_elo=1200 where id=?",userId);return null;});
+            assertEquals(20,rewards.awardFirstWin(userId,"LESSON_BOSS:audit",20));
+            assertEquals(0,rewards.awardFirstWin(userId,"LESSON_BOSS:audit",20));
+            return null;
+        });
+        assertEquals(140,db.queryForObject("select total_xp from users where id=?",Integer.class,userId));
+        assertEquals(1200,db.queryForObject("select pvp_elo from users where id=?",Integer.class,userId));
+        assertEquals(40,db.queryForObject("select sum(amount) from xp_ledger where user_id=?",Integer.class,userId));
+    }
+    @Test void oldReadSnapshotCannotBypassSharedReviewCap(){
+        var users=app.getBean(UserRepository.class);var rewards=app.getBean(StudyRewardService.class);
+        long userId=users.save(new User("snapshot_rewards","Snapshot rewards","unused")).id;
+        var manager=app.getBean(org.springframework.transaction.PlatformTransactionManager.class);
+        var outer=new org.springframework.transaction.support.TransactionTemplate(manager);
+        var inner=new org.springframework.transaction.support.TransactionTemplate(manager);
+        inner.setPropagationBehavior(org.springframework.transaction.TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        outer.execute(status->{
+            users.findByUsernameIgnoreCase("snapshot_rewards").orElseThrow();
+            inner.execute(other->{assertEquals(10,rewards.award(userId,"LEVEL_REVIEW","1",1));assertEquals(10,rewards.award(userId,"LEVEL_REVIEW","1",2));return null;});
+            assertEquals(10,rewards.award(userId,"PRACTICE","",3));assertEquals(0,rewards.award(userId,"PRACTICE","",4));return null;
+        });
+        assertEquals(30,db.queryForObject("select total_xp from users where id=?",Integer.class,userId));
+    }
+    @Test void independentBankDoesNotContainLessonPromptsAndRankedPairsAreLimited()throws Exception {
+        assertEquals(280,db.queryForObject("select count(*) from study_exam_questions",Integer.class));
+        var prompts=new HashSet<String>();
+        for(var raw:db.queryForList("select questions_json from study_lessons",String.class))for(var q:json.readTree(raw))prompts.add(q.path("prompt").asText().strip().toLowerCase(Locale.ROOT));
+        for(var prompt:db.queryForList("select prompt from study_exam_questions",String.class))assertFalse(prompts.contains(prompt.strip().toLowerCase(Locale.ROOT)));
+        var users=app.getBean(UserRepository.class);var first=users.save(new User("pair_first","First","unused"));var second=users.save(new User("pair_second","Second","unused"));
+        var rules=new RankedPairRules(db);var now=java.time.Instant.now();
+        for(int i=0;i<3;i++)db.update("insert into arena_rooms(code,host_id,guest_id,status,is_matchmade,settled_at) values(?,?,?,'FINISHED',true,?)","PAIR"+i,first.id,second.id,java.sql.Timestamp.from(now.minusSeconds(60)));
+        assertFalse(rules.allowed(first.id,second.id,now));assertFalse(rules.allowed(second.id,first.id,now));
+        assertEquals(Set.of(RankedPairRules.pairKey(first.id,second.id)),rules.blockedPairs(List.of(first.id,second.id),now));
+        var ex=assertThrows(ApiException.class,()->app.getBean(ArenaMatchFactory.class).create(first.username,second.username));assertEquals("RANKED_PAIR_LIMIT",ex.code);
+        db.update("update arena_rooms set settled_at=? where host_id=?",java.sql.Timestamp.from(now.minusSeconds(86401)),first.id);
+        assertTrue(rules.allowed(first.id,second.id,now));
+        db.update("update arena_rooms set settled_at=?,is_matchmade=false where host_id=?",java.sql.Timestamp.from(now),first.id);
+        assertTrue(rules.allowed(first.id,second.id,now));
+    }
     @Test void fullCourseRulesAndLegacyIsolationAndSocketTransport()throws Exception {
         int legacyLessons=db.queryForObject("select count(*) from lessons",Integer.class),legacyQuestions=db.queryForObject("select count(*) from questions",Integer.class);
         var initial=call("ROADMAP_OPEN",Map.of());assertEquals(5,initial.path("levels").size());

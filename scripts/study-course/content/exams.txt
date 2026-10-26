@@ -1,0 +1,169 @@
+# Each row contains two independently written contexts, one answer, three distractors and a rule explanation.
+@l1-m1
+The chef ___ lunch every afternoon.~~Our neighbour ___ vegetables every morning.||cooks||cooking||to cook||cook||Chủ ngữ ngôi ba số ít cần động từ hữu hạn có -s ở hiện tại đơn.
+The visitors seem ___ after the long walk.~~The dancers look ___ after their performance.||tired||tiredly||tire||tiringly||Sau động từ nối seem/look, dùng tính từ mô tả chủ ngữ.
+The guide explained the timetable ___ the tourists.~~The trainer described the exercise ___ the beginners.||to||for||at||of||Explain/describe something to someone, không đặt người nhận ngay sau động từ.
+The assistant ordered a taxi ___ the guest.~~The artist made a bracelet ___ her niece.||for||at||of||by||For chỉ người được hưởng lợi trong order/make something for someone.
+The singer ___ a beautiful voice.~~My cousin ___ a bicycle with three wheels.||has||having||to have||have||Câu hoàn chỉnh cần động từ đã chia; chủ ngữ số ít dùng has.
+@l1-m2
+Three ___ were waiting outside the clinic.~~Two ___ joined our walking group yesterday.||women||woman||womans||womens||Số nhiều bất quy tắc của woman là women.
+There are several ___ on the kitchen shelf.~~We put two ___ beside the printer.||boxes||box||boxs||boxies||Danh từ tận cùng -x thêm -es khi chuyển sang số nhiều.
+The new library has many ___.~~Our university offers several summer ___.||courses||course||coursies||course's||Sau many/several dùng danh từ đếm được số nhiều, không dùng dấu sở hữu.
+The ___ collar is red. It belongs to one puppy.~~The ___ bed is upstairs. It belongs to one puppy.||puppy's||puppies'||puppys'||puppy||Danh từ số ít dùng 's để chỉ sở hữu.
+Please put the clean cups on the ___.~~We left the spare keys on the ___.||table||tablesful||tablely||tableness||Vị trí sau mạo từ the ở đây cần danh từ chỉ đồ vật.
+@l1-m3
+The coach called Emma and ___.~~The librarian helped Noah and ___.||me||I||my||mine||Sau động từ cần đại từ tân ngữ me, không dùng đại từ chủ ngữ I.
+Those gloves are not yours; they are ___.~~That blue notebook is not yours; it is ___.||hers||her||she||herself||Đại từ sở hữu hers đứng độc lập, không cần danh từ theo sau.
+We repaired the fence ___.~~We designed the invitation cards ___.||ourselves||ourself||usself||our||Đại từ phản thân tương ứng với we là ourselves.
+___ are the photos I mentioned, here in my hand.~~___ are the tickets I bought, here in my hand.||These||This||That||Them||These chỉ nhiều vật ở gần; this/that là số ít.
+Every participant must bring ___ own pencil.~~Every contestant must bring ___ own water bottle.||their||them||theirs||themselves||Their là từ hạn định sở hữu trước cụm danh từ; singular they dùng cho người không xác định giới tính.
+@l1-m4
+There ___ a pharmacy opposite the museum.~~There ___ a fountain in the middle of the square.||is||are||be||being||There is dùng với một danh từ đếm được số ít.
+There ___ four spare chairs in the hall.~~There ___ six empty lockers near the entrance.||are||is||be||being||There are dùng với danh từ số nhiều.
+___ your neighbours own a dog?~~___ your grandparents live nearby?||Do||Does||Are||Is||Câu hỏi hiện tại đơn với chủ ngữ số nhiều dùng do và động từ nguyên mẫu.
+My brother ___ not a pilot; he is a mechanic.~~The new student ___ not absent; she is in the library.||is||does||has||are||Phủ định với be đặt not sau is; không thêm do/does.
+We ___ a short meeting at nine yesterday.~~They ___ a picnic by the river last Sunday.||had||has||have||having||Have dùng để nói một hoạt động; quá khứ đơn của have là had.
+@l2-m1
+Listen! Someone ___ at the back door.~~Look! A child ___ at the classroom door.||is knocking||knocks||knocked||has knock||Listen/Look nhấn mạnh hành động đang xảy ra, dùng hiện tại tiếp diễn.
+The ferry ___ at seven every morning.~~The factory bus ___ at six every weekday.||leaves||is leave||leaving||leave||Lịch trình đều đặn dùng hiện tại đơn; chủ ngữ số ít thêm -s.
+We ___ the science exhibition last Saturday.~~They ___ the wildlife centre last weekend.||visited||visit||are visiting||have visit||Mốc thời gian quá khứ đã kết thúc dùng quá khứ đơn.
+At this time yesterday, the technicians ___ the roof.~~At noon yesterday, the workers ___ the bridge.||were repairing||repair||have repaired||are repairing||Một hành động đang diễn ra tại thời điểm quá khứ dùng quá khứ tiếp diễn.
+Please ___ your phone before the performance.~~Please ___ the lights before you leave.||switch off||switches off||switching off||to switch off||Câu mệnh lệnh dùng động từ nguyên mẫu không to.
+@l2-m2
+___ does the evening class begin? At half past six.~~___ does the morning train depart? At quarter past eight.||What time||How many||Whose||Which person||What time hỏi thời điểm cụ thể trong ngày.
+___ borrowed my dictionary? Leo did.~~___ painted this mural? A local artist did.||Who||Whom did||Who did||Whose||Who làm chủ ngữ nên không đảo trợ động từ trong câu hỏi chủ ngữ.
+Where ___ the guests wait yesterday?~~Where ___ the players practise last Friday?||did||do||does||were||Câu hỏi quá khứ đơn dùng did + chủ ngữ + động từ nguyên mẫu.
+___ your aunt a dentist?~~___ the new manager from Canada?||Is||Does||Do||Has||Với động từ be, đảo is lên trước chủ ngữ số ít.
+How ___ stamps are in that album?~~How ___ bicycles are outside the shop?||many||much||long||often||How many hỏi số lượng danh từ đếm được số nhiều.
+@l2-m3
+The island has ___ unusual lighthouse.~~The hospital has ___ excellent training programme.||an||a||the an||any a||Dùng an trước danh từ số ít bắt đầu bằng âm nguyên âm.
+My uncle works at ___ university in the north.~~My sister wears ___ uniform at work.||a||an||any||many||University/uniform bắt đầu bằng âm /j/, nên dùng a.
+We saw a fox. ___ fox disappeared behind a tree.~~I bought a lamp. ___ lamp stopped working that evening.||The||A||An||Some a||Khi nhắc lại một đối tượng đã được giới thiệu, dùng the.
+___ Pacific Ocean separates Asia and America.~~___ Atlantic Ocean lies between Europe and North America.||The||A||An||Some||Tên đại dương dùng mạo từ the.
+___ bicycles in this shop are second-hand.~~___ paintings in this room belong to the museum.||The||An||A||A few a||The xác định nhóm đồ vật cụ thể qua cụm bổ nghĩa theo sau.
+@l2-m4
+There is very ___ flour left in the jar.~~There is very ___ fuel left in the tank.||little||few||many||a few||Little đi với danh từ không đếm được như flour/fuel.
+Only a ___ passengers got off at this stop.~~Only a ___ volunteers stayed after the event.||few||little||much||less||A few đi với danh từ đếm được số nhiều.
+We haven't received ___ complaints this week.~~The office hasn't ordered ___ paper this month.||any||some a||a||an||Trong câu phủ định, any dùng được với danh từ số nhiều hoặc không đếm được.
+There are too ___ suitcases for this small car.~~There are too ___ applicants for one interview room.||many||much||little||less||Too many đi với danh từ đếm được số nhiều.
+___ of the two routes takes about an hour.~~___ of the two jackets costs fifty pounds.||Each||Both||All||Several||Each of + danh từ số nhiều đi với động từ số ít.
+@l2-m5
+This path is ___ than the road beside the river.~~This ladder is ___ than the old wooden one.||safer||safest||more safer||most safe||Tính từ ngắn safe có so sánh hơn safer; không dùng more safer.
+This is the ___ room in the building.~~That was the ___ day of the whole trip.||quietest||quieter||more quieter||most quietest||Sau the và trong phạm vi cả nhóm, dùng so sánh nhất quietest.
+The second explanation is ___ than the first.~~The online application is ___ than the paper form.||more useful||usefuller||most useful||more usefuller||So sánh hơn của useful dùng more useful.
+The parcel isn't as ___ as I expected.~~The documentary isn't as ___ as the review suggested.||interesting||more interesting||most interesting||interestingly||Mẫu as ... as dùng tính từ nguyên dạng.
+This printer is ___ than our previous one.~~The new treatment is ___ than the old method.||better||gooder||best||more better||So sánh hơn bất quy tắc của good là better.
+@l2-m6
+The receptionist answered the question ___.~~The instructor demonstrated the movement ___.||clearly||clear||clearness||clearing||Trạng từ clearly bổ nghĩa cho động từ answered/demonstrated.
+Our coach ___ arrives late; she is always punctual.~~Our bus ___ arrives late; it is always on time.||never||every||no||none||Never là trạng từ tần suất đứng trước động từ thường.
+The musicians played extremely ___.~~The students performed extremely ___.||well||good||goodness||bestly||Trạng từ chỉ cách thức tương ứng với good là well.
+The athlete trained ___ to prepare for the race.~~The team worked ___ to finish before the deadline.||hard||hardly||hardness||hardly ever||Hard ở đây nghĩa là chăm chỉ; hardly có nghĩa hầu như không.
+The lift is ___ slow today.~~The internet connection is ___ slow this evening.||rather||many||a few||every||Rather là trạng từ mức độ bổ nghĩa cho tính từ slow.
+@l2-m7
+The seminar begins ___ Thursday morning.~~The interview is scheduled ___ Monday afternoon.||on||in||at||by the||On dùng với ngày hoặc buổi gắn với một ngày cụ thể.
+The village is quiet ___ night.~~The station closes ___ midnight.||at||on||in||under||Dùng at night và at midnight.
+The keys are ___ the drawer, not on the desk.~~The spare batteries are ___ the box, not on the shelf.||in||at||through||onto||In chỉ vị trí bên trong vật chứa.
+The courier walked ___ the narrow bridge.~~The hikers moved ___ the frozen lake from one side to the other.||across||between||among||towards of||Across diễn tả chuyển động từ phía này sang phía kia một bề mặt.
+The bakery is ___ the bank and the post office.~~The car park is ___ the theatre and the hotel.||between||among||through||during||Between dùng khi xác định vị trí giữa hai đối tượng.
+@l3-m1
+The guests ___ before we reached the cottage.~~The spectators ___ before the match was cancelled.||had arrived||have arrived||are arriving||arrive||Hành động xảy ra trước một hành động quá khứ khác dùng quá khứ hoàn thành.
+By Friday, I ___ all the interviews.~~By next month, we ___ all the inspections.||will have completed||had complete||will completing||have completes||Future perfect diễn tả việc sẽ hoàn tất trước một mốc tương lai.
+The roads are wet because it ___ all morning; it has just stopped.~~The ground is muddy because it ___ all afternoon; it has just stopped.||has been raining||had rain||is rain||will raining||Hiện tại hoàn thành tiếp diễn nhấn mạnh hoạt động vừa kéo dài và để lại kết quả hiện tại.
+We ___ that director's films since we were students.~~They ___ this author's novels since they were teenagers.||have enjoyed||enjoyed||are enjoy||has enjoyed||Since nối mốc bắt đầu với trải nghiệm kéo dài đến hiện tại.
+The soup smells ___; shall we taste it?~~The freshly baked bread smells ___; shall we try it?||delicious||deliciously||deliciousness||delightedly||Sau động từ nối smell, dùng tính từ mô tả sự vật.
+@l3-m2
+The committee has reached ___ decision after a long discussion.~~The jury has announced ___ decision after a long trial.||its||it's||it||itself||Its là từ hạn định sở hữu; it's là dạng rút gọn của it is/it has.
+The instructions were confusing, so I asked for ___.~~The directions were unclear, so we asked for ___.||clarification||clarify||clarifyingly||clarifies||Sau for cần danh từ clarification trong ngữ cảnh yêu cầu làm rõ.
+Neither of the two witnesses ___ willing to speak.~~Neither of the two candidates ___ available today.||is||are being to||have||do||Neither of hai đối tượng có thể đi với động từ số ít is trong văn phong trang trọng.
+The two neighbours often help ___.~~The two research teams regularly consult ___.||each other||themselves each||another each||every other||Each other diễn tả hành động tương hỗ giữa các bên.
+This is the ___ changing room, used by all the players.~~That is the ___ entrance, used by all the players.||players'||player's'||players's||players||Danh từ số nhiều tận cùng -s thêm dấu nháy sau s để chỉ sở hữu.
+@l3-m3
+The baby is ___ young to walk without support.~~The shelf is ___ high for the child to reach.||too||enough||such||many||Too + tính từ + to V diễn tả mức độ vượt quá khả năng thực hiện.
+The suitcase is light ___ for me to carry.~~The print is large ___ for everyone to read.||enough||too||such||so a||Enough đứng sau tính từ và trước cụm for ... to V.
+It was ___ a noisy street that we couldn't sleep.~~It was ___ a difficult puzzle that nobody solved it.||such||so||too||enough||Such a/an + tính từ + danh từ số ít + that.
+I have ___ sent the invoice, so you don't need to remind me.~~She has ___ submitted the report, so no reminder is needed.||already||yet||ago||last||Already thường dùng trong câu khẳng định hiện tại hoàn thành cho việc đã xảy ra.
+We haven't chosen the final design ___.~~They haven't published the results ___.||yet||already ago||last||yesterday||Yet thường đứng cuối câu phủ định hiện tại hoàn thành.
+@l3-m4
+The final result depends ___ the weather.~~The delivery date depends ___ the supplier.||on||of||for||at||Cụm cố định depend on something.
+The children are looking forward ___ their cousins.~~We are looking forward ___ our new colleagues.||to meeting||to meet||meet||for meeting||To trong look forward to là giới từ, nên theo sau bằng V-ing.
+The committee put ___ the vote until next week.~~The school put ___ the trip until next month.||off||up||out||into||Put off mang nghĩa hoãn một sự việc.
+Please turn ___ the volume; the baby is sleeping.~~Please turn ___ the music; the neighbours are complaining.||down||into||over||away from||Turn down giảm âm lượng; các lựa chọn khác không mang nghĩa này.
+The twins take ___ their father in appearance.~~Both daughters take ___ their mother in appearance.||after||off||apart||through||Take after someone nghĩa là giống ai về ngoại hình hoặc tính cách.
+@l3-m5
+The film starts at eight, ___ it?~~The museum opens at nine, ___ it?||doesn't||isn't||hasn't||don't||Mệnh đề hiện tại đơn khẳng định với chủ ngữ số ít dùng đuôi doesn't it.
+You haven't ordered the tickets, ___ you?~~You haven't checked the figures, ___ you?||have||haven't||do||did||Mệnh đề phủ định với have dùng câu hỏi đuôi khẳng định have you.
+Could you tell me where the registration desk ___?~~Do you know where the nearest cash machine ___?||is||does||be||is it||Câu hỏi gián tiếp giữ trật tự chủ ngữ + động từ, không đảo như câu hỏi trực tiếp.
+I don't enjoy crowded beaches. — Neither ___ I.~~I don't drink fizzy drinks. — Neither ___ I.||do||don't||am||have||Neither + trợ động từ khẳng định + chủ ngữ diễn tả đồng tình với câu phủ định.
+The meeting was postponed because the speaker ___ ill.~~The workshop was cancelled because the instructor ___ ill.||was||did||had||does||Because nối một mệnh đề đầy đủ; be ill mô tả trạng thái bị bệnh.
+@l3-m6
+You ___ wear a helmet here; it is compulsory.~~Visitors ___ show identification here; it is compulsory.||must||might||would||could perhaps||Must diễn tả nghĩa vụ bắt buộc được nêu rõ trong ngữ cảnh.
+You ___ bring a laptop; we provide computers.~~You ___ print the form; we accept digital copies.||don't have to||mustn't||can't||shouldn't ever||Don't have to nghĩa là không cần thiết; mustn't là bị cấm.
+Drivers ___ park here; the sign says NO PARKING.~~Visitors ___ enter this area; the sign says NO ENTRY.||mustn't||don't have to||needn't||may perhaps||Mustn't diễn tả sự cấm đoán, khác với không cần làm.
+When she was six, she ___ already read two languages.~~When he was seven, he ___ already play the violin.||could||can||must||may||Could diễn tả khả năng chung trong quá khứ.
+You ___ ask a professional before signing that contract.~~You ___ see a dentist about that painful tooth.||should||might have been||must have||can have||Should + nguyên mẫu đưa ra lời khuyên phù hợp với tình huống hiện tại.
+@l4-m1
+The supervisor reminded us ___ the alarm.~~The host reminded us ___ the windows.||to check||checking||check||to checking||Remind someone to do something.
+The designer admitted ___ the measurements incorrectly.~~The accountant admitted ___ the totals incorrectly.||recording||to record||record||to recording||Admit theo sau bằng V-ing khi thừa nhận một hành động.
+We avoided ___ during the hottest part of the day.~~The team avoided ___ during the rush hour.||travelling||to travel||travel||to travelling||Avoid theo sau bằng danh động từ V-ing.
+They made the visitors ___ outside.~~The director made the actors ___ outside.||wait||to wait||waiting||waited||Make someone do something trong câu chủ động dùng nguyên mẫu không to.
+The apprentice is used to ___ early.~~The farmer is used to ___ before dawn.||getting up||get up||got up||to get up||Be used to + V-ing nghĩa là đã quen với việc làm gì.
+@l4-m2
+The laboratory ___ we conduct the tests is downstairs.~~The studio ___ we record the interviews is upstairs.||where||which in||who||whose||Where thay cho cụm giới từ chỉ nơi chốn trong mệnh đề quan hệ.
+The researcher ___ article won the prize is visiting today.~~The photographer ___ picture won the prize is here today.||whose||who||whom||which||Whose đứng trước danh từ để diễn tả quan hệ sở hữu.
+___ the heavy snow, the airport remained open.~~___ the strong wind, the race went ahead.||Despite||Although||Even though||Because||Despite theo sau bằng cụm danh từ; although/even though cần mệnh đề.
+We lowered our voices ___ we wouldn't disturb the patients.~~They closed the curtains ___ the baby could sleep.||so that||in order to||because of||despite||So that nối mệnh đề chỉ mục đích có chủ ngữ và động từ.
+I cannot tell ___ this signature is genuine or not.~~We haven't decided ___ the event will be indoors or not.||whether||what||which person||whose||Whether ... or not giới thiệu hai khả năng trong mệnh đề danh từ.
+@l4-m3
+The old theatre ___ in 1924.~~The village school ___ in 1936.||was built||built||has building||was building||Chủ ngữ nhận hành động ở một mốc quá khứ: was built.
+The safety instructions must ___ before use.~~The application form must ___ before submission.||be checked||checked||be checking||have checking||Bị động sau modal có dạng modal + be + past participle.
+We had the damaged windows ___ last week.~~They had the broken locks ___ yesterday.||replaced||replace||replacing||to replace||Have something done diễn tả thuê hoặc nhờ người khác làm.
+The missing documents are believed ___ in a fire.~~The original photographs are believed ___ in a flood.||to have been destroyed||to destroy||destroying||to have destroying||Bị động tường thuật dùng to have been + V3 khi sự việc bị động xảy ra trước niềm tin hiện tại.
+The suspect was made ___ the room.~~The employee was made ___ the building.||to leave||leave||leaving||left||Bị động của make someone do something cần to V.
+@l4-m4
+If you ___ this button, the screen turns blue.~~If you ___ that switch, the fan starts.||press||will press||would press||pressed||Điều kiện loại 0 diễn tả cơ chế thường đúng: if + hiện tại đơn.
+If the supplier confirms today, we ___ the order tomorrow.~~If the client approves today, we ___ the goods tomorrow.||will dispatch||would dispatch||would have dispatched||had dispatched||Điều kiện có thật trong tương lai: if hiện tại đơn, will + nguyên mẫu.
+If I ___ the answer now, I would tell you.~~If she ___ the address now, she would show us.||knew||know||had known||will know||Giả định trái hiện tại dùng quá khứ đơn trong mệnh đề if.
+If they had checked the map, they ___ lost yesterday.~~If we had followed the guide, we ___ lost last night.||wouldn't have got||won't get||wouldn't get||don't get||Điều kiện loại 3 diễn tả giả định trái quá khứ: would have + V3.
+Unless the parcel ___ today, we will request a refund.~~Unless the shipment ___ tomorrow, we will cancel the order.||arrives||will arrive||would arrive||had arrived||Unless tương đương if ... not; điều kiện tương lai dùng hiện tại đơn.
+@l4-m5
+Yesterday, the witness said that she ___ the accident the day before.~~Yesterday, the passenger said that he ___ the collision the day before.||had seen||will see||is seeing||has see||Trong lời nói gián tiếp, sự việc trước lời kể quá khứ dùng quá khứ hoàn thành.
+At the 2018 interview, the officer asked where I ___ at that time.~~At the 2016 interview, the manager asked where he ___ at that time.||worked||did worked||do work||am work||Câu hỏi gián tiếp dùng trật tự chủ ngữ + động từ và lùi thì phù hợp.
+The ranger warned the tourists ___ the animals.~~The keeper warned the visitors ___ the birds.||not to feed||to not feeding||don't feed||not feed||Warn someone not to do something dùng để thuật lại lời cảnh báo phủ định.
+She asked ___ I had brought the receipt.~~He asked ___ we had booked a table.||whether||that||what||whose||Câu hỏi yes/no trong lời nói gián tiếp được dẫn bằng if/whether.
+The director suggested ___ the opening ceremony.~~The organiser suggested ___ the final session.||postponing||to postpone||postpone us||us to postpone||Suggest có thể theo sau trực tiếp bằng V-ing, không dùng suggest to V.
+@l5-m1
+I wish our flat ___ a balcony.~~If only this room ___ a larger window.||had||has||will have||having||Wish/if only + quá khứ đơn diễn tả mong ước trái hiện tại.
+I wish I ___ the warning before I signed.~~If only we ___ the instructions before we assembled it.||had read||read tomorrow||would read||have reading||Tiếc nuối về quá khứ dùng wish/if only + quá khứ hoàn thành.
+I'd rather you ___ the documents tomorrow.~~I'd sooner you ___ the samples next week.||sent||send||will send||sending||Would rather/sooner + chủ ngữ khác + quá khứ đơn cho mong muốn hiện tại/tương lai.
+It's time the council ___ the damaged road.~~It's time the landlord ___ the broken gate.||repaired||repairs||will repair||repairing||It's time + chủ ngữ + quá khứ đơn diễn tả việc đã đến lúc nên làm.
+I'd rather ___ a later flight.~~We'd sooner ___ the coastal route.||take||to take||taking||taken||Would rather/sooner cùng chủ ngữ theo sau bằng nguyên mẫu không to.
+@l5-m2
+If I had accepted that scholarship, I ___ abroad now.~~If she had taken that job, she ___ abroad now.||would be living||would have lived||will live||had lived||Giả định quá khứ, kết quả hiện tại: if had + V3, would be + V-ing.
+If he were more organised, he ___ the deadline yesterday.~~If I were more careful, I ___ that deadline last week.||wouldn't have missed||won't miss||wouldn't miss||didn't missing||Đặc điểm trái hiện tại dẫn tới kết quả trái quá khứ: if quá khứ đơn, would have + V3.
+We can lend you the equipment provided that you ___ it on Friday.~~You can use the studio as long as you ___ the key on Friday.||return||will return||would return||had returned||Provided that/as long as đặt điều kiện; mệnh đề điều kiện tương lai dùng hiện tại đơn.
+___ you have a valid ticket, you may enter the gallery.~~___ you wear protective clothing, you may enter the laboratory.||Provided that||Despite||Because of||In spite of||Provided that theo sau bằng mệnh đề, diễn tả điều kiện cần thỏa mãn.
+Take a paper map in case the battery ___.~~Keep the address on paper in case your phone ___.||dies||will die||would die||had died||In case nói sự phòng ngừa; tình huống tương lai dùng hiện tại đơn.
+@l5-m3
+The office is dark and everyone has left. They ___ at home now.~~The train has arrived and her car is outside. She ___ at home now.||must be||must have been||must being||must to be||Must + nguyên mẫu diễn tả suy đoán có cơ sở về hiện tại.
+He was abroad all week; he ___ the window yesterday.~~She was in hospital all week; she ___ that vase yesterday.||can't have broken||must have broken||can't breaking||can't broke||Can't have + V3 phủ định khả năng của một sự việc trong quá khứ.
+You ___ the invoice before paying; the total was wrong.~~We ___ the forecast before sailing; the storm was predicted.||should have checked||should check tomorrow||must checking||had better checked||Should have + V3 nói việc đáng lẽ nên làm trong quá khứ.
+There was plenty of food, so we ___ so much.~~There were spare chairs, so they ___ any more.||needn't have bought||mustn't have bought||needn't buying||needn't bought||Needn't have + V3 nói việc đã làm nhưng không cần thiết.
+You had better ___ the leak before it gets worse.~~We had better ___ the lock before the shop closes.||fix||to fix||fixing||fixed||Had better theo sau bằng nguyên mẫu không to.
+@l5-m4
+___ the documents, she locked the cabinet.~~___ the evidence, he sealed the envelope.||Having checked||Have checked||Had checking||Having checking||Having + V3 rút gọn hành động đã hoàn tất trước hành động chính, cùng chủ ngữ.
+___ by the sudden noise, the horses ran away.~~___ by the alarm, the visitors hurried outside.||Startled||Startling||Having startle||To startling||Past participle diễn tả trạng thái bị tác động của chủ ngữ.
+The woman ___ the red suitcase is our guide.~~The man ___ the blue umbrella is our host.||carrying||carried||is carry||has carry||Present participle rút gọn mệnh đề quan hệ chủ động.
+The files ___ on this computer contain confidential data.~~The photographs ___ on this drive belong to the newspaper.||stored||storing||are store||have storing||Past participle rút gọn mệnh đề quan hệ bị động.
+___ no suitable rooms, we stayed at another hotel.~~___ no available seats, we took a later train.||Finding||Found||Having find||To finding||V-ing làm mệnh đề phân từ chủ động; chủ ngữ ngầm trùng với chủ ngữ mệnh đề chính.
+@l5-m5
+Rarely ___ such a convincing argument.~~Seldom ___ such a clear explanation.||have I heard||I have heard||I heard have||have heard I||Trạng từ phủ định/hạn định đứng đầu câu yêu cầu đảo trợ động từ trước chủ ngữ.
+Not until the lights went out ___ the problem.~~Not until the engine stopped ___ the danger.||did we realise||we realised||we did realise||realised we||Not until đứng đầu câu gây đảo trợ động từ ở mệnh đề chính.
+The device is expensive; ___, it is very reliable.~~The route is longer; ___, it is much safer.||however||because||although||despite||However là trạng từ liên kết chỉ tương phản giữa hai mệnh đề độc lập.
+Only after the guests had left ___ the kitchen.~~Only after the audience had gone ___ the hall.||did we clean||we cleaned||we did clean||cleaned we||Only after ở đầu câu gây đảo ngữ ở mệnh đề chính, không đảo trong mệnh đề after.
+No sooner had the speech begun ___ the fire alarm sounded.~~No sooner had the concert started ___ the power failed.||than||when||that||then||Cấu trúc no sooner ... than; hardly/scarcely ... when.
+@l5-m6
+Diễn đạt dừng đi bộ để uống nước: I stopped ___ a drink.~~Diễn đạt dừng chuyến đi để chụp ảnh: We stopped ___ a photo.||to take||taking||take||taken||Stop to V là dừng một hoạt động để làm việc khác.
+Chuyển sang việc mới: The lecturer went on ___ the next topic.~~Chuyển sang việc mới: The guide went on ___ the next exhibit.||to explain||explaining||explain||explained||Go on to V chuyển sang hành động hoặc chủ đề mới.
+I'll never forget ___ the northern lights for the first time.~~She'll never forget ___ the ocean for the first time.||seeing||to see||see||seen||Forget + V-ing nói ký ức về một trải nghiệm đã xảy ra.
+Lời nhắc về việc chưa làm: Remember ___ the signed copy tomorrow.~~Lời nhắc về việc chưa làm: Please remember ___ the receipt tomorrow.||to send||sending||send||sent||Remember to V nhắc việc cần thực hiện; remember V-ing là nhớ việc đã làm.
+The new job means ___ at weekends.~~Running this shop means ___ on public holidays.||working||to work||work||worked||Mean + V-ing diễn tả một hệ quả hoặc điều liên quan; mean to V là có ý định.

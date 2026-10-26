@@ -18,5 +18,7 @@ public class Question {
     @Column(name="accepted_answer") public String acceptedAnswer;
     @Column(columnDefinition="TEXT") public String explanation;
     public boolean published;
+    public boolean deleted;
+    @Column(name="admin_blocked") public boolean adminBlocked;
     protected Question() {}
 }

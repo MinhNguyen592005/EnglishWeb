@@ -9,6 +9,7 @@ Khởi động server bằng `source/server/run-local.ps1` với cấu hình dat
 - `V19`, `V20`: lộ trình và nội dung có sẵn nếu máy chưa cập nhật.
 - `V21__study_placement.sql`: cột `users.placement_eligible` và ba bảng đầu vào. Giá trị mặc định `false` giữ nguyên quyền học của tài khoản cũ, không tạo kết quả đầu vào hay sửa tiến độ của họ. Đăng ký mới đặt `true` và tạo hồ sơ `NOT_STARTED` trong cùng transaction.
 - `V22__study_placement_questions.sql`: 50 câu cố định, chọn từ câu có sẵn trong lộ trình theo xác nhận của chủ dự án; 10 câu/level, phân bố qua các module. Không dùng AI khi làm bài.
+- `V29__independent_exams_and_ranked_pair_limits.sql`: thay 50 câu đầu vào bằng câu đánh giá độc lập. Snapshot và kết quả đã có không đổi. Kiểm tra bằng `python scripts/study-course/build-exams.py --check`.
 - `V23__study_welcome.sql`: migration lịch sử của form làm quen cũ. Các cột `onboarding_json` và `placement_accepted_at` hiện không còn được đọc/ghi bởi luồng popup. Giữ nguyên migration đã áp dụng để không gây lỗi checksum; không thêm bảng/cột cho ba câu hỏi popup.
 
 Không đổi tên/xóa database, không import đè dữ liệu, không sửa checksum migration đã áp dụng. Đồng đội pull đầy đủ code và migration rồi khởi động server như bình thường; dùng thông tin database local của mỗi người. Nên sao lưu trước khi nâng cấp. Học viên demo/tài khoản được tạo trực tiếp từ trước vẫn được miễn kiểm tra.
@@ -33,12 +34,12 @@ Khi mở website, ứng dụng chờ `/auth/me` xác minh phiên trước khi hi
 | --- | --- |
 | `study_entry_questions` | Nội dung, bốn lựa chọn, đáp án đúng, level và mã câu nguồn |
 | `study_entry_profiles` | Trạng thái NOT_STARTED/IN_PROGRESS/COMPLETED, level bắt đầu, level hiện tại, các level vượt qua theo đầu vào, thời điểm hoàn thành và bài đang học |
-| `study_entry_attempts` | Một lượt đầu vào/tài khoản; snapshot 10 câu, các lựa chọn đã lưu, số câu đúng và thời điểm hoàn thành |
+| `study_entry_attempts` | Một lượt đầu vào/tài khoản; snapshot 25 câu mới (giữ lượt 10 câu cũ), các lựa chọn đã lưu, số câu đúng và thời điểm hoàn thành |
 | `study_progress`, `study_attempts` | Tiến độ bài học, luyện tập và kiểm tra level theo cơ chế cũ |
 
-Lấy đề 3–3–2–1–1 câu cho level 1–5, không trùng câu. Lưu đề trước khi trả về; mở lại/tải lại không random lại. Lưu lựa chọn theo từng câu; nộp đủ 10 câu hợp lệ rồi mới chấm tại server. Khóa hồ sơ/lượt làm khi ghi; các yêu cầu nộp đồng thời/nộp lại trả cùng kết quả, không tạo lượt mới. Transaction dùng READ_COMMITTED để đọc được kết quả vừa commit sau khi chờ khóa.
+Lượt mới lấy 5 câu mỗi level 1–5, tổng 25 câu, không trùng câu. Lưu đề trước khi trả về; mở lại/tải lại không random lại. Lưu lựa chọn theo từng câu; nộp đủ số câu hợp lệ trong snapshot rồi mới chấm tại server. Khóa hồ sơ/lượt làm khi ghi; các yêu cầu nộp đồng thời/nộp lại trả cùng kết quả, không tạo lượt mới. Transaction dùng READ_COMMITTED để đọc được kết quả vừa commit sau khi chờ khóa.
 
-Điểm 0–5 bắt đầu Level 1; 6–8 bắt đầu Level 2; 9–10 bắt đầu Level 3. Level đầu vào lưu riêng, không tăng khi người học tiến bộ. Các level thấp hơn được mở toàn bộ module để ôn, không đánh dấu bài học hoàn thành. Từ level bắt đầu trở lên vẫn mở module tuần tự và lên level bằng bài kiểm tra cuối level. Mở bài ghi lại bài gần nhất; vượt level cập nhật level hiện tại. Đăng nhập lại trở về bài đang học hoặc lộ trình ở level hiện tại.
+Xét từ level 1 đến level 4: phải đạt ít nhất 4/5 ở từng nhóm trước mới được bỏ qua nhóm đó. Nhóm đầu tiên chưa đạt quyết định level bắt đầu, tối đa level 5. Lượt 10 câu đang dở giữ bộ câu cũ và chỉ được bỏ qua nhóm có ít nhất 3 câu, đạt 80%. Level đầu vào lưu riêng, không tăng khi người học tiến bộ. Các level thấp hơn được mở toàn bộ module để ôn, không đánh dấu bài học hoàn thành. Từ level bắt đầu trở lên vẫn mở module tuần tự và lên level bằng bài kiểm tra cuối level. Mở bài ghi lại bài gần nhất; vượt level cập nhật level hiện tại. Đăng nhập lại trở về bài đang học hoặc lộ trình ở level hiện tại.
 
 Route học được chặn ở React; server cũng chặn toàn bộ action lộ trình và dịch vụ học khi chưa kiểm tra. Các thao tác học level/module kiểm tra quyền ở server khi mở, tạo lượt, xem, lưu và nộp. Tài khoản cũ không chịu ràng buộc mới.
 
@@ -86,4 +87,4 @@ Smoke đầu vào dùng tài khoản `placement_ui_*` riêng, đăng ký trên U
 
 Đã xác minh local ngày 23/10/2026: Maven 72 test chạy thành công, 15 test tích hợp khác không bật theo cấu hình opt-in. Các mốc 0, 5, 6, 8, 9, 10 và nộp đồng thời được kiểm tra trên MySQL thật ở schema riêng. Lần thay popup này không có migration mới và không thay đổi quy tắc tiến độ.
 
-Ngân hàng đầu vào đã đủ 50 câu theo lựa chọn được duyệt, không còn thiếu dữ liệu để chạy chức năng này. Đây là câu hỏi từ lộ trình hiện tại, không phải chứng chỉ/xếp loại CEFR.
+Ngân hàng đầu vào đã đủ 50 câu theo lựa chọn được duyệt, không còn thiếu dữ liệu để chạy chức năng này. Từ V29 đây là câu hỏi của ngân hàng đánh giá độc lập, không trùng câu luyện tập; không phải chứng chỉ/xếp loại CEFR.
