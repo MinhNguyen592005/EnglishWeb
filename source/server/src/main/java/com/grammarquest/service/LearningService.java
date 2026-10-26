@@ -15,6 +15,8 @@ import java.util.*;
 public class LearningService {
     @org.springframework.beans.factory.annotation.Autowired
     private PlacementService placement;
+    @org.springframework.beans.factory.annotation.Autowired
+    private StudyRewardService studyRewards;
     private final UserRepository users;
     private final LessonRepository lessons;
     private final QuestionRepository questions;
@@ -232,7 +234,9 @@ public class LearningService {
                 if (dailyQuests != null) {
                     dailyQuests.recordProgress(user.id, "CORRECT_COUNT", 1);
                     if (a.kind.equals("LESSON_BOSS") || a.kind.equals("CHAPTER_BOSS")) {
-                        dailyQuests.recordProgress(user.id, "BOSS_DAMAGE", a.kind.equals("CHAPTER_BOSS") ? 13 : 20);
+                        int damage = (int)Math.floor(BossRules.hp(a.kind, a.correctCount - 1))
+                            - (int)Math.floor(BossRules.hp(a.kind, a.correctCount));
+                        dailyQuests.recordProgress(user.id, "BOSS_DAMAGE", damage);
                     }
                     int currentStreak = 0;
                     for (int idx = 0; idx < ordinal; idx++) {
@@ -260,6 +264,10 @@ public class LearningService {
         boolean won=a.kind.equals("PRACTICE")||a.correctCount>=a.requiredCorrect;
         a.status=won?"WON":"LOST"; a.completedAt=Instant.now();
         if (dailyQuests != null) {
+            if(a.correctCount>=((a.totalQuestions*4+4)/5)) {
+                dailyQuests.recordLearningDay(a.userId);
+                dailyQuests.recordProgress(a.userId,"QUALITY_STUDY",1);
+            }
             if (a.kind.equals("PRACTICE")) {
                 dailyQuests.recordProgress(a.userId, "PRACTICE_COUNT", 1);
                 if (a.correctCount == a.totalQuestions) {
@@ -275,6 +283,8 @@ public class LearningService {
                 }
             } catch (Exception ignored) {}
         }
+        if(a.kind.equals("PRACTICE")&&a.correctCount>=((a.totalQuestions*4+4)/5)&&studyRewards!=null)
+            a.awardedXp=studyRewards.award(a.userId,"PRACTICE","",a.id);
         if(won&&!a.kind.equals("PRACTICE")) {
             String key=a.kind.equals("CHAPTER_BOSS")
                 ? chapterRewardKey(a.lessonId==null?"conditionals":lessons.findById(a.lessonId).orElseThrow().topicSlug)

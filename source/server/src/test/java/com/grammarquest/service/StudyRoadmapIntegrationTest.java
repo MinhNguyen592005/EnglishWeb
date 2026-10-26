@@ -66,14 +66,28 @@ class StudyRoadmapIntegrationTest {
         call("ROADMAP_SAVE",Map.of("attemptId",firstId,"answers",draft));draft.put(firstQuestion,"B");
         var changed=call("ROADMAP_SAVE",Map.of("attemptId",firstId,"answers",draft));assertEquals("B",changed.path("answers").path(firstQuestion).asText());assertFalse(changed.has("correctCount"));
         assertThrows(ApiException.class,()->call("ROADMAP_SUBMIT",Map.of("attemptId",firstId,"answers",Map.of())));
-        var result=submit(firstId,0);assertEquals("COMPLETED",result.path("status").asText());assertEquals(0,result.path("correctCount").asInt());
+        var result=submit(firstId,0);assertEquals("FAILED",result.path("status").asText());assertEquals(0,result.path("correctCount").asInt());
+        assertFalse(call("ROADMAP_LESSON",Map.of("lessonId","1.1")).path("completed").asBoolean());
+        assertEquals(0,result.path("awardedXp").asInt());
         assertEquals(result,submit(firstId,3));
         var retry=start("LESSON","1.1");assertEquals(first.path("questions").get(0).path("id"),retry.path("questions").get(0).path("id"));
+        assertEquals(20,submit(retry.path("id").asLong(),3).path("awardedXp").asInt());
         assertTrue(call("ROADMAP_LESSON",Map.of("lessonId","1.1")).path("completed").asBoolean());
-        var secondLesson=start("LESSON","1.2");submit(secondLesson.path("id").asLong(),0);
+        var secondLesson=start("LESSON","1.2");var duplicateLesson=start("LESSON","1.2");
+        try(var pool=Executors.newFixedThreadPool(2)){
+            var a=pool.submit(()->submit(secondLesson.path("id").asLong(),3));
+            var b=pool.submit(()->submit(duplicateLesson.path("id").asLong(),3));
+            assertEquals(20,a.get(15,TimeUnit.SECONDS).path("awardedXp").asInt()+b.get(15,TimeUnit.SECONDS).path("awardedXp").asInt());
+        }
         assertFalse(call("ROADMAP_OPEN",Map.of()).path("levels").get(0).path("modules").get(1).path("unlocked").asBoolean());
         assertTrue(call("ROADMAP_LESSON",Map.of("lessonId","1.3")).path("nextLessonId").isNull());
-        var thirdLesson=start("LESSON","1.3");submit(thirdLesson.path("id").asLong(),0);
+        var thirdLesson=start("LESSON","1.3");submit(thirdLesson.path("id").asLong(),3);
+        assertFalse(call("ROADMAP_OPEN",Map.of()).path("levels").get(0).path("modules").get(1).path("unlocked").asBoolean());
+        assertThrows(ApiException.class,()->start("LEVEL_TEST","1"));
+        var moduleExam=start("MODULE_TEST","l1-m1");
+        assertEquals("FAILED",submit(moduleExam.path("id").asLong(),7).path("status").asText());
+        var modulePass=start("MODULE_TEST","l1-m1");
+        assertEquals(50,submit(modulePass.path("id").asLong(),modulePass.path("totalQuestions").asInt()).path("awardedXp").asInt());
         var moduleUnlocked=call("ROADMAP_OPEN",Map.of()).path("levels").get(0).path("modules");
         assertTrue(moduleUnlocked.get(1).path("unlocked").asBoolean());assertFalse(moduleUnlocked.get(2).path("unlocked").asBoolean());
         assertEquals("2.1",call("ROADMAP_LESSON",Map.of("lessonId","1.3")).path("nextLessonId").asText());
@@ -90,7 +104,10 @@ class StudyRoadmapIntegrationTest {
         assertThrows(ApiException.class,()->call("ROADMAP_SAVE",Map.of("attemptId",lockedAttempt,"answers",Map.of())));
         assertThrows(ApiException.class,()->submit(lockedAttempt,0));
         db.update("update study_progress set completed_at=current_timestamp(6) where user_id=? and lesson_id='1.3'",learner.id);
-        for(String id:db.queryForList("select l.id from study_lessons l join study_modules m on m.id=l.module_id where m.level_id=1 order by m.ordinal_no,l.ordinal_no",String.class)){var a=start("LESSON",id);submit(a.path("id").asLong(),0);}
+        for(String module:db.queryForList("select id from study_modules where level_id=1 order by ordinal_no",String.class)){
+            for(String id:db.queryForList("select id from study_lessons where module_id=? order by ordinal_no",String.class,module)){var a=start("LESSON",id);submit(a.path("id").asLong(),a.path("totalQuestions").asInt());}
+            var a=start("MODULE_TEST",module);submit(a.path("id").asLong(),a.path("totalQuestions").asInt());
+        }
         var ready=call("ROADMAP_OPEN",Map.of());assertEquals(18,ready.path("levels").get(0).path("completedCount").asInt());assertTrue(ready.path("levels").get(0).path("examReady").asBoolean());
         var exam=start("LEVEL_TEST","1");assertEquals(10,exam.path("questions").size());assertEquals(4,java.util.stream.StreamSupport.stream(exam.path("questions").spliterator(),false).map(q->q.path("moduleTitle").asText()).distinct().count());
         assertEquals("FAILED",submit(exam.path("id").asLong(),7).path("status").asText());assertFalse(call("ROADMAP_OPEN",Map.of()).path("levels").get(1).path("unlocked").asBoolean());
@@ -100,8 +117,27 @@ class StudyRoadmapIntegrationTest {
         var request=Map.of("kind","LEVEL_REVIEW","referenceId","1","requestKey",UUID.randomUUID().toString());assertEquals(call("ROADMAP_START",request).path("id"),call("ROADMAP_START",request).path("id"));
         var other=app.getBean(UserRepository.class).save(new User("study_other","Other","unused"));assertThrows(ApiException.class,()->course.action(other.username,"ROADMAP_ATTEMPT",json.valueToTree(Map.of("attemptId",firstId))));
         other.role="TEACHER";app.getBean(UserRepository.class).save(other);assertThrows(ApiException.class,()->course.action(other.username,"ROADMAP_OPEN",json.createObjectNode()));
-        assertEquals(legacyLessons,db.queryForObject("select count(*) from lessons",Integer.class));assertEquals(legacyQuestions,db.queryForObject("select count(*) from questions",Integer.class));assertEquals(0,db.queryForObject("select count(*) from attempts",Integer.class));assertEquals(0,db.queryForObject("select count(*) from xp_ledger",Integer.class));
+        assertEquals(legacyLessons,db.queryForObject("select count(*) from lessons",Integer.class));assertEquals(legacyQuestions,db.queryForObject("select count(*) from questions",Integer.class));assertEquals(0,db.queryForObject("select count(*) from attempts",Integer.class));assertEquals(710,db.queryForObject("select total_xp from users where id=?",Integer.class,learner.id));
+        assertEquals(710,db.queryForObject("select sum(amount) from xp_ledger where user_id=?",Integer.class,learner.id));
+        var reviews=new ArrayList<JsonNode>();
+        for(int i=0;i<4;i++)reviews.add(start(i%2==0?"LEVEL_REVIEW":"MODULE_REVIEW",i%2==0?"1":"l1-m1"));
+        try(var pool=Executors.newFixedThreadPool(4)){
+            var tasks=new ArrayList<Future<JsonNode>>();
+            for(var review:reviews)tasks.add(pool.submit(()->submit(review.path("id").asLong(),review.path("totalQuestions").asInt())));
+            int totalXp=0;for(var task:tasks)totalXp+=task.get(15,TimeUnit.SECONDS).path("awardedXp").asInt();
+            assertEquals(30,totalXp);
+        }
+        assertEquals(740,db.queryForObject("select total_xp from users where id=?",Integer.class,learner.id));
+        assertEquals(1,db.queryForObject("select current_streak from user_quest_streaks where user_id=?",Integer.class,learner.id));
+        assertNull(db.queryForObject("select milestone_claimed_date from user_quest_streaks where user_id=?",java.sql.Date.class,learner.id));
         socketRoundTrip();
+        var history=call("ROADMAP_HISTORY",Map.of());assertTrue(history.isArray());assertTrue(history.size()>0);
+        for(var entry:history){
+            assertFalse(entry.has("questions"));assertFalse(entry.has("answers"));
+            assertTrue(entry.path("levelId").asInt()>=1);assertFalse(entry.path("title").asText().isBlank());
+            if("IN_PROGRESS".equals(entry.path("status").asText()))assertTrue(entry.path("correctCount").isNull());
+            assertEquals(learner.id,db.queryForObject("select user_id from study_attempts where id=?",Long.class,entry.path("id").asLong()));
+        }
     }
     void socketRoundTrip()throws Exception {
         var cookie=new CookieManager(null,CookiePolicy.ACCEPT_ALL);var http=HttpClient.newBuilder().cookieHandler(cookie).build();

@@ -12,6 +12,27 @@ import static org.mockito.Mockito.*;
 import org.mockito.ArgumentCaptor;
 
 class SystemSocketHandlerTest {
+    @Test void securityAlertReachesAllTargetTabsAndAdminsWithoutLeakingToOtherUsers() throws Exception {
+        var handler=new SystemSocketHandler(new ObjectMapper(),users,learning,matchmaker,arenaSocket,mock(com.grammarquest.service.LiveExamService.class),mock(com.grammarquest.service.SocketClassroomService.class),mock(com.grammarquest.service.LearnerReportService.class),mock(com.grammarquest.security.AnswerRateLimiter.class),mock(com.grammarquest.service.ArenaSnapshotStore.class));
+        var target=socket("guest");var otherTab=socket("guest");when(otherTab.getId()).thenReturn("other-tab");
+        var admin=socket("admin");var bystander=socket("bystander");
+        for(var client:java.util.List.of(target,otherTab,admin,bystander))handler.afterConnectionEstablished(client);
+        clearInvocations(target,otherTab,admin,bystander);
+        handler.securityAlert(new com.grammarquest.service.SecurityIncidentService.Alert(9L,"guest","HIGH","Repeated access denied"));
+        var sent=ArgumentCaptor.forClass(TextMessage.class);
+        verify(target).sendMessage(sent.capture());var data=new ObjectMapper().readTree(sent.getValue().getPayload());
+        assertEquals("SECURITY_WARNING",data.path("action").asText());assertFalse(data.path("payload").has("username"));
+        verify(otherTab).sendMessage(any());verify(admin).sendMessage(sent.capture());
+        assertEquals("SECURITY_INCIDENT",new ObjectMapper().readTree(sent.getValue().getPayload()).path("action").asText());
+        verifyNoInteractions(bystander);
+        clearInvocations(target,otherTab,admin,bystander);
+        // Recheck the current DB role instead of trusting a stale ADMIN socket registration.
+        users.findByUsernameIgnoreCase("admin").orElseThrow().role="TEACHER";
+        handler.securityAlert(new com.grammarquest.service.SecurityIncidentService.Alert(10L,"guest","HIGH","Repeated access denied"));
+        verifyNoInteractions(admin,bystander);
+        handler.securityResolved(new com.grammarquest.service.SecurityIncidentService.Resolved(10L,"guest","LOCK","Account locked"));
+        verify(target).close(new CloseStatus(4003,"Account locked"));verify(otherTab).close(new CloseStatus(4003,"Account locked"));
+    }
     @Test void reportReceiptAndEveryDecisionArePushedToBothPartiesWithoutLeakingIdentity() throws Exception {
         var handler=new SystemSocketHandler(new ObjectMapper(),users,learning,matchmaker,arenaSocket,mock(com.grammarquest.service.LiveExamService.class),mock(com.grammarquest.service.SocketClassroomService.class),mock(com.grammarquest.service.LearnerReportService.class),mock(com.grammarquest.security.AnswerRateLimiter.class),mock(com.grammarquest.service.ArenaSnapshotStore.class));
         var target=socket("guest");var target2=socket("guest");when(target2.getId()).thenReturn("target2");

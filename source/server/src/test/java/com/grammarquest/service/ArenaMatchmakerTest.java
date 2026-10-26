@@ -35,19 +35,22 @@ class ArenaMatchmakerTest {
         assertEquals("MATCHED",updates.get("s1").get("status"));assertEquals("MATCHED",updates.get("s2").get("status"));
         verify(factory,times(1)).create("a","b");
     }
-    @Test void adjacentLevelsWaitAndNeverMatchBeyondTwo(){
-        user("a",1,3);user("b",2,4);matched("a","b");
+    @Test void accountLevelNeverBlocksEqualEloOpponents(){
+        user("a",1,1);user("b",2,100);matched("a","b");
+        queue.join("a","s1");queue.join("b","s2");
+        assertEquals("MATCHED",queue.tick(System.currentTimeMillis()).get("s1").get("status"));
+    }
+    @Test void eloWindowsExpandAfterFifteenAndThirtySeconds(){
+        user("a",1,1);user("b",2,100);matched("a","b");
+        users.findByUsernameIgnoreCase("b").orElseThrow().pvpElo=1250;
         queue.join("a","s1");queue.join("b","s2");long now=System.currentTimeMillis();
         assertEquals("WAITING",queue.tick(now).get("s1").get("status"));
         assertEquals("MATCHED",queue.tick(now+16000).get("s1").get("status"));
-        user("c",3,1);user("d",4,4);queue.join("c","s3");queue.join("d","s4");
-        assertEquals("WAITING",queue.tick(now+120000).get("s3").get("status"));
-        verify(factory,never()).create("c","d");
-    }
-    @Test void twoLevelGapRequiresThirtySeconds(){
-        user("a",1,3);user("b",2,5);matched("a","b");queue.join("a","s1");queue.join("b","s2");long now=System.currentTimeMillis();
-        assertEquals("WAITING",queue.tick(now+16000).get("s1").get("status"));
-        assertEquals("MATCHED",queue.tick(now+31000).get("s1").get("status"));
+        user("c",3,2);user("d",4,90);matched("c","d");
+        users.findByUsernameIgnoreCase("d").orElseThrow().pvpElo=1500;
+        queue.join("c","s3");queue.join("d","s4");now=System.currentTimeMillis();
+        assertEquals("WAITING",queue.tick(now+16000).get("s3").get("status"));
+        assertEquals("MATCHED",queue.tick(now+31000).get("s3").get("status"));
     }
     @Test void duplicateAccountAndDisconnectAreHandled(){
         user("a",1,3);queue.join("a","s1");assertThrows(ApiException.class,()->queue.join("a","other"));

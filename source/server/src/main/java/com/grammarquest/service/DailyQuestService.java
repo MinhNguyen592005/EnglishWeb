@@ -22,6 +22,8 @@ import java.util.*;
 
 @Service
 public class DailyQuestService {
+    public static final int MILESTONE_XP = 50;
+    private LocalDate today(){return LocalDate.now(StudyRewardService.STUDY_ZONE);}
     private final DailyQuestRepository dailyQuests;
     private final UserDailyQuestRepository userQuests;
     private final UserQuestStreakRepository streaks;
@@ -54,9 +56,9 @@ public class DailyQuestService {
 
     @Transactional
     public DailyQuestOverview getOverview(String username) {
-        User user = users.findByUsernameIgnoreCase(username)
+        User user = users.findWithLockByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "Không tìm thấy người dùng"));
-        LocalDate today = LocalDate.now();
+        LocalDate today = today();
         List<UserDailyQuest> userDailyQuests = ensureTodayQuests(user.id, today);
 
         Map<Integer, DailyQuest> questMap = new HashMap<>();
@@ -78,26 +80,25 @@ public class DailyQuestService {
         boolean milestoneClaimed = today.equals(streak.milestoneClaimedDate);
         boolean allCompleted = !views.isEmpty() && completedCount == views.size();
 
-        MilestoneView milestone = new MilestoneView(views.size(), completedCount, allCompleted, milestoneClaimed, 100);
-        StreakView streakView = new StreakView(streak.currentStreak, streak.longestStreak, milestoneClaimed);
+        MilestoneView milestone = new MilestoneView(views.size(), completedCount, allCompleted, milestoneClaimed, MILESTONE_XP);
+        StreakView streakView = new StreakView(streak.currentStreak, streak.longestStreak, today.equals(streak.lastCompletedDate));
 
         return new DailyQuestOverview(views, milestone, streakView);
     }
 
     @Transactional
     public StreakView getStreak(String username) {
-        User user = users.findByUsernameIgnoreCase(username)
+        User user = users.findWithLockByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "Không tìm thấy người dùng"));
-        LocalDate today = LocalDate.now();
+        LocalDate today = today();
         UserQuestStreak streak = getOrInitStreak(user.id, today);
-        boolean milestoneClaimed = today.equals(streak.milestoneClaimedDate);
-        return new StreakView(streak.currentStreak, streak.longestStreak, milestoneClaimed);
+        return new StreakView(streak.currentStreak, streak.longestStreak, today.equals(streak.lastCompletedDate));
     }
 
     @Transactional
     public void recordProgress(Long userId, String targetType, int increment) {
         if (userId == null || increment <= 0) return;
-        LocalDate today = LocalDate.now();
+        LocalDate today = today();
         List<UserDailyQuest> userDailyQuests = ensureTodayQuests(userId, today);
         if (userDailyQuests.isEmpty()) return;
 
@@ -125,8 +126,9 @@ public class DailyQuestService {
 
     @Transactional
     public QuestClaimResult claimQuestReward(String username, Long userQuestId) {
-        User user = users.findByUsernameIgnoreCase(username)
+        User user = users.findWithLockByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "Không tìm thấy người dùng"));
+        User lockedUser = user;
         UserDailyQuest udq = userQuests.findWithLockById(userQuestId)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "QUEST_NOT_FOUND", "Không tìm thấy nhiệm vụ"));
 
@@ -144,7 +146,6 @@ public class DailyQuestService {
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "QUEST_NOT_FOUND", "Định nghĩa nhiệm vụ không tồn tại"));
 
         String rewardKey = "DAILY_QUEST:" + udq.id;
-        User lockedUser = users.findWithLockById(user.id).orElseThrow();
         if (!xp.existsByUserIdAndRewardKey(lockedUser.id, rewardKey)) {
             xp.save(new XpLedger(lockedUser.id, rewardKey, dq.rewardXp));
             lockedUser.totalXp += dq.rewardXp;
@@ -160,10 +161,11 @@ public class DailyQuestService {
 
     @Transactional
     public MilestoneClaimResult claimDailyMilestone(String username) {
-        User user = users.findByUsernameIgnoreCase(username)
+        User user = users.findWithLockByUsernameIgnoreCase(username)
                 .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "Không tìm thấy người dùng"));
-        LocalDate today = LocalDate.now();
-        List<UserDailyQuest> todayQuests = userQuests.findByUserIdAndQuestDate(user.id, today);
+        LocalDate today = today();
+        User lockedUser = user;
+        List<UserDailyQuest> todayQuests = userQuests.findWithLockByUserIdAndQuestDate(user.id, today);
 
         if (todayQuests.size() < 3 || todayQuests.stream().anyMatch(q -> !q.completed)) {
             throw new ApiException(HttpStatus.BAD_REQUEST, "MILESTONE_NOT_READY", "Cần hoàn thành trọn vẹn cả 3 nhiệm vụ hôm nay trước khi mở rương");
@@ -175,8 +177,7 @@ public class DailyQuestService {
         }
 
         String rewardKey = "DAILY_MILESTONE:" + today;
-        User lockedUser = users.findWithLockById(user.id).orElseThrow();
-        int rewardXp = 100;
+        int rewardXp = MILESTONE_XP;
 
         if (!xp.existsByUserIdAndRewardKey(lockedUser.id, rewardKey)) {
             xp.save(new XpLedger(lockedUser.id, rewardKey, rewardXp));
@@ -184,29 +185,17 @@ public class DailyQuestService {
             users.save(lockedUser);
         }
 
-        LocalDate yesterday = today.minusDays(1);
-        if (yesterday.equals(streak.lastCompletedDate)) {
-            streak.currentStreak += 1;
-        } else {
-            streak.currentStreak = 1;
-        }
-
-        if (streak.currentStreak > streak.longestStreak) {
-            streak.longestStreak = streak.currentStreak;
-        }
-
-        streak.lastCompletedDate = today;
         streak.milestoneClaimedDate = today;
         streaks.save(streak);
 
-        MilestoneView milestone = new MilestoneView(todayQuests.size(), todayQuests.size(), true, true, 100);
-        StreakView streakView = new StreakView(streak.currentStreak, streak.longestStreak, true);
+        MilestoneView milestone = new MilestoneView(todayQuests.size(), todayQuests.size(), true, true, MILESTONE_XP);
+        StreakView streakView = new StreakView(streak.currentStreak, streak.longestStreak, today.equals(streak.lastCompletedDate));
 
         return new MilestoneClaimResult(milestone, streakView, AuthController.Profile.from(lockedUser));
     }
 
     private UserQuestStreak getOrInitStreak(Long userId, LocalDate today) {
-        UserQuestStreak streak = streaks.findById(userId).orElseGet(() -> streaks.save(new UserQuestStreak(userId)));
+        UserQuestStreak streak = streaks.findWithLockByUserId(userId).orElseGet(() -> streaks.save(new UserQuestStreak(userId)));
         if (streak.lastCompletedDate != null && streak.lastCompletedDate.isBefore(today.minusDays(1))) {
             streak.currentStreak = 0;
             streaks.save(streak);
@@ -214,8 +203,24 @@ public class DailyQuestService {
         return streak;
     }
 
+    /** A quality learning activity keeps the streak, regardless of reward claims. */
+    @Transactional
+    public void recordLearningDay(Long userId) {
+        users.findWithLockById(userId).orElseThrow();
+        LocalDate day=today();
+        var streak=getOrInitStreak(userId,day);
+        if(day.equals(streak.lastCompletedDate))return;
+        streak.currentStreak=day.minusDays(1).equals(streak.lastCompletedDate)?streak.currentStreak+1:1;
+        streak.longestStreak=Math.max(streak.longestStreak,streak.currentStreak);
+        streak.lastCompletedDate=day;
+        streaks.save(streak);
+    }
+
+    @Transactional
     public List<UserDailyQuest> ensureTodayQuests(Long userId, LocalDate today) {
-        List<UserDailyQuest> existing = userQuests.findByUserIdAndQuestDate(userId, today);
+        // Lock the account before allocating or updating its daily quests.
+        users.findWithLockById(userId).orElseThrow();
+        List<UserDailyQuest> existing = userQuests.findWithLockByUserIdAndQuestDate(userId, today);
         if (!existing.isEmpty()) return existing;
 
         List<DailyQuest> easy = new ArrayList<>(dailyQuests.findByTierAndActiveTrue("EASY"));

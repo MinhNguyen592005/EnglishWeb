@@ -20,6 +20,8 @@ public class SocketSessionRegistry implements HttpSessionListener,HttpSessionIdL
     private final ConcurrentHashMap<String,WebSocketSession> sockets=new ConcurrentHashMap<>();
     @org.springframework.beans.factory.annotation.Autowired
     private ServerCapacity capacity;
+    @org.springframework.beans.factory.annotation.Autowired
+    private BehaviorMonitor behavior;
     private final ApplicationEventPublisher events;
     public record Revoked(String socketId,int code,String reason) {}
     public SocketSessionRegistry(ApplicationEventPublisher events){this.events=events;}
@@ -47,7 +49,9 @@ public class SocketSessionRegistry implements HttpSessionListener,HttpSessionIdL
             try{super.afterConnectionEstablished(socket);}catch(Exception ex){sockets.remove(socket.getId());if(capacity!=null)capacity.unregister(socket.getId());throw ex;}
         }
         @Override public void handleMessage(WebSocketSession socket,WebSocketMessage<?> message)throws Exception{
-            if(!valid(socket)){revoke(socket,4004,"Session ended");return;}super.handleMessage(socket,message);
+            if(!valid(socket)){revoke(socket,4004,"Session ended");return;}
+            if(behavior!=null&&message instanceof TextMessage)behavior.observe(BehaviorMonitor.Rule.SOCKET_BURST,socket.getPrincipal().getName(),null,socket.getId());
+            super.handleMessage(socket,message);
         }
         @Override public void afterConnectionClosed(WebSocketSession socket,CloseStatus status)throws Exception{
             sockets.remove(socket.getId());if(capacity!=null)capacity.unregister(socket.getId());super.afterConnectionClosed(socket,status);

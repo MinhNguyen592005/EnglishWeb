@@ -35,11 +35,12 @@ public class SecurityConfig {
     @Bean HttpSessionSecurityContextRepository securityContextRepository() { return new HttpSessionSecurityContextRepository(); }
     @Bean SecurityFilterChain filterChain(HttpSecurity http, @Value("${app.allowed-origin}") String origin,
                                           HttpSessionSecurityContextRepository contextRepository,
-                                          ObjectMapper json,AnswerRateLimiter limiter,ServerCapacity capacity) throws Exception {
+                                          ObjectMapper json,AnswerRateLimiter limiter,ServerCapacity capacity,BehaviorMonitor behavior,UserRepository users) throws Exception {
         var csrf = CookieCsrfTokenRepository.withHttpOnlyFalse();
         csrf.setCookieCustomizer(cookie -> cookie.path("/").sameSite("Lax"));
         var handler = new CsrfTokenRequestAttributeHandler();
         handler.setCsrfRequestAttributeName(null);
+        http.addFilterAfter(new BehaviorMonitoringFilter(behavior,users,json),org.springframework.security.web.context.SecurityContextHolderFilter.class);
         http.addFilterBefore(new CapacityFilter(capacity,json),org.springframework.security.web.access.intercept.AuthorizationFilter.class);
         http.addFilterBefore(new AnswerRateFilter(limiter,json),org.springframework.security.web.access.intercept.AuthorizationFilter.class);
         http.cors(cors -> cors.configurationSource(request -> {

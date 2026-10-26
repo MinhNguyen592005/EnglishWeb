@@ -376,7 +376,7 @@ export function ArenaPage() {
         <div>
           <span className="section-label">THỬ THÁCH HAI NGƯỜI · XẾP HẠNG ELO</span>
           <h1>Đấu trường PvP</h1>
-          <p>Hai người chơi cùng 10 câu hỏi (20 giây/câu, giới hạn 3 phút/trận). Điểm câu hỏi quyết định Thắng/Thua/Hòa; điểm ELO đánh giá trình độ &amp; xếp hạng PvP (không cộng EXP học tập).</p>
+          <p>Hai người chơi cùng 10 câu hỏi (20 giây/câu, giới hạn 3 phút/trận). Bằng số câu đúng sẽ hòa. Phòng tự tạo là giao hữu, không đổi ELO; ghép tự động là xếp hạng; điểm ELO đánh giá trình độ &amp; xếp hạng PvP (không cộng EXP học tập).</p>
         </div>
         <div className="heading-icon"><Swords /></div>
       </div>
@@ -609,8 +609,8 @@ export function ArenaPage() {
             <div className="card-icon purple"><Swords /></div>
             <h2>Tìm và ghép đối thủ cùng trình độ</h2>
             <p>
-              Cấp của bạn: <strong>{queue.level ?? user?.level}</strong> · Điểm ELO: <strong>{myElo} ({myRankTitle})</strong>.
-              Hệ thống ưu tiên ghép đối thủ cùng cấp &amp; chênh lệch ELO ±150, sau 15 giây mở rộng ±1 cấp (±300 ELO), sau 30 giây tối đa ±2 cấp (±600 ELO).
+              Cấp tài khoản: <strong>{queue.level ?? user?.level}</strong> · Điểm ELO: <strong>{myElo} ({myRankTitle})</strong>.
+              Ghép trận xếp hạng theo ELO: ban đầu ±150, sau 15 giây ±300, sau 30 giây ±600. Cấp tài khoản không giới hạn đối thủ.
             </p>
 
             {banSecondsLeft > 0 && (
@@ -629,7 +629,7 @@ export function ArenaPage() {
             {queueWaiting ? (
               <>
                 <p className="tag" role="status">
-                  Đang tìm trận · {Math.max(0, Math.floor((queueNow - (queue.queuedAt || queueNow)) / 1000))} giây · Chênh lệch tối đa ±{queue.allowedGap ?? 0} cấp / ±{queue.allowedEloGap ?? 150} ELO
+                  Đang tìm trận · {Math.max(0, Math.floor((queueNow - (queue.queuedAt || queueNow)) / 1000))} giây · Chênh lệch tối đa ±{queue.allowedEloGap ?? 150} ELO
                 </p>
                 <p className="muted">Bạn có thể hủy bất cứ lúc nào. Khi tìm thấy đối thủ, cả hai người chơi sẽ có 15 giây để xác nhận tham gia trận đấu.</p>
                 <button className="button secondary" disabled={busy} onClick={cancelMatch}>Hủy tìm trận</button>
@@ -827,7 +827,7 @@ export function ArenaPage() {
                   ) : (
                     <p className="muted">Đáp án chỉ hiện khi cả hai đã trả lời hoặc hết giờ.</p>
                   )}
-                  <button className="button secondary" onClick={() => { if (window.confirm('Rời trận sẽ bị xử thua và trừ điểm ELO. Tiếp tục?')) act({ action: 'LEAVE', roomId: room.id }) }}>
+                  <button className="button secondary" onClick={() => { if (window.confirm(room.isMatchmade?'Rời trận sẽ bị xử thua và trừ điểm ELO. Tiếp tục?':'Rời trận giao hữu sẽ bị xử thua, không đổi ELO. Tiếp tục?')) act({ action: 'LEAVE', roomId: room.id }) }}>
                     Rời trận
                   </button>
                 </section>
@@ -844,7 +844,8 @@ export function ArenaPage() {
               <p className="muted">{resultReasonLabel(room.resultType)}</p>
 
               {/* Thống kê biến động ELO sau trận */}
-              <div className="pvp-elo-summary">
+              {!room.isMatchmade&&<p className="muted">Trận giao hữu · Không đổi ELO hoặc thành tích xếp hạng.</p>}
+              {room.isMatchmade&&<div className="pvp-elo-summary">
                 <div className="pvp-elo-box">
                   <strong>{room.hostName}</strong>
                   <span>
@@ -863,7 +864,7 @@ export function ArenaPage() {
                     {(room.guestEloChange ?? 0) > 0 ? `+${room.guestEloChange} ELO` : `${room.guestEloChange ?? 0} ELO`}
                   </b>
                 </div>
-              </div>
+              </div>}
               <small className="muted" style={{ display: 'block', marginBottom: 14 }}>
                 ✦ Điểm trả lời câu hỏi dùng để xác định kết quả trận đấu · Điểm ELO dùng để xếp hạng PvP · Không cộng EXP học tập
               </small>

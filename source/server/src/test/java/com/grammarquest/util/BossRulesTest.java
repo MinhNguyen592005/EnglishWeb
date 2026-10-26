@@ -10,7 +10,7 @@ class BossRulesTest {
         assertEquals(20,BossRules.hp("LESSON_BOSS",4));
         assertEquals(0,BossRules.hp("LESSON_BOSS",5));
         assertEquals(0,BossRules.hp("LESSON_BOSS",6));
-        assertEquals(50,BossRules.firstWinXp("LESSON_BOSS"));
+        assertEquals(20,BossRules.firstWinXp("LESSON_BOSS"));
     }
     @Test void chapterBossNeedsEightOfTenDespiteZeroHpAtEight() {
         assertEquals(10,BossRules.questionCount("CHAPTER_BOSS"));

@@ -1,10 +1,9 @@
-import { ArrowRight, BookOpen, ChevronRight, Rocket, Star, Target, Trophy, Zap } from 'lucide-react'
+import { ArrowRight, BookOpen, ChevronRight, Target, Trophy, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import { Layout } from '../components/Layout'
-import { DailyQuestsWidget } from '../components/DailyQuestsWidget'
 import { ErrorState, Loading } from '../components/States'
 import { difficultyName, sortLessons, topicName } from './RoadmapPage'
 import type { Lesson, Attempt } from '../types'
@@ -20,22 +19,7 @@ function useLessons() {
   useEffect(()=>{if(connected)reload()}, [request,user?.totalXp,connected,revision])
   return { data, error, reload }
 }
-const progress = (lessons: Lesson[]) => lessons.filter(l => l.status === 'COMPLETED').length
-
-export function Dashboard() {
-  const { user } = useAuth()
-  const { data, error, reload } = useLessons()
-  if (!data) return <Layout title="Tổng quan">{error ? <ErrorState message={error} retry={reload}/> : <Loading/>}</Layout>
-  const ordered=sortLessons(data), current = ordered.find(l => l.status === 'AVAILABLE')
-  const pendingTopic=[...new Set(ordered.map(l=>l.topicSlug))].find(slug=>{const chapter=ordered.filter(l=>l.topicSlug===slug);return chapter.every(l=>l.status==='COMPLETED')&&!chapter[0].chapterCompleted})
-  const pendingName=ordered.find(l=>l.topicSlug===pendingTopic)?.topicTitle || (pendingTopic ? topicName(pendingTopic) : '')
-  return <Layout title="Tổng quan"><div className="page-heading"><div><span className="section-label">TRẠM CHỈ HUY</span><h1>Chào {user?.displayName}! <span className="wave">✦</span></h1><p>Một bài học nhỏ hôm nay sẽ đưa bạn đến hành tinh lớn hơn.</p></div><div className="heading-icon"><Rocket size={38}/></div></div>
-    <div className="dashboard-grid"><div className="primary-column"><section className="hero-card"><div><span className="hero-kicker">HÀNH TRÌNH HIỆN TẠI</span><h2>Chinh phục ngữ pháp</h2><p>Nhiều chủ đề và cấp độ từ cơ bản đến nâng cao.</p><div className="hero-progress"><span>{progress(data)}/{data.length} cấp độ hoàn thành</span><strong>{data.length?Math.round(progress(data)/data.length*100):0}%</strong></div><div className="progress-track"><div style={{width:`${data.length?progress(data)/data.length*100:0}%`}}/></div><Link className="button white" to="/roadmap">Xem lộ trình <ArrowRight size={18}/></Link></div><div className="hero-planet"><span>✦</span><div className="planet"/></div></section>
-      <DailyQuestsWidget/>
-      <section className="card current-card"><div className="card-title-row"><div className="card-icon purple"><BookOpen size={22}/></div><span className="tag">{current?'BÀI HỌC TIẾP THEO':pendingTopic?'THỬ THÁCH TIẾP THEO':'LỘ TRÌNH CỦA BẠN'}</span></div><h3>{current?.title || (pendingTopic ? `Boss: ${pendingName}` : 'Đã hoàn thành các bài hiện có')}</h3><p>{current?.summary || (pendingTopic ? 'Vượt boss cuối hành tinh để mở chủ đề tiếp theo.' : 'Bạn có thể ôn lại bài học và luyện tập thêm.')}</p><Link className="button primary" to={current ? `/lessons/${current.id}` : pendingTopic ? `/roadmap?planet=${pendingTopic}#${pendingTopic}` : '/roadmap'}>{current?'Tiếp tục học':pendingTopic?'Đến thử thách':'Xem lộ trình'} <ArrowRight size={18}/></Link></section>
-    </div><aside className="secondary-column"><section className="card stat-card"><div className="card-title-row"><div className="card-icon amber"><Star size={22}/></div><span>TIẾN ĐỘ CỦA BẠN</span></div><h3>Cấp {user?.level}</h3><p>{user?.xpInLevel} / 1.000 EXP để lên cấp</p><div className="progress-track xp"><div style={{width:`${(user?.xpInLevel||0)/10}%`}}/></div><div className="stat-split"><span>Tổng EXP</span><strong>{user?.totalXp}</strong></div></section><section className="card goal-card"><div className="card-title-row"><div className="card-icon mint"><Target size={22}/></div><span>ĐÍCH ĐẾN</span></div><h3>Boss cuối chủ đề</h3><p>Vượt boss của từng cấp để mở cấp tiếp theo, rồi hoàn thành thử thách tổng hợp để nhận 150 EXP.</p><Link to="/roadmap">Xem điều kiện <ChevronRight size={17}/></Link></section></aside></div>
-  </Layout>
-}
+export { StudyDashboard as Dashboard } from './StudyDashboard'
 
 export function LessonPage() {
   const { request,connected } = useSystemSocket()

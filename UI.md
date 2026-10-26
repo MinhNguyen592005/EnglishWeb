@@ -358,3 +358,15 @@ Luật nghiệp vụ theo PROJECT_SPEC.md; số liệu trong ảnh chỉ minh h�
 Nếu API chưa có, định nghĩa hợp đồng trước; không giả vờ đã tích hợp thật.
 Sau khi làm, báo file thay đổi, cách kiểm tra và phần còn thiếu.
 ```
+
+
+## Cập nhật tiến độ và phần thưởng — 26/10/2026
+
+- Hiển thị riêng “Cấp tài khoản” (EXP), “Level học” và hạng Elo. Luật chi tiết nằm ở phần cuối STUDY.md.
+- Bài học và kiểm tra module cần ít nhất 80%; ghi rõ số câu tối thiểu do server trả về. Nộp đủ nhưng chưa đạt phải hiển thị “Chưa đạt”, không coi là hoàn thành.
+- Kết quả hiện EXP thực nhận, hỗ trợ làm lại; không hiển thị nút học tiếp khi chưa đạt hoặc nội dung tiếp theo còn khóa.
+- Khi đã xong bài nhưng chưa vượt kiểm tra module, gợi ý tiếp tục phải dẫn đến module đó, không gợi ý thi cuối level.
+- Chuỗi học được ghi nhận tự động từ hoạt động đạt ít nhất 80%; rương chỉ nhận EXP. Hiển thị phần thưởng rương từ API, không hard-code.
+- Đầu vào mới 25 câu; giao diện lấy tổng số câu từ snapshot/kết quả để vẫn hỗ trợ lượt 10 câu cũ.
+- PvP ghi rõ ghép tự động là xếp hạng, phòng tự tạo là giao hữu. Giao hữu không hiển thị biến động Elo; thông báo rời trận không nói sẽ mất Elo.
+- Hiển thị phạm vi tìm trận theo Elo; cấp tài khoản chỉ là thông tin hồ sơ. Bằng số câu đúng thì hòa.

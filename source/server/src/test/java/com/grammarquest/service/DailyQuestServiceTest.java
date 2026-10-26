@@ -44,6 +44,7 @@ class DailyQuestServiceTest {
         user = new User("nam", "Hoang Nam", "hash");
         user.id = 10L;
         user.totalXp = 500;
+        lenient().when(users.findWithLockById(10L)).thenReturn(Optional.of(user));
 
         qEasy = new DailyQuest("PRACTICE_1", "EASY", "Luyện tập 1", "Desc", "PRACTICE", "PRACTICE_COUNT", 1, 30, "BookOpen");
         qEasy.id = 1;
@@ -55,7 +56,7 @@ class DailyQuestServiceTest {
 
     @Test
     void ensuresThreeQuestsAllocatedDaily() {
-        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(Collections.emptyList());
+        when(userQuests.findWithLockByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(Collections.emptyList());
         when(dailyQuests.findByTierAndActiveTrue("EASY")).thenReturn(List.of(qEasy));
         when(dailyQuests.findByTierAndActiveTrue("MEDIUM")).thenReturn(List.of(qMed));
         when(dailyQuests.findByTierAndActiveTrue("HARD")).thenReturn(List.of(qHard));
@@ -72,7 +73,7 @@ class DailyQuestServiceTest {
         udq.id = 101L;
         udq.currentProgress = 14;
 
-        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(List.of(udq));
+        when(userQuests.findWithLockByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(List.of(udq));
         when(dailyQuests.findAll()).thenReturn(List.of(qMed));
         when(userQuests.save(any(UserDailyQuest.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -89,10 +90,9 @@ class DailyQuestServiceTest {
         udq.completed = true;
         udq.claimed = false;
 
-        when(users.findByUsernameIgnoreCase("nam")).thenReturn(Optional.of(user));
+        when(users.findWithLockByUsernameIgnoreCase("nam")).thenReturn(Optional.of(user));
         when(userQuests.findWithLockById(100L)).thenReturn(Optional.of(udq));
         when(dailyQuests.findById(1)).thenReturn(Optional.of(qEasy));
-        when(users.findWithLockById(10L)).thenReturn(Optional.of(user));
         when(xp.existsByUserIdAndRewardKey(10L, "DAILY_QUEST:100")).thenReturn(false);
 
         var result = service.claimQuestReward("nam", 100L);
@@ -104,7 +104,7 @@ class DailyQuestServiceTest {
     }
 
     @Test
-    void claimDailyMilestoneUpdatesStreakAndBonusXp() {
+    void claimingChestAddsBonusButDoesNotCreateLearningStreak() {
         UserDailyQuest u1 = new UserDailyQuest(10L, 1, LocalDate.now()); u1.completed = true;
         UserDailyQuest u2 = new UserDailyQuest(10L, 2, LocalDate.now()); u2.completed = true;
         UserDailyQuest u3 = new UserDailyQuest(10L, 3, LocalDate.now()); u3.completed = true;
@@ -113,18 +113,45 @@ class DailyQuestServiceTest {
         streak.currentStreak = 2;
         streak.lastCompletedDate = LocalDate.now().minusDays(1);
 
-        when(users.findByUsernameIgnoreCase("nam")).thenReturn(Optional.of(user));
-        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(List.of(u1, u2, u3));
-        when(streaks.findById(10L)).thenReturn(Optional.of(streak));
-        when(users.findWithLockById(10L)).thenReturn(Optional.of(user));
+        when(users.findWithLockByUsernameIgnoreCase("nam")).thenReturn(Optional.of(user));
+        when(userQuests.findWithLockByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(List.of(u1, u2, u3));
+        when(streaks.findWithLockByUserId(10L)).thenReturn(Optional.of(streak));
         when(xp.existsByUserIdAndRewardKey(eq(10L), startsWith("DAILY_MILESTONE:"))).thenReturn(false);
 
         var result = service.claimDailyMilestone("nam");
-        assertEquals(3, streak.currentStreak);
-        assertEquals(3, streak.longestStreak);
-        assertEquals(LocalDate.now(), streak.lastCompletedDate);
-        assertEquals(600, user.totalXp);
-        assertEquals(600, result.profile().totalXp());
+        assertEquals(2, streak.currentStreak);
+        assertEquals(0, streak.longestStreak);
+        assertEquals(LocalDate.now().minusDays(1), streak.lastCompletedDate);
+        assertEquals(550, user.totalXp);
+        assertEquals(550, result.profile().totalXp());
         verify(streaks).save(streak);
+    }
+    @Test void allocationLocksAccountBeforeReadingAndReusesExistingQuests() {
+        var existing=List.of(new UserDailyQuest(10L,1,LocalDate.now()));
+        when(userQuests.findWithLockByUserIdAndQuestDate(10L,LocalDate.now())).thenReturn(existing);
+        assertSame(existing,service.ensureTodayQuests(10L,LocalDate.now()));
+        var order=inOrder(users,userQuests);
+        order.verify(users).findWithLockById(10L);
+        order.verify(userQuests).findWithLockByUserIdAndQuestDate(10L,LocalDate.now());
+        verifyNoInteractions(dailyQuests);
+        verify(userQuests,never()).save(any());
+    }
+    @Test void qualityLearningAutomaticallyExtendsStreakOnlyOncePerDay() {
+        LocalDate today=LocalDate.now(StudyRewardService.STUDY_ZONE);
+        var streak=new UserQuestStreak(10L);streak.currentStreak=2;streak.longestStreak=2;streak.lastCompletedDate=today.minusDays(1);
+        when(streaks.findWithLockByUserId(10L)).thenReturn(Optional.of(streak));
+        service.recordLearningDay(10L);
+        service.recordLearningDay(10L);
+        assertEquals(3,streak.currentStreak);assertEquals(3,streak.longestStreak);
+        assertEquals(today,streak.lastCompletedDate);assertNull(streak.milestoneClaimedDate);
+        verify(streaks,times(1)).save(streak);
+        verifyNoInteractions(xp);
+    }
+    @Test void missedDayRestartsLearningStreakWithoutClaimingChest() {
+        LocalDate today=LocalDate.now(StudyRewardService.STUDY_ZONE);
+        var streak=new UserQuestStreak(10L);streak.currentStreak=5;streak.longestStreak=8;streak.lastCompletedDate=today.minusDays(2);
+        when(streaks.findWithLockByUserId(10L)).thenReturn(Optional.of(streak));
+        service.recordLearningDay(10L);
+        assertEquals(1,streak.currentStreak);assertEquals(8,streak.longestStreak);assertEquals(today,streak.lastCompletedDate);
     }
 }

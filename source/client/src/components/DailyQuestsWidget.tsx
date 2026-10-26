@@ -15,11 +15,15 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../app/AuthContext'
 import { api } from '../services/api'
+import { useSystemSocket } from '../app/SystemSocketContext'
 import type { DailyQuest, DailyQuestOverview } from '../types'
 import './DailyQuestsWidget.css'
 
 export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak: number) => void }) {
   const { setUser } = useAuth()
+  const { subscribe } = useSystemSocket()
+  const [revision,setRevision]=useState(0)
+  useEffect(()=>subscribe(message=>{if(message.action==='ROADMAP_PROGRESS_CHANGED')setRevision(v=>v+1)}),[subscribe])
   const [data, setData] = useState<DailyQuestOverview | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -45,7 +49,7 @@ export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak
         if (active) setLoading(false)
       })
     return () => { active = false }
-  }, [onStreakUpdate])
+  }, [onStreakUpdate,revision])
 
   function showToast(msg: string) {
     setToastMessage(msg)
@@ -88,7 +92,7 @@ export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak
       if (onStreakUpdate) {
         onStreakUpdate(res.streak.currentStreak)
       }
-      showToast(`Mở Rương Tinh Tú thành công: +100 EXP & Chuỗi ${res.streak.currentStreak} ngày! 🔥🎁`)
+      showToast(`Mở Rương Tinh Tú thành công: +${res.milestone.rewardXp} EXP · Chuỗi ${res.streak.currentStreak} ngày! 🔥🎁`)
     } catch (e) {
       showToast((e as Error).message)
     } finally {
@@ -166,7 +170,7 @@ export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak
           </div>
           <div className="daily-quests-title-block">
             <h3>NHIỆM VỤ HÀNG NGÀY</h3>
-            <p>Làm mới lúc 00:00 mỗi ngày · Tích lũy tối đa 250 EXP/ngày</p>
+            <p>Làm mới lúc 00:00 (UTC+7) · Thưởng nhiệm vụ tối đa {quests.reduce((sum,q)=>sum+q.rewardXp,0)+milestone.rewardXp} EXP/ngày</p>
           </div>
         </div>
 
@@ -238,16 +242,17 @@ export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak
         })}
       </div>
 
+      <p className="muted">Đạt ít nhất 80% một bài học, ôn tập hoặc kiểm tra để tự động giữ chuỗi ngày học; không cần nhận rương.</p>
       <div className="daily-milestone-box">
         <div className="daily-milestone-left">
           <div className="daily-milestone-icon">
             <Gift size={24}/>
           </div>
           <div className="daily-milestone-text">
-            <h4>RƯƠNG TINH TÚ NGÀY (+100 EXP + 🔥 TĂNG STREAK)</h4>
+            <h4>RƯƠNG TINH TÚ NGÀY (+{milestone.rewardXp} EXP)</h4>
             <p>
               {milestone.claimed
-                ? '✦ Bạn đã mở khóa Rương Tinh Tú hôm nay! Chuỗi ngày đã được gia hạn.'
+                ? '✦ Bạn đã nhận thưởng rương hôm nay!'
                 : milestone.allCompleted
                 ? '✦ Chúc mừng! Bạn đã hoàn thành trọn vẹn 3 nhiệm vụ ngày, mở rương ngay!'
                 : `Hoàn thành 3/3 nhiệm vụ hôm nay để mở rương (hiện tại: ${milestone.completedQuests}/3).`}
@@ -266,7 +271,7 @@ export function DailyQuestsWidget({ onStreakUpdate }: { onStreakUpdate?: (streak
               disabled={claimingMilestone}
               onClick={handleClaimMilestone}
             >
-              <Gift size={17}/> {claimingMilestone ? 'Đang mở...' : 'Mở Rương (+100 EXP) 🌟'}
+              <Gift size={17}/> {claimingMilestone ? 'Đang mở...' : `Mở Rương (+${milestone.rewardXp} EXP) 🌟`}
             </button>
           ) : (
             <span className="quest-in-progress-chip" style={{ fontWeight: 700 }}>

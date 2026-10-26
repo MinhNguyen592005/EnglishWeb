@@ -20,6 +20,15 @@ import java.util.Comparator;
 @Component
 public class SystemSocketHandler extends TextWebSocketHandler {
     @org.springframework.beans.factory.annotation.Autowired
+    private com.grammarquest.security.BehaviorMonitor behavior;
+    private void observe(WebSocketSession session,com.grammarquest.security.BehaviorMonitor.Rule rule){
+        if(behavior!=null&&session.getPrincipal()!=null)behavior.observe(rule,session.getPrincipal().getName(),null,session.getId());
+    }
+    private void observeError(WebSocketSession session,ApiException error){
+        if(error.status==org.springframework.http.HttpStatus.FORBIDDEN)observe(session,com.grammarquest.security.BehaviorMonitor.Rule.ACCESS_DENIED);
+        else if(java.util.Set.of("UNKNOWN_ACTION","INVALID_ACTION","INVALID_JSON").contains(error.code))observe(session,com.grammarquest.security.BehaviorMonitor.Rule.INVALID_PROTOCOL);
+    }
+    @org.springframework.beans.factory.annotation.Autowired
     private com.grammarquest.service.SocketWorkspaceService workspaces;
     @org.springframework.beans.factory.annotation.Autowired
     private com.grammarquest.service.RoadmapCourseService roadmapCourse;
@@ -91,10 +100,42 @@ public class SystemSocketHandler extends TextWebSocketHandler {
 
     @org.springframework.context.event.EventListener
     public void sessionRevoked(com.grammarquest.security.SocketSessionRegistry.Revoked event){var socket=sessions.get(event.socketId());if(socket!=null)disconnect(socket,new CloseStatus(event.code(),event.reason()));}
+    @org.springframework.transaction.event.TransactionalEventListener(fallbackExecution=true)
+    public void securityAlert(com.grammarquest.service.SecurityIncidentService.Alert alert){
+        networkEvents.add("WARNING","Cảnh báo bảo mật #"+alert.id()+": "+alert.message());
+        accounts.forEach((id,account)->{
+            try{
+                var user=users.findByUsernameIgnoreCase(account.username()).orElse(null);
+                if(user!=null&&!user.locked&&"ADMIN".equals(user.role))
+                    sendTo(id,"SECURITY_INCIDENT",alert,"");
+                if(account.username().equalsIgnoreCase(java.util.Objects.toString(alert.username(),"")))
+                    sendTo(id,"SECURITY_WARNING",Map.of("id",alert.id(),"severity",alert.severity(),"message","Server ghi nhận hoạt động bất thường: "+alert.message()+" Hãy giảm tốc độ thao tác; nếu không phải bạn, hãy liên hệ hỗ trợ."),"");
+            }catch(Exception ex){log.debug("Security notification failed for {}",id,ex);}
+        });
+    }
+    @org.springframework.transaction.event.TransactionalEventListener(fallbackExecution=true)
+    public void securityResolved(com.grammarquest.service.SecurityIncidentService.Resolved result){
+        accounts.forEach((id,account)->{
+            try{
+                var user=users.findByUsernameIgnoreCase(account.username()).orElse(null);
+                if(user!=null&&!user.locked&&"ADMIN".equals(user.role))sendTo(id,"SECURITY_INCIDENT_UPDATED",Map.of("id",result.id()),"");
+                if(account.username().equalsIgnoreCase(java.util.Objects.toString(result.username(),""))){
+                    sendTo(id,"SECURITY_WARNING",Map.of("id",result.id(),"message",result.message()),"");
+                    if("LOCK".equals(result.decision())){
+                        sendTo(id,"ACCOUNT_LOCKED",Map.of("message",result.message()),"");
+                        var socket=sessions.get(id);if(socket!=null)disconnect(socket,new CloseStatus(4003,"Account locked"));
+                    }
+                }
+            }catch(Exception ex){log.debug("Security decision push failed for {}",id,ex);}
+        });
+    }
     @org.springframework.context.event.EventListener
     public void answerThrottled(com.grammarquest.security.AnswerRateLimiter.Limited event){
         networkEvents.add("WARNING","Tạm dừng đáp án 10 giây cho '"+event.username()+"' ("+event.count()+" yêu cầu/giây); không chặn IP dùng chung.");
-        accounts.forEach((id,account)->{if(account.username().equalsIgnoreCase(event.username())){var socket=sessions.get(id);if(socket!=null)disconnect(socket,new CloseStatus(4005,"Answer rate exceeded"));}});
+        accounts.forEach((id,account)->{if(account.username().equalsIgnoreCase(event.username())){
+            try{sendTo(id,"SECURITY_WARNING",Map.of("message","Server phát hiện đáp án được gửi quá nhanh. Hãy chờ 10 giây; sự kiện đã được chuyển cho quản trị viên xem xét."),"");}catch(IOException ignored){}
+            var socket=sessions.get(id);if(socket!=null)disconnect(socket,new CloseStatus(4005,"Answer rate exceeded"));
+        }});
     }
     @Override
     public void afterConnectionEstablished(WebSocketSession session) {
@@ -138,6 +179,7 @@ public class SystemSocketHandler extends TextWebSocketHandler {
             updateAccountRole(session.getId(),authenticated.role);
             if(!"ADMIN".equals(authenticated.role)) roles.put(session.getId(),"GUEST");
             String action=body.path("action").asText();
+            if(java.util.Set.of("CLASS_CHAT","ARENA_CHAT","SUPPORT_SEND").contains(action))observe(session,com.grammarquest.security.BehaviorMonitor.Rule.CHAT_SPAM);
             if(action.startsWith("PLACEMENT_")){
                 if(action.equals("PLACEMENT_SUBMIT"))limiter.check(state.username);
                 var result=placement.action(state.username,action,body.path("payload"));
@@ -348,6 +390,7 @@ public class SystemSocketHandler extends TextWebSocketHandler {
                 }
                 case "AUTH" -> { }
                 default -> {
+                    observe(session,com.grammarquest.security.BehaviorMonitor.Rule.INVALID_PROTOCOL);
                     sendTo(session.getId(),"ERROR",Map.of("code","UNKNOWN_ACTION","message","Action không được hỗ trợ"),requestId);
                     return;
                 }
@@ -359,8 +402,10 @@ public class SystemSocketHandler extends TextWebSocketHandler {
             if("ADMIN".equals(roles.get(session.getId())))eventCursors.put(session.getId(),0L);else eventCursors.remove(session.getId());
             log.info("System client role updated: id={}, role={}", session.getId(), roles.get(session.getId()));
         } catch (com.fasterxml.jackson.core.JsonProcessingException ex) {
+            observe(session,com.grammarquest.security.BehaviorMonitor.Rule.INVALID_PROTOCOL);
             disconnect(session, CloseStatus.BAD_DATA);
         } catch (ApiException ex) {
+            observeError(session,ex);
             sendTo(session.getId(),"ERROR",Map.of("code",ex.code,"message",ex.getMessage()),requestId);
         } catch (RuntimeException ex) {
             log.error("Learning socket request failed",ex);

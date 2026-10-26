@@ -2,10 +2,11 @@ import { useEffect, useRef, useState } from 'react'
 import { Activity, Database, MemoryStick } from 'lucide-react'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import './ServerDashboardPage.css'
+import { SecurityIncidentsPanel } from '../components/SecurityIncidentsPanel'
 
 type Client={sessionId:string;userId:number;username:string;currentActivity:string;page:string;topic:string;lesson:string;lastInteractionAt:number;idleSeconds:number;activeAttemptId:number|null;allocatedQuestions:number;lastPongAt:number;activeExamId?:number|null;allocatedExamQuestions?:number;activeArenaId?:number|null;allocatedArenaQuestions?:number;connectedAt:number;attemptAllocatedAt:number;examAllocatedAt:number;arenaAllocatedAt:number;messagesReceived:number;messagesSent:number}
 type NetworkEvent={id:number;time:string;level:string;message:string}
-type QueueEntry={username:string;sessionId:string;level:number;queuedAt:number;waitingSeconds:number;allowedGap:number}
+type QueueEntry={username:string;sessionId:string;level:number;queuedAt:number;waitingSeconds:number;allowedGap:number;elo:number;allowedEloGap:number}
 type Alert={key:string;level:string;message:string;sessionId:string}
 type Capacity={maxSockets:number;maxSocketsPerAccount:number;reservedSockets:number;maxConcurrentRequests:number;activeRequests:number;rejectedRequests:number;rejectedConnections:number}
 type Stats={connections:number;ram:number;activeSockets:number;heapCommitted:number;heapMax:number;activeSnapshots:number;clients:Client[];events:NetworkEvent[];queue?:QueueEntry[];alerts?:Alert[];eventsDelta?:boolean;capacity?:Capacity}
@@ -52,6 +53,7 @@ export function ServerDashboardPage(){
   const lastEvent=stats?.events[stats.events.length-1]?.id
   useEffect(()=>{if(!paused&&consoleRef.current)consoleRef.current.scrollTop=consoleRef.current.scrollHeight},[lastEvent,paused])
   return <section className="admin-monitor" aria-label="Giám sát máy chủ">
+    <SecurityIncidentsPanel/>
     <div className="monitor-heading"><span className={`monitor-live ${connected?'online':''}`}><i/>{connected?'Trực tiếp · mỗi 2,5 giây':'Đang kết nối lại…'}</span><small>Cập nhật: {updated||'Đang chờ'}</small></div>
     {stats?.capacity&&<p className="monitor-scope">Giới hạn tải: {stats.capacity.reservedSockets}/{stats.capacity.maxSockets} socket (tối đa {stats.capacity.maxSocketsPerAccount}/tài khoản) · {stats.capacity.activeRequests}/{stats.capacity.maxConcurrentRequests} yêu cầu nghiệp vụ đang xử lý · Đã từ chối từ lúc khởi động: {stats.capacity.rejectedRequests} yêu cầu, {stats.capacity.rejectedConnections} kết nối. Không gồm các job định kỳ.</p>}
     <div className="monitor-cards">
@@ -77,7 +79,7 @@ export function ServerDashboardPage(){
       <div className="button-row"><button className="button secondary" disabled={busy||!connected} onClick={()=>void manage(selected,false)}>Gửi lời nhắc</button><button className="button secondary" disabled={busy||!connected} onClick={()=>void manage(selected,true)}>Ngắt kết nối</button></div></>}
       {feedback&&<p role="status">{feedback}</p>}
     </section>
-    <section className="card feature-card"><h2>Hàng đợi PvP trực tiếp · {stats?.queue?.length??0} người</h2><div className="table-wrap"><table><thead><tr><th>Tài khoản / Socket</th><th>Level</th><th>Thời gian chờ</th><th>Phạm vi ghép hiện tại</th></tr></thead><tbody>{stats?.queue?.map(q=><tr key={q.sessionId}><td><button className="button secondary" onClick={()=>setSelectedId(q.sessionId)}>{q.username} · {q.sessionId.slice(0,8)}</button></td><td>{q.level}</td><td>{duration(q.waitingSeconds)}</td><td>Cấp {Math.max(1,q.level-q.allowedGap)}–{q.level+q.allowedGap} (±{q.allowedGap})</td></tr>)}</tbody></table></div>{!stats?.queue?.length&&<p>Chưa có học sinh đang chờ ghép trận.</p>}<small>Ghép trận còn phụ thuộc phạm vi chấp nhận của cả hai người chơi.</small></section>
+    <section className="card feature-card"><h2>Hàng đợi PvP trực tiếp · {stats?.queue?.length??0} người</h2><div className="table-wrap"><table><thead><tr><th>Tài khoản / Socket</th><th>Cấp tài khoản / Elo</th><th>Thời gian chờ</th><th>Phạm vi ghép hiện tại</th></tr></thead><tbody>{stats?.queue?.map(q=><tr key={q.sessionId}><td><button className="button secondary" onClick={()=>setSelectedId(q.sessionId)}>{q.username} · {q.sessionId.slice(0,8)}</button></td><td>{q.level} / {q.elo} Elo</td><td>{duration(q.waitingSeconds)}</td><td>±{q.allowedEloGap} Elo</td></tr>)}</tbody></table></div>{!stats?.queue?.length&&<p>Chưa có học sinh đang chờ ghép trận.</p>}<small>Ghép trận còn phụ thuộc phạm vi chấp nhận của cả hai người chơi.</small></section>
     <section className="card feature-card"><h2>Cảnh báo bất thường · {stats?.alerts?.length??0}</h2><p>Heap ≥85% giới hạn JVM; thiếu Pong &gt;30 giây; AFK ≥2 phút; giữ gói đề &gt;15 phút. Giữ gói lâu là tín hiệu cần xem xét, không tự động xác định vi phạm.</p>{stats?.alerts?.map(a=><div className={`system-alert ${a.level.toLowerCase()}`} key={a.key}><strong>[{a.level}]</strong> {a.message} {a.sessionId&&<button className="button secondary" onClick={()=>setSelectedId(a.sessionId)}>Xem client</button>}</div>)}{!stats?.alerts?.length&&<p>Chưa phát hiện bất thường.</p>}<small>Kèm sự kiện cảnh báo/bảo mật trong 60 giây gần nhất. Khi socket đã bị ngắt, cảnh báo kết nối hiện tại sẽ biến mất; nhật ký vẫn giữ sự kiện.</small></section>
     <p className="monitor-scope">Sockets được đếm tại /api/ws-system; không phải toàn bộ TCP của máy. Gói câu hỏi PvP dùng RAM chung theo phòng; DB lưu trạng thái và kết quả. Ping/Pong kiểm tra kết nối; AFK tính từ thao tác người dùng. Bộ đếm tin nhắn tính JSON ứng dụng qua handler, không tính frame Ping/Pong hay gói telemetry.</p>
   </section>

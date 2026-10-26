@@ -86,10 +86,8 @@ public class ArenaMatchmaker {
         for(var a:waiting){
             if(a.room!=null||a.error!=null)continue;
             var b=waiting.stream().filter(e->e!=a&&e.room==null&&e.error==null)
-                .filter(e->Math.abs(e.level-a.level)<=Math.min(allowedGap(a.joined,now),allowedGap(e.joined,now)))
                 .filter(e->Math.abs(e.elo-a.elo)<=Math.min(allowedEloGap(a.joined,now),allowedEloGap(e.joined,now)))
                 .min(Comparator.<Entry>comparingInt(e->Math.abs(e.elo-a.elo))
-                    .thenComparingLong(e->Math.abs(e.level-a.level))
                     .thenComparingLong(e->e.joined)).orElse(null);
             if(b==null)continue;
             try{var rooms=factory.create(a.username,b.username);a.room=rooms.get(a.username);b.room=rooms.get(b.username);}
@@ -99,11 +97,11 @@ public class ArenaMatchmaker {
         queue.values().forEach(entry->updates.put(entry.socket,view(entry,now)));
         return updates;
     }
-    public record QueueEntry(String username,String sessionId,long level,long queuedAt,long waitingSeconds,int allowedGap) {}
+    public record QueueEntry(String username,String sessionId,long level,long queuedAt,long waitingSeconds,int allowedGap,int elo,int allowedEloGap) {}
     public synchronized List<QueueEntry> dashboardQueue(){
         long now=System.currentTimeMillis();
         return queue.values().stream().filter(e->e.room==null&&e.error==null)
-            .map(e->new QueueEntry(e.username,e.socket,e.level,e.joined,Math.max(0,(now-e.joined)/1000),allowedGap(e.joined,now))).toList();
+            .map(e->new QueueEntry(e.username,e.socket,e.level,e.joined,Math.max(0,(now-e.joined)/1000),allowedGap(e.joined,now),e.elo,allowedEloGap(e.joined,now))).toList();
     }
     private void enrichUserMeta(Map<String,Object> map, com.grammarquest.entity.User u) {
         var rank = PvpRankRules.fromElo(u.pvpElo);

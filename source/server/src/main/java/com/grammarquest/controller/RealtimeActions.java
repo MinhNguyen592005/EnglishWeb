@@ -16,6 +16,11 @@ import java.util.*;
 
 @Controller
 public class RealtimeActions {
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.grammarquest.security.BehaviorMonitor behavior;
+    private void observe(Principal principal,com.grammarquest.security.BehaviorMonitor.Rule rule){
+        if(behavior!=null&&principal!=null)behavior.observe(rule,principal.getName(),null,null);
+    }
     private final com.grammarquest.security.ServerCapacity capacity;
     private final ArenaController arena;
     private final ArenaChatController arenaChat;
@@ -40,6 +45,10 @@ public class RealtimeActions {
         return id;
     }
     private void ack(Principal principal,String requestId,Object data,Exception error) {
+        if(error instanceof ApiException api){
+            if(api.status==HttpStatus.FORBIDDEN)observe(principal,com.grammarquest.security.BehaviorMonitor.Rule.ACCESS_DENIED);
+            else if("INVALID_ACTION".equals(api.code))observe(principal,com.grammarquest.security.BehaviorMonitor.Rule.INVALID_PROTOCOL);
+        }
         Map<String,Object> payload=new LinkedHashMap<>();
         payload.put("requestId",requestId);
         payload.put("ok",error==null);
@@ -50,6 +59,7 @@ public class RealtimeActions {
     @MessageMapping("/arena/action") public void arena(Principal principal,@Payload ArenaAction action) {
         if(principal==null)return;
         String requestId=action==null?null:action.requestId();
+        if(action!=null&&"CHAT".equals(action.action()))observe(principal,com.grammarquest.security.BehaviorMonitor.Rule.CHAT_SPAM);
         if(!capacity.tryEnter()){ack(principal,requestId,null,new ApiException(HttpStatus.SERVICE_UNAVAILABLE,"SERVER_BUSY","Máy chủ đang bận. Vui lòng thử lại sau vài giây."));return;}
         try {
             if(action==null||action.action()==null) throw new ApiException(HttpStatus.BAD_REQUEST,"INVALID_ACTION","Thiếu hành động");
@@ -72,6 +82,7 @@ public class RealtimeActions {
     @MessageMapping("/classes/message") public void classMessage(Principal principal,@Payload ClassMessage message) {
         if(principal==null)return;
         String requestId=message==null?null:message.requestId();
+        observe(principal,com.grammarquest.security.BehaviorMonitor.Rule.CHAT_SPAM);
         if(!capacity.tryEnter()){ack(principal,requestId,null,new ApiException(HttpStatus.SERVICE_UNAVAILABLE,"SERVER_BUSY","Máy chủ đang bận. Vui lòng thử lại sau vài giây."));return;}
         try {
             if(message==null||message.classId()==null||message.classId()<=0) throw new ApiException(HttpStatus.BAD_REQUEST,"INVALID_CLASS","Lớp học không hợp lệ");

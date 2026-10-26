@@ -23,9 +23,11 @@ public class RoadmapCourseService {
     private final UserRepository users;
     private final ApplicationEventPublisher events;
     private final PlacementService placement;
+    private final DailyQuestService dailyQuests;
+    private final StudyRewardService rewards;
     public record ProgressChanged(String username) {}
-    public RoadmapCourseService(JdbcTemplate db,ObjectMapper json,UserRepository users,ApplicationEventPublisher events,PlacementService placement) {
-        this.db=db;this.json=json;this.users=users;this.events=events;this.placement=placement;
+    public RoadmapCourseService(JdbcTemplate db,ObjectMapper json,UserRepository users,ApplicationEventPublisher events,PlacementService placement,DailyQuestService dailyQuests,StudyRewardService rewards) {
+        this.db=db;this.json=json;this.users=users;this.events=events;this.placement=placement;this.dailyQuests=dailyQuests;this.rewards=rewards;
     }
     private ApiException invalid(String message){return new ApiException(HttpStatus.BAD_REQUEST,"INVALID_ROADMAP",message);}
     private void require(boolean valid,String message){if(!valid)throw invalid(message);}
@@ -33,7 +35,7 @@ public class RoadmapCourseService {
     private String text(JsonNode p,String key){var v=p.path(key);require(v.isTextual()&&!v.asText().isBlank()&&v.asText().length()<=64,"Thiếu hoặc sai "+key);return v.asText();}
     private long attemptId(JsonNode p){var id=p.path("attemptId");require(id.isIntegralNumber()&&id.canConvertToLong()&&id.asLong()>0,"Lượt làm không hợp lệ");return id.asLong();}
     private User learner(String username){
-        var u=users.findByUsernameIgnoreCase(username).orElseThrow(()->new ApiException(HttpStatus.UNAUTHORIZED,"UNAUTHENTICATED","Vui lòng đăng nhập"));
+        var u=users.findWithLockByUsernameIgnoreCase(username).orElseThrow(()->new ApiException(HttpStatus.UNAUTHORIZED,"UNAUTHENTICATED","Vui lòng đăng nhập"));
         if(u.locked||!"LEARNER".equals(u.role))throw new ApiException(HttpStatus.FORBIDDEN,"LEARNER_ONLY","Chỉ học viên được tham gia lộ trình");
         placement.requireCompleted(u);
         return u;
@@ -55,14 +57,14 @@ public class RoadmapCourseService {
     private record ModuleBarrier(int ordinal,String title) {}
     private ModuleBarrier firstUnfinishedModule(long userId,int level){
         if(level<Math.max(1,placement.startingLevel(userId)))return null;
-        var rows=db.queryForList("select m.ordinal_no,m.title from study_modules m left join study_lessons l on l.module_id=m.id left join study_progress p on p.lesson_id=l.id and p.user_id=? where m.level_id=? group by m.id,m.ordinal_no,m.title having count(l.id)=0 or count(p.completed_at)<count(l.id) order by m.ordinal_no limit 1",userId,level);
+        var rows=db.queryForList("select m.ordinal_no,m.title from study_modules m left join study_lessons l on l.module_id=m.id left join study_progress p on p.lesson_id=l.id and p.user_id=? where m.level_id=? group by m.id,m.ordinal_no,m.title having count(l.id)=0 or count(p.completed_at)<count(l.id) or not exists (select 1 from study_module_mastery mm where mm.user_id=? and mm.module_id=m.id) order by m.ordinal_no limit 1",userId,level,userId);
         return rows.isEmpty()?null:new ModuleBarrier(((Number)rows.getFirst().get("ordinal_no")).intValue(),rows.getFirst().get("title").toString());
     }
     private void moduleUnlocked(long userId,String moduleId){
         var module=moduleRow(moduleId);int level=((Number)module.get("level_id")).intValue();unlocked(userId,level);
         var barrier=firstUnfinishedModule(userId,level);
         if(barrier!=null&&((Number)module.get("ordinal_no")).intValue()>barrier.ordinal())
-            throw new ApiException(HttpStatus.FORBIDDEN,"MODULE_LOCKED","Hoàn thành toàn bộ bài học trong module “"+barrier.title()+"” trước khi mở module tiếp theo");
+            throw new ApiException(HttpStatus.FORBIDDEN,"MODULE_LOCKED","Đạt các bài học và kiểm tra module “"+barrier.title()+"” trước khi mở module tiếp theo");
     }
     private void referenceUnlocked(long userId,String kind,String reference){
         if(kind.equals("LESSON"))moduleUnlocked(userId,lessonRow(reference).get("module_id").toString());
@@ -77,8 +79,10 @@ public class RoadmapCourseService {
     @Transactional
     public Object action(String username,String action,JsonNode p){
         User u=learner(username);
+        // learner() acquires the account lock before attempts, rewards and quests.
         return switch(action){
             case "ROADMAP_OPEN" -> overview(u.id);
+            case "ROADMAP_HISTORY" -> history(u.id);
             case "ROADMAP_LESSON" -> openLesson(u,text(p,"lessonId"));
             case "ROADMAP_START" -> start(u,p);
             case "ROADMAP_ATTEMPT" -> view(u,attemptId(p));
@@ -87,8 +91,26 @@ public class RoadmapCourseService {
             default -> throw invalid("Thao tác lộ trình không được hỗ trợ");
         };
     }
+    private List<Map<String,Object>> history(long userId){
+        return db.queryForList("""
+            select a.id,a.kind,a.reference_id as referenceId,a.status,
+                   coalesce(l.title,m.title,lv.title) as title,lv.id as levelId,
+                   json_length(a.questions_json) as totalQuestions,
+                   case when a.status='IN_PROGRESS' then null else a.correct_count end as correctCount,
+                   a.created_at as createdAt,a.submitted_at as submittedAt
+            from study_attempts a
+            left join study_lessons l on a.kind='LESSON' and l.id=a.reference_id
+            left join study_modules lm on lm.id=l.module_id
+            left join study_modules m on a.kind in ('MODULE_REVIEW','MODULE_TEST') and m.id=a.reference_id
+            left join study_levels lv on lv.id=case when a.kind in ('LEVEL_REVIEW','LEVEL_TEST')
+                then cast(a.reference_id as unsigned) else coalesce(lm.level_id,m.level_id) end
+            where a.user_id=?
+            order by coalesce(a.submitted_at,a.created_at) desc,a.id desc limit 20
+            """,userId);
+    }
     private Object overview(long userId){
         var passed=new HashSet<>(db.queryForList("select distinct reference_id from study_attempts where user_id=? and kind='LEVEL_TEST' and status='PASSED'",String.class,userId));
+        var mastered=new HashSet<>(db.queryForList("select module_id from study_module_mastery where user_id=?",String.class,userId));
         var modules=db.queryForList("select id,level_id as levelId,ordinal_no as ordinalNo,title from study_modules order by level_id,ordinal_no");
         var lessons=db.queryForList("select l.id,l.module_id as moduleId,l.ordinal_no as ordinalNo,l.title,p.opened_at as openedAt,p.completed_at as completedAt from study_lessons l left join study_progress p on p.lesson_id=l.id and p.user_id=? order by l.module_id,l.ordinal_no",userId);
         var levels=db.queryForList("select id,title,outcome,planet_style as planetStyle from study_levels order by id");
@@ -104,11 +126,12 @@ public class RoadmapCourseService {
                     item.put("status",completed?"COMPLETED":lesson.get("openedAt")!=null?"IN_PROGRESS":"NOT_STARTED");moduleLessons.add(item);if(completed)moduleDone++;
                 }
                 var item=new LinkedHashMap<String,Object>(module);item.put("lessons",moduleLessons);item.put("completedCount",moduleDone);item.put("lessonCount",moduleLessons.size());item.put("unlocked",moduleOpen);
-                item.put("lockReason",moduleOpen?null:!open?"Vượt bài kiểm tra level trước để mở level này":"Hoàn thành toàn bộ bài trong module “"+blockingModule+"” để mở");
-                if(!placementPassed&&moduleOpen&&(moduleLessons.isEmpty()||moduleDone!=moduleLessons.size())){moduleOpen=false;blockingModule=module.get("title").toString();}
+                item.put("passed",placementPassed||mastered.contains(module.get("id")));
+                item.put("lockReason",moduleOpen?null:!open?"Vượt bài kiểm tra level trước để mở level này":"Đạt bài học và kiểm tra module “"+blockingModule+"” để mở");
+                if(!placementPassed&&moduleOpen&&(moduleLessons.isEmpty()||moduleDone!=moduleLessons.size()||!mastered.contains(module.get("id")))){moduleOpen=false;blockingModule=module.get("title").toString();}
                 levelModules.add(item);done+=moduleDone;total+=moduleLessons.size();
             }
-            boolean completed=placementPassed||passed.contains(Integer.toString(id));level.put("placementPassed",placementPassed);level.put("unlocked",open);level.put("passed",completed);level.put("modules",levelModules);level.put("completedCount",done);level.put("lessonCount",total);level.put("examReady",open&&total>0&&done==total);
+            boolean completed=placementPassed||passed.contains(Integer.toString(id));level.put("placementPassed",placementPassed);level.put("unlocked",open);level.put("passed",completed);level.put("modules",levelModules);level.put("completedCount",done);level.put("lessonCount",total);level.put("examReady",open&&total>0&&done==total&&levelModules.stream().allMatch(m->Boolean.TRUE.equals(m.get("passed"))));
             open=open&&completed;
         }
         return Map.of("levels",levels);
@@ -140,6 +163,7 @@ public class RoadmapCourseService {
             String condition=kind.equals("LEVEL_TEST")?"m.level_id=?":"m.id=?";
             var counts=db.queryForMap("select count(*) as total,count(p.completed_at) as completed from study_lessons l join study_modules m on m.id=l.module_id left join study_progress p on p.lesson_id=l.id and p.user_id=? where "+condition,u.id,reference);
             require(((Number)counts.get("total")).intValue()>0&&((Number)counts.get("total")).intValue()==((Number)counts.get("completed")).intValue(),"Hoàn thành các bài học trước khi làm kiểm tra");
+            if(kind.equals("LEVEL_TEST"))require(firstUnfinishedModule(u.id,Integer.parseInt(reference))==null,"Vượt kiểm tra tất cả module trước khi kiểm tra level");
         }
         if(kind.equals("LESSON"))db.update("insert ignore into study_progress(user_id,lesson_id) values(?,?)",u.id,reference);
         return create(u,kind,reference,key);
@@ -155,7 +179,7 @@ public class RoadmapCourseService {
         for(var row:rows){for(var question:parse(row.get("questions_json"))){var q=question.deepCopy();((ObjectNode)q).put("lessonId",row.get("id").toString());((ObjectNode)q).put("lessonTitle",row.get("title").toString());((ObjectNode)q).put("moduleTitle",row.get("module_title").toString());banks.computeIfAbsent(row.get("module_id").toString(),k->new ArrayList<>()).add(q);}}
         List<JsonNode> selected=kind.equals("LESSON")?banks.values().stream().flatMap(Collection::stream).toList():selectBalanced(banks,10);
         require(!selected.isEmpty()&&(!kind.equals("LEVEL_TEST")||selected.size()==10),"Bộ câu hỏi chưa đủ để bắt đầu");
-        int required=kind.equals("LEVEL_TEST")?8:0;var snapshot=json.createArrayNode();selected.forEach(snapshot::add);
+        int required=requiredCorrect(kind,selected.size());var snapshot=json.createArrayNode();selected.forEach(snapshot::add);
         var keys=new GeneratedKeyHolder();db.update(c->{var s=c.prepareStatement("insert into study_attempts(user_id,kind,reference_id,request_key,required_correct,questions_json,answers_json) values(?,?,?,?,?,?,'{}')",Statement.RETURN_GENERATED_KEYS);s.setLong(1,u.id);s.setString(2,kind);s.setString(3,reference);s.setString(4,key);s.setInt(5,required);s.setString(6,snapshot.toString());return s;},keys);
         return view(u,Objects.requireNonNull(keys.getKey()).longValue());
     }
@@ -186,20 +210,41 @@ public class RoadmapCourseService {
         for(var question:qs){var q=(ObjectNode)question.deepCopy();if(submitted){var answer=answers.path(q.path("id").asText());q.put("answer",answer.asText());q.put("correct",answer.asText().equals(q.path("correctOption").asText()));}else{q.remove("correctOption");q.remove("explanation");}safe.add(q);}
         var out=new LinkedHashMap<String,Object>();String kind=a.get("kind").toString(),reference=a.get("reference_id").toString();
         out.put("id",id);out.put("kind",kind);out.put("referenceId",reference);out.put("status",a.get("status"));out.put("levelId",levelOf(kind,reference));out.put("questions",safe);out.put("answers",answers);out.put("requiredCorrect",a.get("required_correct"));out.put("totalQuestions",qs.size());
-        if(submitted)out.put("correctCount",a.get("correct_count"));
+        out.put("requiredCorrect",requiredCorrect(kind,qs.size()));
+        if(submitted){out.put("correctCount",a.get("correct_count"));out.put("awardedXp",a.getOrDefault("awarded_xp",0));}
         String title=kind.equals("LESSON")?lessonRow(reference).get("title").toString():kind.startsWith("MODULE_")?moduleRow(reference).get("title").toString():db.queryForObject("select title from study_levels where id=?",String.class,Integer.parseInt(reference));out.put("title",title);return out;
     }
     private Object save(User u,JsonNode p,boolean submit){
         long id=attemptId(p);var a=attempt(u,id,true);if(!"IN_PROGRESS".equals(a.get("status")))return view(u,id);
         JsonNode questions=parse(a.get("questions_json")),answers=validateAnswers(questions,p.path("answers"),submit);
         if(!submit){db.update("update study_attempts set answers_json=? where id=?",answers.toString(),id);return view(u,id);}
-        int correct=score(questions,answers),required=((Number)a.get("required_correct")).intValue();String kind=a.get("kind").toString();
-        String status=kind.equals("LEVEL_TEST")?(correct>=required?"PASSED":"FAILED"):"COMPLETED";
+        String kind=a.get("kind").toString();int correct=score(questions,answers),required=requiredCorrect(kind,questions.size());boolean passed=correct>=required;
+        String status=kind.endsWith("TEST")?(passed?"PASSED":"FAILED"):kind.equals("LESSON")?(passed?"COMPLETED":"FAILED"):"COMPLETED";
         db.update("update study_attempts set answers_json=?,correct_count=?,status=?,submitted_at=current_timestamp(6) where id=?",answers.toString(),correct,status,id);
-        if(kind.equals("LESSON"))db.update("insert into study_progress(user_id,lesson_id,completed_at) values(?,?,current_timestamp(6)) on duplicate key update completed_at=coalesce(completed_at,values(completed_at))",u.id,a.get("reference_id"));
+        if(kind.equals("LESSON")&&passed)db.update("insert into study_progress(user_id,lesson_id,completed_at) values(?,?,current_timestamp(6)) on duplicate key update completed_at=coalesce(completed_at,values(completed_at))",u.id,a.get("reference_id"));
+        if(kind.equals("MODULE_TEST")&&passed)db.update("insert ignore into study_module_mastery(user_id,module_id) values(?,?)",u.id,a.get("reference_id"));
         if(kind.equals("LEVEL_TEST")&&status.equals("PASSED"))placement.advance(u.id,Integer.parseInt(a.get("reference_id").toString())+1);
+        dailyQuests.recordProgress(u.id,"CORRECT_COUNT",correct);
+        int streak=0,best=0;
+        for(var question:questions){
+            streak=question.path("correctOption").asText().equals(answers.path(question.path("id").asText()).asText())?streak+1:0;
+            best=Math.max(best,streak);
+        }
+        dailyQuests.recordProgress(u.id,"STREAK_CORRECT",best);
+        if(kind.endsWith("REVIEW")){
+            dailyQuests.recordProgress(u.id,"PRACTICE_COUNT",1);
+            if(questions.size()>=10&&correct==questions.size())dailyQuests.recordProgress(u.id,"PERFECT_PRACTICE",1);
+        }
+        if(correct>=masteryThreshold(questions.size())){
+            int awarded=rewards.award(u.id,kind,a.get("reference_id").toString(),id);
+            db.update("update study_attempts set awarded_xp=? where id=?",awarded,id);
+            dailyQuests.recordLearningDay(u.id);
+            dailyQuests.recordProgress(u.id,"QUALITY_STUDY",1);
+        }
         events.publishEvent(new ProgressChanged(u.username));return view(u,id);
     }
+    static int masteryThreshold(int count){return (count*4+4)/5;}
+    static int requiredCorrect(String kind,int count){return kind.equals("LESSON")||kind.endsWith("TEST")?masteryThreshold(count):0;}
     ObjectNode validateAnswers(JsonNode questions,JsonNode input,boolean complete){
         require(input.isObject(),"Câu trả lời không hợp lệ");var clean=json.createObjectNode();var validIds=new HashSet<String>();
         for(var q:questions){String id=q.path("id").asText();validIds.add(id);var answer=input.get(id);if(answer!=null){require(answer.isTextual()&&answer.asText().matches("[ABCD]"),"Đáp án không hợp lệ");clean.put(id,answer.asText());}else require(!complete,"Hãy trả lời đầy đủ các câu hỏi trước khi nộp");}

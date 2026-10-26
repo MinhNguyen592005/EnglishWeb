@@ -19,6 +19,39 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class PvpArenaFeaturesTest {
+    record MatchFixture(ArenaController controller,JdbcTemplate db,UserRepository users,User host,User guest) {}
+    private MatchFixture finalRound(boolean ranked,int hostScore,int guestScore,int hostElo,int guestElo){
+        var db=mock(JdbcTemplate.class);var users=mock(UserRepository.class);
+        var host=new User("host","Host","unused");host.id=1L;host.pvpElo=hostElo;
+        var guest=new User("guest","Guest","unused");guest.id=2L;guest.pvpElo=guestElo;
+        when(users.findWithLockById(1L)).thenReturn(Optional.of(host));when(users.findWithLockById(2L)).thenReturn(Optional.of(guest));
+        when(users.findById(1L)).thenReturn(Optional.of(host));when(users.findById(2L)).thenReturn(Optional.of(guest));
+        var room=new HashMap<String,Object>();room.put("id",99L);room.put("is_matchmade",ranked);room.put("status","IN_PROGRESS");
+        room.put("host_id",1L);room.put("guest_id",2L);room.put("current_round",10);room.put("question_limit",10);
+        room.put("host_score",hostScore);room.put("guest_score",guestScore);room.put("round_deadline_at",Timestamp.from(Instant.now().minusSeconds(1)));
+        when(db.queryForList("select * from arena_rooms where id=? for update",99L)).thenReturn(List.of(room));
+        when(db.queryForMap("select correct_option,host_answer,guest_answer from arena_rounds where room_id=? and round_no=?",99L,10))
+            .thenReturn(Map.of("correct_option","A","host_answer","B","guest_answer","B"));
+        return new MatchFixture(new ArenaController(db,users,mock(RealtimeNotifier.class)),db,users,host,guest);
+    }
+    @Test void friendlyRoomDoesNotChangeEloRankedStatsOrCosmetics(){
+        var f=finalRound(false,8,3,1000,1200);f.controller.advance(99L);
+        assertEquals(1000,f.host.pvpElo);assertEquals(1200,f.guest.pvpElo);
+        assertEquals(0,f.host.pvpWins);assertEquals(0,f.guest.pvpLosses);
+        verify(f.users,never()).save(any());
+        verify(f.db).update("update arena_rooms set result_type=?,elo_settled=true where id=?","SCORE",99L);
+    }
+    @Test void equalCorrectAnswersDrawWithoutSpeedTiebreaker(){
+        var f=finalRound(true,7,7,1000,1000);f.controller.advance(99L);
+        assertEquals(1000,f.host.pvpElo);assertEquals(1000,f.guest.pvpElo);
+        assertEquals(1,f.host.pvpDraws);assertEquals(1,f.guest.pvpDraws);
+        verify(f.db).update("update arena_rooms set host_elo_before=?,guest_elo_before=?,host_elo_change=?,guest_elo_change=?,result_type=?,elo_settled=true where id=?",1000,1000,0,0,"DRAW",99L);
+    }
+    @Test void recordedLossAtEloFloorMatchesActualBalance(){
+        var f=finalRound(true,0,1,100,100);f.controller.advance(99L);
+        assertEquals(100,f.host.pvpElo);assertEquals(116,f.guest.pvpElo);
+        verify(f.db).update("update arena_rooms set host_elo_before=?,guest_elo_before=?,host_elo_change=?,guest_elo_change=?,result_type=?,elo_settled=true where id=?",100,100,0,16,"SCORE",99L);
+    }
 
     @Test
     void eloAndRankTiersCalculateAccuratelyAndDoNotAffectLearningXp() {
@@ -120,6 +153,7 @@ class PvpArenaFeaturesTest {
 
         Map<String, Object> room = new HashMap<>();
         room.put("id", 99L);
+        room.put("is_matchmade", true);
         room.put("status", "IN_PROGRESS");
         room.put("host_id", 1L);
         room.put("guest_id", 2L);

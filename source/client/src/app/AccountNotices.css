@@ -7,3 +7,5 @@
 .system-notice-close { flex: 0 0 auto; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: inherit; font-size: 24px; }
 .system-notice-close:hover { background: #dfe3ff; }
 .system-notice-close:focus-visible { outline: 2px solid #4856b8; outline-offset: 2px; }
+.security-notice { border-color: #e8b768; background: #fff8e8; color: #794414; }
+.security-notice a { color: inherit; font-weight: 600; }

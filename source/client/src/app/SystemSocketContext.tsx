@@ -27,6 +27,7 @@ export function SystemSocketProvider({ children }: { children: ReactNode }) {
   const [connected, setConnected] = useState(false)
   const [socketNotice,setSocketNotice]=useState('')
   const [systemNotice,setSystemNotice]=useState('')
+  const [securityNotice,setSecurityNotice]=useState('')
   const [idleReminder,setIdleReminder]=useState('')
   const socket = useRef<WebSocket | null>(null)
   const pending = useRef(new Map<string, Pending>())
@@ -81,6 +82,9 @@ export function SystemSocketProvider({ children }: { children: ReactNode }) {
         let message: Message
         try { message = JSON.parse(event.data) } catch { return }
         if (!message || typeof message.action !== 'string') return
+        if(message.action==='ROADMAP_PROGRESS_CHANGED') {
+          void request<Profile>('ACCOUNT_GET','ACCOUNT_DATA').then(profile=>{if(profile.id===userRef.current?.id)setUser(profile)}).catch(()=>{})
+        }
         if(message.action==='ACCOUNT_UPDATE') {
           const profile=message.payload as Profile
           if(profile?.id===userRef.current?.id&&['ADMIN','TEACHER','LEARNER'].includes(profile.role)&&Number.isFinite(profile.totalXp)){
@@ -99,6 +103,10 @@ export function SystemSocketProvider({ children }: { children: ReactNode }) {
             receivedReports.current.add(key);setReportNotices(old=>[...old,{key,text:data.message,title:message.action==='REPORT_SUBMITTED'?'Đã tiếp nhận báo cáo':message.action==='REPORT_DECISION'?'Kết quả xử lý báo cáo':'Thông báo báo cáo'}].slice(-3))
             if(message.action==='REPORT_DECISION'&&data.decision==='LOCK'&&data.recipient==='TARGET')setSocketNotice(data.message)
           }
+        }
+        if(message.action==='SECURITY_WARNING'||(message.action==='SECURITY_INCIDENT'&&userRef.current?.role==='ADMIN')) {
+          const data=message.payload as {message?:unknown;id?:number;username?:string}
+          if(typeof data?.message==='string')setSecurityNotice(message.action==='SECURITY_INCIDENT'?`Cảnh báo #${data.id} · ${data.username||'Chưa đăng nhập'}: ${data.message}`:data.message)
         }
         if(message.action==='SYSTEM_NOTICE') {
           const text=(message.payload as {message?:unknown})?.message
@@ -144,6 +152,7 @@ export function SystemSocketProvider({ children }: { children: ReactNode }) {
       setConnected(false)
       setIdleReminder('')
       setSystemNotice('')
+      setSecurityNotice('')
       // Thu hồi tài nguyên: đóng socket, xóa bộ chờ và timer khi đăng xuất/unmount.
       const current = socket.current
       socket.current = null
@@ -174,10 +183,10 @@ export function SystemSocketProvider({ children }: { children: ReactNode }) {
     return () => events.forEach(name => window.removeEventListener(name, interaction, true))
   }, [])
 
-  const adminReminder=systemNotice?<aside className="system-notice" role="status" aria-live="polite">
+  const adminReminder=<>{securityNotice&&<aside className="system-notice security-notice" role="alert"><div><strong>Cảnh báo hoạt động bất thường</strong><p>{securityNotice}</p>{user?.role==='ADMIN'&&<a href="/admin?tab=overview#security-incidents">Xem và xử lý cảnh báo</a>}</div><button className="system-notice-close" aria-label="Đóng cảnh báo bảo mật" onClick={()=>setSecurityNotice('')}>×</button></aside>}{systemNotice?<aside className="system-notice" role="status" aria-live="polite">
     <div><strong>Lời nhắc từ quản trị viên</strong><p>{systemNotice}</p></div>
     <button type="button" className="system-notice-close" aria-label="Đóng lời nhắc từ quản trị viên" onClick={()=>setSystemNotice('')}>×</button>
-  </aside>:null
+  </aside>:null}</>
   return <Context.Provider value={{ connected, request, subscribe }}>{adminReminder}{socketNotice&&<div className="error-banner" role="alert">{socketNotice}</div>}{accountNotice&&<div className="success-banner" role="status">{accountNotice}</div>}{children}{user&&reportNotices.length>0&&<div className="account-report-notices" aria-live="polite">{reportNotices.map(item=><aside className="card" role="status" key={item.key}><strong>Thông báo báo cáo</strong><p>{item.text}</p><button className="text-button" onClick={()=>setReportNotices(old=>old.filter(n=>n.key!==item.key))}>Đã hiểu</button></aside>)}</div>}{idleReminder&&<aside className="idle-reminder" role="status" aria-live="polite"><span className="idle-reminder-icon" aria-hidden="true">✨</span><div><strong>Tiếp tục hành trình nhé!</strong><p>{idleReminder}</p></div><button type="button" aria-label="Đóng lời nhắc" onClick={()=>{
     setIdleReminder('')
     if(socket.current?.readyState===WebSocket.OPEN)socket.current.send(JSON.stringify({action:'CLIENT_INTERACTION'}))

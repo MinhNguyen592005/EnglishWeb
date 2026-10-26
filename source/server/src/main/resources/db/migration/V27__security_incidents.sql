@@ -1,0 +1,20 @@
+CREATE TABLE security_incidents (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    user_id BIGINT NULL,
+    username VARCHAR(80) NULL,
+    peer_address VARCHAR(128) NULL,
+    session_id VARCHAR(128) NULL,
+    rule_code VARCHAR(40) NOT NULL,
+    severity VARCHAR(20) NOT NULL,
+    message VARCHAR(255) NOT NULL,
+    event_count INT NOT NULL,
+    window_seconds INT NOT NULL,
+    status VARCHAR(20) NOT NULL DEFAULT 'OPEN',
+    decision VARCHAR(20) NULL,
+    note VARCHAR(500) NULL,
+    resolved_by BIGINT NULL,
+    occurred_at TIMESTAMP(6) NOT NULL,
+    resolved_at TIMESTAMP(6) NULL,
+    INDEX idx_security_status_time (status, occurred_at),
+    INDEX idx_security_user_time (user_id, occurred_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

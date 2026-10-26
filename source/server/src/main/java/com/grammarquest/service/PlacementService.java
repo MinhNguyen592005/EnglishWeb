@@ -74,7 +74,7 @@ public class PlacementService {
             var answers=(ObjectNode)parse(attempt.get("answers_json"));answers.put(questionId,option);
             db.update("update study_entry_attempts set answers_json=? where id=?",answers.toString(),id.asLong());return Map.of("saved",true,"attemptId",id.asLong());
         }
-        var answers=validateAnswers(questions,p.path("answers"));int correct=score(questions,answers),start=startingLevelForScore(correct);
+        var answers=validateAnswers(questions,p.path("answers"));int correct=score(questions,answers),start=startingLevelForAnswers(questions,answers);
         var passed=json.createArrayNode();for(int level=1;level<start;level++)passed.add(level);
         db.update("update study_entry_attempts set status='COMPLETED',answers_json=?,correct_count=?,completed_at=current_timestamp(6) where id=?",answers.toString(),correct,id.asLong());
         db.update("update study_entry_profiles set status='COMPLETED',starting_level=?,current_level=?,passed_levels=?,completed_at=current_timestamp(6) where user_id=?",start,start,passed.toString(),u.id);
@@ -89,7 +89,7 @@ public class PlacementService {
         return json.valueToTree(draw(banks));
     }
     static List<JsonNode> draw(Map<Integer,List<JsonNode>> banks){
-        int[] counts={3,3,2,1,1};var selected=new ArrayList<JsonNode>();
+        int[] counts={5,5,5,5,5};var selected=new ArrayList<JsonNode>();
         for(int level=1;level<=5;level++){var copy=new ArrayList<>(banks.get(level));Collections.shuffle(copy);selected.addAll(copy.subList(0,counts[level-1]));}
         Collections.shuffle(selected);return selected;
     }
@@ -112,19 +112,26 @@ public class PlacementService {
                 var last=db.queryForMap("select l.id,l.module_id,m.level_id,p.completed_at from study_lessons l join study_modules m on m.id=l.module_id left join study_progress p on p.lesson_id=l.id and p.user_id=? where l.id=?",u.id,state.get("last_lesson_id"));
                 if(last.get("completed_at")==null)resumePath="/roadmap?planet=level-"+last.get("level_id")+"&module="+last.get("module_id")+"&lesson="+last.get("id");
             }
-            out.put("correctCount",correct);out.put("totalQuestions",10);out.put("startingLevel",start);out.put("currentLevel",current);out.put("passedLevels",parse(state.get("passed_levels")));out.put("completedAt",state.get("completed_at").toString());out.put("message",resultMessage(correct));out.put("startPath",startPath);out.put("resumePath",resumePath);
+            int total=db.queryForObject("select json_length(questions_json) from study_entry_attempts where user_id=?",Integer.class,u.id);
+            out.put("correctCount",correct);out.put("totalQuestions",total);out.put("startingLevel",start);out.put("currentLevel",current);out.put("passedLevels",parse(state.get("passed_levels")));out.put("completedAt",state.get("completed_at").toString());out.put("message",start==1?"Bạn sẽ bắt đầu từ Level 1 để củng cố nền tảng.":"Bạn đã đạt kiến thức các level trước và sẽ bắt đầu từ Level "+start+".");out.put("startPath",startPath);out.put("resumePath",resumePath);
         }
         return out;
     }
     ObjectNode validateAnswers(JsonNode questions,JsonNode input){
-        if(!input.isObject()||input.size()!=10)throw invalid("Hãy trả lời đủ 10 câu trước khi nộp");var clean=json.createObjectNode();
-        for(var q:questions){String id=q.path("id").asText();var a=input.get(id);if(a==null||!a.isTextual()||!a.asText().matches("[ABCD]"))throw invalid("Hãy trả lời đầy đủ và hợp lệ tất cả 10 câu");clean.put(id,a.asText());}return clean;
+        if(!input.isObject()||input.size()!=questions.size())throw invalid("Hãy trả lời đủ "+questions.size()+" câu trước khi nộp");var clean=json.createObjectNode();
+        for(var q:questions){String id=q.path("id").asText();var a=input.get(id);if(a==null||!a.isTextual()||!a.asText().matches("[ABCD]"))throw invalid("Hãy trả lời đầy đủ và hợp lệ tất cả câu hỏi");clean.put(id,a.asText());}return clean;
     }
     static int score(JsonNode questions,JsonNode answers){int result=0;for(var q:questions)if(q.path("correctOption").asText().equals(answers.path(q.path("id").asText()).asText()))result++;return result;}
-    public static int startingLevelForScore(int score){if(score<0||score>10)throw new IllegalArgumentException("Score must be 0..10");return score<=5?1:score<=8?2:3;}
-    public static String resultMessage(int score){return switch(startingLevelForScore(score)){
-        case 1 -> "Bạn chưa vượt qua level nào trong bài kiểm tra đầu vào. Bạn sẽ bắt đầu học từ Level 1.";
-        case 2 -> "Bạn đã vượt qua Level 1 trong bài kiểm tra đầu vào. Bạn sẽ bắt đầu học từ Level 2.";
-        default -> "Bạn đã vượt qua Level 1 và Level 2 trong bài kiểm tra đầu vào. Bạn sẽ bắt đầu học từ Level 3.";
-    };}
+    /** Never skip a weak foundational level based on points earned in harder groups. */
+    static int startingLevelForAnswers(JsonNode questions,JsonNode answers){
+        int start=1;
+        for(int level=1;level<5;level++){
+            int count=0,correct=0;
+            for(var q:questions)if(q.path("level").asInt()==level){count++;if(q.path("correctOption").asText().equals(answers.path(q.path("id").asText()).asText()))correct++;}
+            // Older in-progress ten-question snapshots remain valid, but sparse groups cannot exempt a level.
+            if(count<3||correct<RoadmapCourseService.masteryThreshold(count))break;
+            start=level+1;
+        }
+        return start;
+    }
 }

@@ -538,8 +538,9 @@ public class ArenaController {
         Long guestId = r.get("guest_id") == null ? null : ((Number) r.get("guest_id")).longValue();
         db.update("update arena_rooms set status='FINISHED',host_score=?,guest_score=?,winner_id=?,round_deadline_at=null,pause_started_at=null,paused_user_id=null,state_version=state_version+1 where id=?",
             hostScore, guestScore, winnerId, id);
+        db.update("update arena_rooms set result_type=?,elo_settled=true where id=?",resultType,id);
 
-        if (guestId != null && !Boolean.TRUE.equals(r.get("elo_settled"))) {
+        if (guestId != null && Boolean.TRUE.equals(r.get("is_matchmade")) && !Boolean.TRUE.equals(r.get("elo_settled"))) {
             long firstId = Math.min(hostId, guestId);
             long secondId = Math.max(hostId, guestId);
             users.findWithLockById(firstId);
@@ -557,6 +558,8 @@ public class ArenaController {
                 hostUser.pvpElo = PvpRankRules.applyEloChange(hostEloBefore, hostDelta);
                 hostUser.pvpPeakElo = Math.max(hostUser.pvpPeakElo, hostUser.pvpElo);
                 guestUser.pvpElo = PvpRankRules.applyEloChange(guestEloBefore, guestDelta);
+                hostDelta = hostUser.pvpElo - hostEloBefore;
+                guestDelta = guestUser.pvpElo - guestEloBefore;
                 guestUser.pvpPeakElo = Math.max(guestUser.pvpPeakElo, guestUser.pvpElo);
 
                 if (winnerId == null) {
@@ -582,10 +585,8 @@ public class ArenaController {
                 syncUserCosmetics(hostUser);
                 syncUserCosmetics(guestUser);
 
-                try {
-                    db.update("update arena_rooms set host_elo_before=?,guest_elo_before=?,host_elo_change=?,guest_elo_change=?,result_type=?,elo_settled=true where id=?",
-                        hostEloBefore, guestEloBefore, hostDelta, guestDelta, resultType, id);
-                } catch (RuntimeException ignored) {}
+                db.update("update arena_rooms set host_elo_before=?,guest_elo_before=?,host_elo_change=?,guest_elo_change=?,result_type=?,elo_settled=true where id=?",
+                    hostEloBefore, guestEloBefore, hostDelta, guestDelta, resultType, id);
             }
         }
         if (dailyQuestService != null) {
@@ -667,13 +668,6 @@ public class ArenaController {
             if(hostScore!=guestScore) {
                 winner=hostScore>guestScore?((Number)r.get("host_id")).longValue():((Number)r.get("guest_id")).longValue();
                 resultType = matchExpired ? "MATCH_TIME_LIMIT" : "SCORE";
-            } else {
-                var speed=db.queryForMap("select coalesce(sum(case when host_answer=correct_option then timestampdiff(microsecond,started_at,host_answered_at) else 0 end),0) as hostTime,coalesce(sum(case when guest_answer=correct_option then timestampdiff(microsecond,started_at,guest_answered_at) else 0 end),0) as guestTime from arena_rounds where room_id=?",id);
-                long h=((Number)speed.get("hostTime")).longValue(),g=((Number)speed.get("guestTime")).longValue();
-                if(h!=g) {
-                    winner=h<g?((Number)r.get("host_id")).longValue():((Number)r.get("guest_id")).longValue();
-                    resultType = "SPEED_TIEBREAKER";
-                }
             }
             finishMatchWithElo(r, hostScore, guestScore, winner, resultType);
         } else {

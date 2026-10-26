@@ -68,7 +68,7 @@ export function Layout({ children, title }: { children: ReactNode; title: string
     <aside className={`sidebar ${menu ? 'open' : ''}`}>
       <Link to={home} className="brand" onClick={() => setMenu(false)}><span className="brand-mark"><Rocket size={23}/></span>Grammar Quest</Link>
       <nav aria-label="Điều hướng chính" className="nav-list">{links.map(({ to, label, icon: Icon }) => <Link key={to} to={to} onClick={() => setMenu(false)} aria-current={isLinkActive(to)?'page':undefined} className={`nav-link ${isLinkActive(to)?'active':''}`}><Icon size={21}/>{label}</Link>)}</nav>
-      <div className="sidebar-bottom"><div className={`avatar ${frameClass}`}>{user?.displayName.slice(0, 1).toUpperCase()}</div><div><strong>{user?.displayName}</strong><small>{isAdmin?'Quản trị viên':isTeacher?'Giáo viên':`Cấp ${user?.level} · ${user?.pvpRankTitle || 'Đồng'} (${user?.pvpElo ?? 1000} ELO)`}</small></div></div>
+      <div className="sidebar-bottom"><div className={`avatar ${frameClass}`}>{user?.displayName.slice(0, 1).toUpperCase()}</div><div><strong>{user?.displayName}</strong><small>{isAdmin?'Quản trị viên':isTeacher?'Giáo viên':`Cấp tài khoản ${user?.level} · ${user?.pvpRankTitle || 'Đồng'} (${user?.pvpElo ?? 1000} ELO)`}</small></div></div>
     </aside>
     {menu && <button className="backdrop" aria-label="Đóng menu" onClick={() => setMenu(false)}/>}
     <div className="main-panel">

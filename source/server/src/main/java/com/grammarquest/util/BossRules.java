@@ -7,5 +7,5 @@ public final class BossRules {
     public static double hp(String kind, int correctCount) {
         return kind.equals("PRACTICE") ? 0 : Math.max(0,100-correctCount*(kind.equals("CHAPTER_BOSS")?12.5:20));
     }
-    public static int firstWinXp(String kind) { return kind.equals("CHAPTER_BOSS") ? 150 : kind.equals("LESSON_BOSS") ? 50 : 0; }
+    public static int firstWinXp(String kind) { return kind.equals("CHAPTER_BOSS") ? 150 : kind.equals("LESSON_BOSS") ? 20 : 0; }
 }

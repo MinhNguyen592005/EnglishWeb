@@ -19,7 +19,7 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   })
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as ApiError
-    if (response.status === 401 && path !== '/auth/login') window.dispatchEvent(new Event('grammarquest:unauthenticated'))
+    if ((response.status === 401 && path !== '/auth/login') || body.code === 'ACCOUNT_LOCKED') window.dispatchEvent(new Event('grammarquest:unauthenticated'))
     throw new Error(body.message || (response.status >= 500 ? offlineMessage : `Máy chủ trả lỗi ${response.status}`))
   }
   if (response.status === 204) return undefined as T
@@ -33,6 +33,8 @@ export async function refreshCsrf() {
   if (!csrfToken) throw new Error('Máy chủ chưa cấp mã bảo mật phiên.')
 }
 export const api = {
+  securityIncidents: () => request<import('../components/SecurityIncidentsPanel').SecurityIncident[]>('/admin/security-incidents'),
+  decideSecurityIncident: (id: number, action: 'WARN' | 'LOCK' | 'DISMISS', note: string) => request(`/admin/security-incidents/${id}/decision`, { method: 'POST', body: JSON.stringify({ action, note }) }),
   adminBusiness: () => request<{days:{date:string;registrations:number;classes:number;matches:number}[];finishedMatches:number}>('/admin/business'),
   adminDeleteLesson: (id:number) => request(`/admin/lessons/${id}`,{method:'DELETE'}),
   adminDeleteQuestion: (id:number) => request(`/admin/questions/${id}`,{method:'DELETE'}),

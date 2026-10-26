@@ -113,4 +113,23 @@ class LearningServiceTest {
         assertTrue(visible.options().isEmpty());
         assertNull(visible.correctOption());
     }
+    @Test void chapterDamageTracksActualHpAndStopsAtZero() {
+        var quests=mock(com.grammarquest.service.DailyQuestService.class);
+        service=new LearningService(users,lessons,questions,attempts,items,xp,db,quests);
+        boss.kind="CHAPTER_BOSS";
+        var entries=new ArrayList<AttemptItem>();
+        for(int i=1;i<=10;i++){
+            Question q=new Question();q.correctOption="B";
+            entries.add(new AttemptItem(boss.id,i,q));
+        }
+        when(attempts.findWithLockById(20L)).thenReturn(Optional.of(boss));
+        when(items.findByAttemptIdOrderByOrdinalNoAsc(20L)).thenReturn(entries);
+        // Leave the final question unanswered so this test isolates damage from XP rewards.
+        for(int i=1;i<=9;i++)service.answer("minh",20L,i,"B");
+        var damage=org.mockito.ArgumentCaptor.forClass(Integer.class);
+        verify(quests,times(9)).recordProgress(eq(7L),eq("BOSS_DAMAGE"),damage.capture());
+        assertEquals(100,damage.getAllValues().stream().mapToInt(Integer::intValue).sum());
+        assertEquals(0,damage.getAllValues().get(8));
+        assertEquals(0,com.grammarquest.util.BossRules.hp(boss.kind,boss.correctCount));
+    }
 }

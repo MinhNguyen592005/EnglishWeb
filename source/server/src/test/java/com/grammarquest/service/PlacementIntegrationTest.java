@@ -46,7 +46,8 @@ class PlacementIntegrationTest {
     ObjectNode answers(String table,long id,int right)throws Exception {
         assertTrue(Set.of("study_entry_attempts","study_attempts").contains(table));
         var questions=json.readTree(db.queryForObject("select questions_json from "+table+" where id=?",String.class,id));var out=json.createObjectNode();int i=0;
-        for(var q:questions){String answer=q.path("correctOption").asText();out.put(q.path("id").asText(),i++<right?answer:answer.equals("A")?"B":"A");}return out;
+        var ordered=new ArrayList<JsonNode>();questions.forEach(ordered::add);if(table.equals("study_entry_attempts"))ordered.sort(Comparator.comparingInt(q->q.path("level").asInt()));
+        for(var q:ordered){String answer=q.path("correctOption").asText();out.put(q.path("id").asText(),i++<right?answer:answer.equals("A")?"B":"A");}return out;
     }
     final class Session {
         final HttpClient http=HttpClient.newBuilder().cookieHandler(new CookieManager(null,CookiePolicy.ACCEPT_ALL)).build();
@@ -82,9 +83,9 @@ class PlacementIntegrationTest {
         assertNull(db.queryForObject("select placement_accepted_at from study_entry_profiles where user_id=?",java.sql.Timestamp.class,uid));
         assertEquals("Placement learner",db.queryForObject("select display_name from users where id=?",String.class,uid));
         assertFalse(open.has("welcomeRequired"));assertFalse(open.has("onboarding"));
-        assertEquals(10,open.path("questions").size());assertFalse(open.has("correctCount"));
+        assertEquals(25,open.path("questions").size());assertFalse(open.has("correctCount"));
         var seen=new HashSet<String>();int[] count=new int[6];for(var q:open.path("questions")){assertTrue(seen.add(q.path("id").asText()));count[q.path("level").asInt()]++;assertFalse(q.has("correctOption"));assertFalse(q.has("explanation"));}
-        assertArrayEquals(new int[]{0,3,3,2,1,1},count);
+        assertArrayEquals(new int[]{0,5,5,5,5,5},count);
         assertEquals(50,db.queryForObject("select count(*) from study_entry_questions",Integer.class));
         String question=open.path("questions").get(0).path("id").asText();
         call("entry_resume","PLACEMENT_SAVE",Map.of("attemptId",id,"questionId",question,"option","A"));
@@ -103,23 +104,24 @@ class PlacementIntegrationTest {
         }finally{socket.sendClose(1000,"complete").join();}
     }
     @Test void exactBoundariesIdempotentConcurrentSubmitAndCourseAccess()throws Exception {
-        for(int score:new int[]{0,5,6,8,9,10}){
+        for(int score:new int[]{0,5,6,8,9,10,15,20,25}){
             String name="entry_score_"+score;register(name);var open=call(name,"PLACEMENT_OPEN",Map.of());long id=open.path("attemptId").asLong();
             var payload=Map.of("attemptId",id,"answers",answers("study_entry_attempts",id,score));
             JsonNode result;
             try(var pool=Executors.newFixedThreadPool(2)){
                 var first=pool.submit(()->call(name,"PLACEMENT_SUBMIT",payload));var second=pool.submit(()->call(name,"PLACEMENT_SUBMIT",payload));result=first.get(15,TimeUnit.SECONDS);assertEquals(result,second.get(15,TimeUnit.SECONDS));
             }
-            assertEquals(score,result.path("correctCount").asInt());int start=score<=5?1:score<=8?2:3;assertEquals(start,result.path("startingLevel").asInt());assertEquals(start,result.path("currentLevel").asInt());assertEquals(start-1,result.path("passedLevels").size());
-            assertEquals(PlacementService.resultMessage(score),result.path("message").asText());
+            assertEquals(score,result.path("correctCount").asInt());int start=Math.min(5,1+(score+1)/5);assertEquals(start,result.path("startingLevel").asInt());assertEquals(start,result.path("currentLevel").asInt());assertEquals(start-1,result.path("passedLevels").size());
+            assertTrue(result.path("message").asText().contains("Level "+start));
+            assertEquals(25,result.path("totalQuestions").asInt());
             for(String key:List.of("questions","answers","correctOption","explanation"))assertFalse(result.has(key));
             assertEquals(result,call(name,"PLACEMENT_SUBMIT",Map.of("attemptId",id,"answers",answers("study_entry_attempts",id,10))));assertEquals(result,call(name,"PLACEMENT_OPEN",Map.of()));
             var session=new Session();session.login(name);assertFalse(call(name,"PLACEMENT_STATUS",Map.of()).path("required").asBoolean());
             long uid=db.queryForObject("select id from users where username=?",Long.class,name);assertEquals(1,db.queryForObject("select count(*) from study_entry_attempts where user_id=?",Integer.class,uid));assertEquals(0,db.queryForObject("select count(*) from study_progress where user_id=?",Integer.class,uid));
             var levels=roadmap(name,"ROADMAP_OPEN",Map.of()).path("levels");
             for(int i=0;i<5;i++){assertEquals(i<start,levels.get(i).path("unlocked").asBoolean());assertEquals(0,levels.get(i).path("completedCount").asInt());if(i<start-1)for(var module:levels.get(i).path("modules"))assertTrue(module.path("unlocked").asBoolean());}
-            String locked=db.queryForObject("select l.id from study_lessons l join study_modules m on m.id=l.module_id where m.level_id=? order by m.ordinal_no,l.ordinal_no limit 1",String.class,start+1);
-            assertThrows(ApiException.class,()->roadmap(name,"ROADMAP_LESSON",Map.of("lessonId",locked)));
+            if(start<5){String locked=db.queryForObject("select l.id from study_lessons l join study_modules m on m.id=l.module_id where m.level_id=? order by m.ordinal_no,l.ordinal_no limit 1",String.class,start+1);
+            assertThrows(ApiException.class,()->roadmap(name,"ROADMAP_LESSON",Map.of("lessonId",locked)));}
             for(int lower=1;lower<start;lower++){
                 String review=db.queryForObject("select l.id from study_lessons l join study_modules m on m.id=l.module_id where m.level_id=? order by m.ordinal_no desc,l.ordinal_no desc limit 1",String.class,lower);
                 assertEquals(review,roadmap(name,"ROADMAP_LESSON",Map.of("lessonId",review)).path("id").asText());
@@ -128,8 +130,12 @@ class PlacementIntegrationTest {
         String name="entry_score_9";long uid=db.queryForObject("select id from users where username=?",Long.class,name);
         String second=db.queryForObject("select l.id from study_lessons l join study_modules m on m.id=l.module_id where m.level_id=3 and m.ordinal_no=2 order by l.ordinal_no limit 1",String.class);
         assertThrows(ApiException.class,()->roadmap(name,"ROADMAP_LESSON",Map.of("lessonId",second)));
-        for(String lesson:db.queryForList("select l.id from study_lessons l join study_modules m on m.id=l.module_id where m.level_id=3 order by m.ordinal_no,l.ordinal_no",String.class)){
-            var a=roadmap(name,"ROADMAP_LESSON",Map.of("lessonId",lesson)).path("attempt");long id=a.path("id").asLong();assertEquals("COMPLETED",roadmap(name,"ROADMAP_SUBMIT",Map.of("attemptId",id,"answers",answers("study_attempts",id,0))).path("status").asText());
+        for(String module:db.queryForList("select id from study_modules where level_id=3 order by ordinal_no",String.class)){
+            for(String lesson:db.queryForList("select id from study_lessons where module_id=? order by ordinal_no",String.class,module)){
+                var a=roadmap(name,"ROADMAP_LESSON",Map.of("lessonId",lesson)).path("attempt");long id=a.path("id").asLong();assertEquals("COMPLETED",roadmap(name,"ROADMAP_SUBMIT",Map.of("attemptId",id,"answers",answers("study_attempts",id,100))).path("status").asText());
+            }
+            var a=roadmap(name,"ROADMAP_START",Map.of("kind","MODULE_TEST","referenceId",module,"requestKey",UUID.randomUUID().toString()));long id=a.path("id").asLong();
+            assertEquals("PASSED",roadmap(name,"ROADMAP_SUBMIT",Map.of("attemptId",id,"answers",answers("study_attempts",id,100))).path("status").asText());
         }
         var exam=roadmap(name,"ROADMAP_START",Map.of("kind","LEVEL_TEST","referenceId","3","requestKey",UUID.randomUUID().toString()));long id=exam.path("id").asLong();
         assertEquals("PASSED",roadmap(name,"ROADMAP_SUBMIT",Map.of("attemptId",id,"answers",answers("study_attempts",id,8))).path("status").asText());

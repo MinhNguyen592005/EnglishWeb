@@ -716,88 +716,45 @@ Sách đã có cấu trúc Study → Write → Context để làm cơ sở biên
 
 CHỨC NĂNG BÀI HỌC VÀ QUY TẮC HOÀN THÀNH
 
-1. Mô tả chung
-   Mỗi bài học thuộc một module trong lộ trình 5 level của hệ thống. Khi mở bài học, người học được cung cấp kiến thức, cấu trúc ngữ pháp, ví dụ minh họa và giải thích. Sau đó, người học thực hiện 3–4 câu luyện tập để củng cố nội dung vừa học.
-   Người học được ghi nhận hoàn thành bài học khi đã trả lời đầy đủ các câu luyện tập và nhấn “Nộp bài”, bất kể kết quả đúng hay sai. Điểm số dùng để phản hồi và hỗ trợ ôn tập, không phải điều kiện hoàn thành bài học.
-2. Nội dung của một bài học
-   Thành phần
-   Nội dung
-   Thông tin bài học
-   Tên bài, module và level tương ứng
-   Kiến thức ngữ pháp
-   Giải thích khái niệm, ý nghĩa và các trường hợp sử dụng
-   Cấu trúc ngữ pháp
-   Công thức, quy tắc kết hợp từ và các trường hợp cần lưu ý
-   Ví dụ minh họa
-   Các câu ví dụ có nghĩa tiếng Việt và giải thích cách sử dụng
-   Luyện tập
-   3–4 câu hỏi bám sát kiến thức của bài
-   Kết quả và giải thích
-   Đáp án đã chọn, kết quả đúng/sai, đáp án đúng và giải thích từng câu
-   Điều hướng
-   Các nút “Làm lại”, “Bài tiếp theo” và “Quay lại module”
+Cập nhật ngày 26/10/2026: tách cấp tài khoản, level học và Elo.
 
-Với bài có nhiều nội dung, phần kiến thức được chia thành các đề mục nhỏ để người học dễ theo dõi. 3. Quy trình học và làm luyện tập
-Người học chọn một bài trong danh sách bài học của module.
-Hệ thống hiển thị kiến thức, cấu trúc ngữ pháp, ví dụ và giải thích.
-Người học thực hiện 3–4 câu luyện tập ở cuối bài.
-Người học có thể thay đổi câu trả lời trước khi nộp.
-Khi đã trả lời đầy đủ, người học nhấn “Nộp bài”.
-Hệ thống chấm điểm, lưu kết quả và cập nhật trạng thái hoàn thành.
-Hệ thống hiển thị đáp án và giải thích cho từng câu.
-Người học lựa chọn làm lại, chuyển sang bài tiếp theo hoặc quay lại module.
-Trước khi nộp bài, hệ thống không hiển thị đáp án đúng hoặc kết quả đúng/sai. Nếu còn câu chưa trả lời, hệ thống thông báo và yêu cầu người học hoàn thành các câu còn thiếu. 4. Hiển thị kết quả luyện tập
-Sau khi nộp bài, mỗi câu hỏi hiển thị đầy đủ:
-Nội dung câu hỏi.
-Câu trả lời của người học.
-Kết quả đúng hoặc sai.
-Đáp án đúng.
-Giải thích quy tắc ngữ pháp được áp dụng.
-Ví dụ:
-Câu hỏi: She \_\_\_ to school every day.
-Bạn chọn: go
-Kết quả: Sai
-Đáp án đúng: goes
-Giải thích: Trong thì hiện tại đơn, chủ ngữ “she” đi với động từ thêm “-s”, vì vậy sử dụng “goes”.
-Phần tổng kết hiển thị số câu đúng trên tổng số câu và trạng thái hoàn thành, chẳng hạn:
-Đã hoàn thành bài học — Đúng 1/4 câu. 5. Điều kiện hoàn thành bài học
-Bài học được đánh dấu “Đã hoàn thành” khi đáp ứng đủ hai điều kiện:
-Người học đã trả lời tất cả các câu luyện tập.
-Người học đã nhấn “Nộp bài” và hệ thống lưu kết quả thành công.
-Không yêu cầu điểm tối thiểu hoặc số câu đúng tối thiểu. Người học vẫn hoàn thành bài nếu trả lời sai toàn bộ câu hỏi; hệ thống cung cấp đáp án và giải thích để người học hiểu và sửa lỗi.
-Kết quả luyện tập
-Trạng thái bài học
-Đúng toàn bộ câu hỏi và đã nộp
-Đã hoàn thành
-Đúng một phần câu hỏi và đã nộp
-Đã hoàn thành
-Sai toàn bộ câu hỏi và đã nộp
-Đã hoàn thành
-Chưa trả lời đầy đủ
-Đang học
-Đã trả lời đầy đủ nhưng chưa nộp
-Đang học
+1. Bài học
+   Mỗi bài gồm mục tiêu, lý thuyết, cấu trúc và ví dụ, lỗi thường gặp, luyện tập, vận dụng và tổng kết. Các câu luyện tập được lưu cùng bài, có đáp án và giải thích; làm lại dùng bộ câu của bài.
+   Người học trả lời đầy đủ rồi nhấn “Nộp bài”. Chỉ sau khi nộp mới hiện đáp án, kết quả từng câu và giải thích.
+   Đạt ít nhất 80% số câu mới ghi nhận hoàn thành; số câu yêu cầu làm tròn lên. Với 3 câu cần đúng 3, với 4 câu cần đúng 4. Chưa đạt thì lưu kết quả “Chưa đạt”, cho xem lời giải và làm lại, không tăng số bài hoàn thành.
+   Một bài chỉ được tính một lần vào tiến độ. Làm lại điểm thấp không thu hồi tiến độ đã đạt. Nút “Bài tiếp theo” chỉ xuất hiện khi bài đã đạt và bài kế tiếp được mở.
 
-6. Trạng thái và tiến độ học
-   Mỗi bài học có ba trạng thái:
-   Chưa học: Người học chưa mở bài.
-   Đang học: Người học đã mở bài nhưng chưa nộp đầy đủ phần luyện tập.
-   Đã hoàn thành: Người học đã trả lời đầy đủ và nộp phần luyện tập.
-   Khi bài học hoàn thành, hệ thống cập nhật số bài đã hoàn thành và thanh tiến độ của module. Một bài chỉ được tính một lần vào tiến độ, kể cả khi người học làm luyện tập nhiều lần.
-7. Chức năng làm lại và học tiếp
-   Sau khi xem kết quả, người học có thể:
-   Chọn “Làm lại” để luyện tập thêm.
-   Chọn “Bài tiếp theo” để tiếp tục lộ trình.
-   Chọn “Quay lại module” để xem danh sách và tiến độ các bài.
-   Làm lại không hủy trạng thái hoàn thành đã đạt. Người học không bị yêu cầu làm lại vì điểm thấp.
-8. Quản lý nội dung bài học
-   Admin quản lý tên bài, vị trí trong module, nội dung kiến thức, cấu trúc, ví dụ, câu luyện tập, đáp án và giải thích. Mỗi bài cần có đầy đủ nội dung và phần luyện tập trước khi được xuất bản cho người học.
-   Quy tắc hoàn thành trên áp dụng cho bài học thông thường. Bài kiểm tra đầu vào, kiểm tra module và kiểm tra cuối level được xử lý theo quy tắc đánh giá riêng.
-   PHẦN CÂU HỎI LUYỆN TẬP TRONG TỪNG BÀI ĐỌC
+2. Module và level học
+   Có thể học các bài trong module đang mở. Đạt toàn bộ bài mới mở kiểm tra module.
+   Kiểm tra module lấy tối đa 10 câu từ nội dung module; đạt ít nhất 80% để mở module tiếp theo.
+   Đạt bài học và kiểm tra tất cả module mới mở kiểm tra cuối level. Kiểm tra level có 10 câu phân bố giữa các module, đạt ít nhất 8/10 để mở level tiếp theo.
+   Các bài kiểm tra hiện vẫn dùng ngân hàng câu hỏi của bài học. Ngân hàng kiểm tra độc lập cần được biên soạn riêng nếu muốn đo khả năng vận dụng trên câu mới.
+   Không dùng EXP hoặc Elo để mở nội dung học.
 
-Mỗi bài gắn với 3–4 câu cố định, có đáp án và giải thích.
-Khi mở bài, hệ thống lấy các câu tương ứng từ database.
-Người học trả lời đủ và nộp bài.
-Hệ thống chấm, hiển thị đáp án cùng giải thích, lưu kết quả và đánh dấu hoàn thành bất kể điểm số.
-Làm lại sẽ dùng chính bộ câu đó.
-Khi cần sửa nội dung, bạn cập nhật qua file dữ liệu hoặc script, không cần xây trang quản trị.
+3. Đầu vào
+   Lượt mới có 25 câu, ngẫu nhiên 5 câu mỗi level từ ngân hàng đầu vào riêng.
+   Xét các nhóm từ level 1 đến level 4 theo thứ tự: phải đạt ít nhất 4/5 ở từng nhóm trước mới được bỏ qua nhóm đó. Nhóm chưa đạt đầu tiên quyết định level bắt đầu; tối đa bắt đầu level 5.
+   Kết quả đầu vào đã chốt được giữ nguyên. Lượt 10 câu đang làm dở giữ snapshot cũ; chỉ nhóm có ít nhất 3 câu và đạt 80% mới cho bỏ qua level. Không ghi nhận các bài riêng lẻ là đã hoàn thành do miễn level.
+
+4. EXP và cấp tài khoản
+   Cấp tài khoản = floor(tổng EXP / 1.000) + 1. Đây là thước đo hoạt động, không phải level học.
+   Bài học đạt lần đầu: 20 EXP. Kiểm tra module đạt lần đầu: 50 EXP. Kiểm tra level đạt lần đầu: 150 EXP.
+   Ôn tập module/level và luyện tập cũ đạt ít nhất 80%: 10 EXP/lượt, tổng cộng tối đa 30 EXP/ngày trên toàn bộ các loại ôn tập.
+   Boss bài cũ thưởng lần đầu 20 EXP; boss chương cũ 150 EXP. Giữ khóa thưởng cũ để không thưởng lại những boss đã nhận trước cập nhật.
+   Thưởng lần đầu gắn với tài khoản và nội dung; gửi lại cùng lượt hoặc làm lại nội dung không nhận thêm thưởng lần đầu. Giao diện hiển thị EXP thực nhận của lượt làm.
+
+5. Nhiệm vụ và streak
+   Mỗi ngày chọn 3 nhiệm vụ có thể làm cá nhân: dễ 20 EXP, trung bình 30 EXP, khó 50 EXP. Rương hoàn thành cả ba thưởng 50 EXP, tổng nhiệm vụ và rương 150 EXP/ngày.
+   Không phân nhiệm vụ bắt buộc tham gia lớp, PvP hoặc boss cũ. Nhiệm vụ loại này đã được phân trước cập nhật được đổi sang điều kiện học đạt ít nhất 80% để vẫn làm được.
+   Một bài học, ôn tập hoặc kiểm tra đạt ít nhất 80% tự động giữ chuỗi ngày học; không cần nhận rương. Mỗi ngày chỉ tăng một lần; bỏ lỡ một ngày thì chuỗi bắt đầu lại từ 1 ở ngày học tiếp theo.
+   Mốc ngày dùng UTC+7 (Asia/Bangkok) cho nhiệm vụ, rương, streak và giới hạn EXP ôn tập.
+
+6. PvP
+   Ghép tự động là xếp hạng, chỉ dựa trên Elo: ±150 lúc đầu, ±300 sau 15 giây, ±600 sau 30 giây; cả hai người phải chấp nhận phạm vi tương ứng. Cấp tài khoản không giới hạn ghép trận.
+   Phòng tự tạo là giao hữu: không đổi Elo, thành tích xếp hạng hoặc vật phẩm theo hạng/chuỗi thắng.
+   Số câu đúng quyết định thắng/thua; bằng số câu đúng thì hòa, không dùng tốc độ để phân thắng.
+   Giữ Elo khởi đầu 1.000, K=32, sàn 100. Lịch sử lưu chênh lệch thực tế sau khi áp dụng sàn. PvP không thưởng EXP học tập trực tiếp.
+
+7. Chuyển đổi dữ liệu
+   Migration V28 giữ tổng EXP, các lần nhận thưởng và các bài đã hoàn thành. Module đã hoàn thành toàn bộ bài trước cập nhật được công nhận đã đạt để bảo toàn đường học đã mở.
+   Không tự động cộng bù EXP cho dữ liệu cũ. Quy tắc mới áp dụng khi nộp lượt còn đang làm hoặc tạo lượt mới.
