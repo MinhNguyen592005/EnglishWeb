@@ -21,6 +21,10 @@ import java.util.Comparator;
 public class SystemSocketHandler extends TextWebSocketHandler {
     @org.springframework.beans.factory.annotation.Autowired
     private com.grammarquest.service.SocketWorkspaceService workspaces;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.grammarquest.service.RoadmapCourseService roadmapCourse;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.grammarquest.service.PlacementService placement;
     private static class WorkspaceWatch {
         final String username,kind;
         String snapshot="";
@@ -134,7 +138,19 @@ public class SystemSocketHandler extends TextWebSocketHandler {
             updateAccountRole(session.getId(),authenticated.role);
             if(!"ADMIN".equals(authenticated.role)) roles.put(session.getId(),"GUEST");
             String action=body.path("action").asText();
+            if(action.startsWith("PLACEMENT_")){
+                if(action.equals("PLACEMENT_SUBMIT"))limiter.check(state.username);
+                var result=placement.action(state.username,action,body.path("payload"));
+                if(!action.equals("PLACEMENT_STATUS"))state.touch();
+                sendTo(session.getId(),"PLACEMENT_DATA",result,requestId);return;
+            }
             if(java.util.Set.of("SUBMIT_ANSWER","ARENA_ANSWER","EXAM_ANSWER").contains(action))limiter.check(state.username);
+            if(action.startsWith("ROADMAP_")) {
+                if(action.equals("ROADMAP_SUBMIT"))limiter.check(state.username);
+                var result=roadmapCourse.action(state.username,action,body.path("payload"));
+                if(!java.util.Set.of("ROADMAP_OPEN","ROADMAP_ATTEMPT").contains(action))state.touch();
+                sendTo(session.getId(),"ROADMAP_COURSE_DATA",result,requestId);return;
+            }
             if(action.startsWith("SUPPORT_")){
                 var payload=body.path("payload");Object result;
                 switch(action){
@@ -747,6 +763,22 @@ public class SystemSocketHandler extends TextWebSocketHandler {
     @org.springframework.transaction.event.TransactionalEventListener(phase=org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT)
     public void curriculumChanged(com.grammarquest.service.CurriculumChanged event){
         sessions.forEach((id,socket)->{try{sendTo(id,"CURRICULUM_CHANGED",Map.of("changed",true),"");}catch(IOException ignored){}});
+    }
+
+    @org.springframework.transaction.event.TransactionalEventListener(phase=org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT)
+    public void roadmapProgressChanged(com.grammarquest.service.RoadmapCourseService.ProgressChanged event){
+        accounts.forEach((id,account)->{if(account.username().equalsIgnoreCase(event.username())){
+            try{sendTo(id,"ROADMAP_PROGRESS_CHANGED",Map.of("changed",true),"");}
+            catch(IOException ex){log.debug("Roadmap progress push failed for {}",id,ex);}
+        }});
+    }
+
+    @org.springframework.transaction.event.TransactionalEventListener(phase=org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT)
+    public void placementCompleted(com.grammarquest.service.PlacementService.Completed event){
+        accounts.forEach((id,account)->{if(account.username().equalsIgnoreCase(event.username())){
+            try{sendTo(id,"PLACEMENT_COMPLETED",Map.of("completed",true),"");}
+            catch(IOException ex){log.debug("Placement completion push failed for {}",id,ex);}
+        }});
     }
 
     private void release(String id) {

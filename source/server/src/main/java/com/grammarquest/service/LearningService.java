@@ -13,6 +13,8 @@ import java.util.*;
 
 @Service
 public class LearningService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private PlacementService placement;
     private final UserRepository users;
     private final LessonRepository lessons;
     private final QuestionRepository questions;
@@ -20,9 +22,18 @@ public class LearningService {
     private final AttemptItemRepository items;
     private final XpLedgerRepository xp;
     private final JdbcTemplate db;
+    private final DailyQuestService dailyQuests;
     public LearningService(UserRepository users, LessonRepository lessons, QuestionRepository questions,
                            AttemptRepository attempts, AttemptItemRepository items, XpLedgerRepository xp, JdbcTemplate db) {
         this.users=users; this.lessons=lessons; this.questions=questions; this.attempts=attempts; this.items=items; this.xp=xp; this.db=db;
+        this.dailyQuests=null;
+    }
+    @org.springframework.beans.factory.annotation.Autowired
+    public LearningService(UserRepository users, LessonRepository lessons, QuestionRepository questions,
+                           AttemptRepository attempts, AttemptItemRepository items, XpLedgerRepository xp, JdbcTemplate db,
+                           DailyQuestService dailyQuests) {
+        this.users=users; this.lessons=lessons; this.questions=questions; this.attempts=attempts; this.items=items; this.xp=xp; this.db=db;
+        this.dailyQuests=dailyQuests;
     }
     public record LessonView(Long id, String topicSlug, String topicTitle, int topicSortOrder, String title, String summary, String theory, int ordinalNo,
                              String difficulty, String status, boolean chapterCompleted) {}
@@ -40,6 +51,7 @@ public class LearningService {
         User user=users.findByUsernameIgnoreCase(username).orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED,"UNAUTHENTICATED","Vui lòng đăng nhập"));
         if(user.locked) throw new ApiException(HttpStatus.FORBIDDEN,"ACCOUNT_LOCKED","Tài khoản đã bị khóa");
         if(user.role.equals("ADMIN")) throw new ApiException(HttpStatus.FORBIDDEN,"ADMIN_ONLY_MANAGEMENT","Quản trị viên chỉ sử dụng chức năng quản trị");
+        if(user.placementEligible&&user.role.equals("LEARNER"))placement.requireCompleted(user);
         return user;
     }
     private User learner(String username) {
@@ -131,6 +143,25 @@ public class LearningService {
     public AttemptView startAssignment(String username, Long lessonId, Long teacherId) {
         return startInternal(username,"PRACTICE",lessonId,true,teacherId);
     }
+    @Transactional
+    public AttemptView startAssignmentSnapshot(String username, Long lessonId, String snapshot, int passPercent) {
+        User user=learner(username);
+        List<Question> selected;
+        try {
+            selected=new com.fasterxml.jackson.databind.ObjectMapper().readValue(snapshot,
+                new com.fasterxml.jackson.core.type.TypeReference<List<Question>>(){});
+        } catch(java.io.IOException e) {
+            throw new ApiException(HttpStatus.CONFLICT,"INVALID_ASSIGNMENT","Không thể đọc bộ câu hỏi đã giao");
+        }
+        if(selected==null||selected.isEmpty()||selected.size()>30)
+            throw new ApiException(HttpStatus.CONFLICT,"INVALID_ASSIGNMENT","Bộ câu hỏi đã giao không hợp lệ");
+        int required=(int)Math.ceil(selected.size()*passPercent/100.0);
+        Attempt attempt=attempts.save(new Attempt(user.id,lessonId,"PRACTICE",selected.size(),required));
+        List<AttemptItem> snapshots=new ArrayList<>();
+        for(int index=0;index<selected.size();index++) snapshots.add(new AttemptItem(attempt.id,index+1,selected.get(index)));
+        items.saveAll(snapshots);
+        return view(attempt,snapshots);
+    }
     private AttemptView startInternal(String username, String kind, Long lessonId, boolean assignment) {
         return startInternal(username,kind,lessonId,assignment,null);
     }
@@ -167,7 +198,9 @@ public class LearningService {
             String topic=chapterTopic;
             lessons.findByPublishedTrueOrderByOrdinalNoAsc().stream().filter(l -> l.topicSlug.equals(topic)).forEach(l -> chapterLessons.add(l.id));
         }
-        List<Question> common=new ArrayList<>(kind.equals("CHAPTER_BOSS") ? questions.findByPublishedTrue().stream().filter(q -> chapterLessons.contains(q.lessonId)).toList() : questions.findByLessonIdAndPublishedTrue(lesson.id));
+        List<Question> common=new ArrayList<>(kind.equals("CHAPTER_BOSS")
+            ? questions.findByPublishedTrue().stream().filter(q -> chapterLessons.contains(q.lessonId) && (q.questionType == null || q.questionType.equals("MCQ"))).toList()
+            : questions.findByLessonIdAndPublishedTrue(lesson.id).stream().filter(q -> q.questionType == null || q.questionType.equals("MCQ")).toList());
         Collections.shuffle(common);
         bank.addAll(common);
         if(bank.size()<count) throw new ApiException(HttpStatus.CONFLICT,"QUESTION_BANK_INCOMPLETE","Bộ câu hỏi chưa đủ để bắt đầu");
@@ -213,7 +246,23 @@ public class LearningService {
                 throw new ApiException(HttpStatus.CONFLICT,"ANSWER_ORDER","Hãy trả lời theo thứ tự");
             if(textQuestion(item)) item.textAnswer=option; else item.answer=option;
             item.answeredAt=Instant.now();
-            if(correct(item)) a.correctCount++;
+            if(correct(item)) {
+                a.correctCount++;
+                if (dailyQuests != null) {
+                    dailyQuests.recordProgress(user.id, "CORRECT_COUNT", 1);
+                    if (a.kind.equals("LESSON_BOSS") || a.kind.equals("CHAPTER_BOSS")) {
+                        dailyQuests.recordProgress(user.id, "BOSS_DAMAGE", a.kind.equals("CHAPTER_BOSS") ? 13 : 20);
+                    }
+                    int currentStreak = 0;
+                    for (int idx = 0; idx < ordinal; idx++) {
+                        if (correct(entries.get(idx))) currentStreak++;
+                        else currentStreak = 0;
+                    }
+                    if (currentStreak >= 5) {
+                        dailyQuests.recordProgress(user.id, "STREAK_CORRECT", currentStreak);
+                    }
+                }
+            }
             if(entries.stream().allMatch(i -> answerOf(i)!=null)) complete(a);
         }
         boolean reveal=a.kind.equals("PRACTICE")||!a.status.equals("IN_PROGRESS");
@@ -229,6 +278,22 @@ public class LearningService {
     private void complete(Attempt a) {
         boolean won=a.kind.equals("PRACTICE")||a.correctCount>=a.requiredCorrect;
         a.status=won?"WON":"LOST"; a.completedAt=Instant.now();
+        if (dailyQuests != null) {
+            if (a.kind.equals("PRACTICE")) {
+                dailyQuests.recordProgress(a.userId, "PRACTICE_COUNT", 1);
+                if (a.correctCount == a.totalQuestions) {
+                    dailyQuests.recordProgress(a.userId, "PERFECT_PRACTICE", 1);
+                }
+            } else if (won && (a.kind.equals("LESSON_BOSS") || a.kind.equals("CHAPTER_BOSS"))) {
+                dailyQuests.recordProgress(a.userId, "BOSS_WIN", 1);
+            }
+            try {
+                Integer count = db.queryForObject("select count(1) from assignment_attempts where attempt_id=?", Integer.class, a.id);
+                if (count != null && count > 0) {
+                    dailyQuests.recordProgress(a.userId, "CLASS_ASSIGNMENT", 1);
+                }
+            } catch (Exception ignored) {}
+        }
         if(won&&!a.kind.equals("PRACTICE")) {
             String key=a.kind.equals("CHAPTER_BOSS")
                 ? chapterRewardKey(a.lessonId==null?"conditionals":lessons.findById(a.lessonId).orElseThrow().topicSlug)

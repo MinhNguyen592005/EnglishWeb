@@ -1,13 +1,16 @@
 import { AlertCircle, ArrowRight, BookOpen, Building2, CalendarDays, CheckCircle2, ClipboardList, Copy, Eye, Hash, Hourglass, KeyRound, LayoutDashboard, ListChecks, Lock, MessageCircle, Pencil, PieChart, Plus, Radio, RefreshCw, Rocket, School, Search, Send, ShieldCheck, Star, Target, UserRound, UsersRound, type LucideIcon } from 'lucide-react'
-import { useEffect, useMemo, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import { Layout } from '../components/Layout'
+import { Pagination, PAGE_SIZE } from '../components/Pagination'
 import { Loading } from '../components/States'
 import { LiveClassExam } from '../components/LiveClassExam'
+import { MaterialDeliveryForm } from '../components/MaterialDeliveryForm'
 import { api } from '../services/api'
-import type { Assignment, AssignmentResult, ClassMessage, Classroom, ClassOverview, Lesson } from '../types'
+import { teacherMaterialChanged } from '../services/teacherMaterialEvents'
+import type { Assignment, AssignmentResult, ClassMessage, Classroom, ClassOverview, TeacherMaterialSummary } from '../types'
 import './classroom.css'
 
 type View='overview'|'assignments'|'members'|'grades'|'exams'|'chat'
@@ -22,7 +25,7 @@ const dueState=(a:Assignment):{label:string;tone:DueTone;overdue:boolean}=>{
   return hours<=24?{label:`Sắp hết hạn · còn ${hours} giờ`,tone:'urgent',overdue:false}:{label:'Đang mở',tone:'open',overdue:false}
 }
 const stateIcons:Record<DueTone,LucideIcon>={overdue:AlertCircle,urgent:Hourglass,open:CheckCircle2,closed:Lock}
-const TABS:{key:View;label:string;icon:LucideIcon}[]=[{key:'overview',label:'Tổng quan',icon:LayoutDashboard},{key:'assignments',label:'Nhiệm vụ',icon:ClipboardList},{key:'members',label:'Thành viên',icon:UsersRound},{key:'grades',label:'Bảng điểm',icon:Star},{key:'exams',label:'Kiểm tra trực tiếp',icon:Radio},{key:'chat',label:'Chat lớp',icon:MessageCircle}]
+const TABS:{key:View;label:string;icon:LucideIcon}[]=[{key:'overview',label:'Tổng quan',icon:LayoutDashboard},{key:'assignments',label:'Bài tập',icon:ClipboardList},{key:'members',label:'Thành viên',icon:UsersRound},{key:'grades',label:'Bảng điểm',icon:Star},{key:'exams',label:'Kiểm tra trực tiếp',icon:Radio},{key:'chat',label:'Chat lớp',icon:MessageCircle}]
 function StatePill({state}:{state:{label:string;tone:DueTone}}){const Icon=stateIcons[state.tone];return <span className={`class-state-pill state-${state.tone}`}><Icon size={13}/> {state.label}</span>}
 
 export function ClassesPage(){
@@ -33,25 +36,54 @@ export function ClassesPage(){
   async function create(e:FormEvent){e.preventDefault();setBusy(true);try{const created=await api.createClass(name);navigate(`/classes/${created.id}`)}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
   async function join(e:FormEvent){e.preventDefault();setBusy(true);try{const joined=await api.joinClass(code.trim().toUpperCase());navigate(`/classes/${joined.id}`)}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
   const filtered=classes?.filter(item=>`${item.name} ${item.teacherName} ${item.joinCode}`.toLocaleLowerCase().includes(filter.toLocaleLowerCase()))||[]
-  const pageSize=6
-  const pageCount=Math.max(1,Math.ceil(filtered.length/pageSize))
-  const visible=filtered.slice((page-1)*pageSize,page*pageSize)
+  const pageCount=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE))
+  const currentPage=Math.min(page,pageCount)
+  const visible=filtered.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE)
   useEffect(()=>{setPage(1)},[filter])
   return <Layout title="Lớp học"><div className="class-page"><div className="page-heading"><div><span className="section-label class-eyebrow"><School size={15}/> {teacher?'TRẠM LỚP HỌC':'KHOANG HỌC VIÊN'}</span><h1>{teacher?'Lớp học của tôi':'Lớp học của bạn'}</h1><p>{teacher?'Chọn lớp để xem thống kê, giao bài và theo dõi học viên.':'Theo dõi các lớp học và bài tập của bạn.'}</p></div></div>
     {error&&<div className="error-banner" role="alert">{error}<button className="button secondary" onClick={()=>void reload()}><RefreshCw size={15}/>Tải lại</button></div>}
     {teacher?<section className="class-create-banner"><div><h2>Tạo lớp học mới</h2><p>Mã tham gia sẽ được tạo tự động.</p></div><form className="class-create-form" onSubmit={create}><input required maxLength={120} value={name} onChange={e=>setName(e.target.value)} placeholder="Tên lớp học"/><button className="button primary" disabled={busy}><Plus size={18}/>Tạo lớp</button></form></section>:<section className="class-join-banner"><div className="class-join-copy"><div className="class-join-icon"><KeyRound size={23}/></div><div><h2>Nhập mã mời vào lớp</h2><p>Kết nối vào lớp học bằng mã tham gia.</p></div></div><form className="class-join-form" onSubmit={join}><div className="class-input-icon"><Hash size={18}/><input required maxLength={12} value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder="Nhập mã lớp"/></div><button className="button primary" disabled={busy}>Gia nhập lớp <ArrowRight size={16}/></button></form></section>}
-    <section className="class-list-section"><div className="class-list-heading"><div><h2><BookOpen size={22}/> Danh sách lớp học {classes&&<span className="class-list-count">({filtered.length})</span>}</h2><p>{teacher?'Các lớp bạn đang quản lý.':'Các lớp bạn đang tham gia.'}</p></div><div className="class-search"><Search size={17}/><input aria-label="Tìm kiếm lớp học" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="Tìm kiếm lớp học..."/></div></div>{!classes?<Loading/>:visible.length?<><div className="class-card-grid">{visible.map(item=><Link to={`/classes/${item.id}`} className="class-card" key={item.id}><div className="class-card-top"><span className="class-sector">LỚP HỌC</span><span className="class-status"><span/>Đang hoạt động</span></div><h3>{item.name}</h3><p className="class-teacher"><School size={16}/> {teacher?'Lớp bạn quản lý':item.teacherName}</p><div className="class-card-metrics"><span><UsersRound size={15}/> {item.memberCount??0} học viên</span><span><ClipboardList size={15}/> Mã {item.joinCode}</span></div><div className="class-card-footer"><span>{item.memberCount===0?'Chưa có học viên':'Đang theo dõi lớp'}</span><span className="class-view-link">Mở lớp <ArrowRight size={15}/></span></div></Link>)}</div>{pageCount>1&&<div className="class-pagination" aria-label="Phân trang lớp học"><button type="button" className="button secondary" disabled={page===1} onClick={()=>setPage(value=>value-1)}>Trước</button><span>Trang {page} / {pageCount}</span><button type="button" className="button secondary" disabled={page===pageCount} onClick={()=>setPage(value=>value+1)}>Sau</button></div>}</>:<div className="card empty-state">{filter?'Không tìm thấy lớp phù hợp.':'Bạn chưa có lớp nào.'}</div>}</section>
+    <section className="class-list-section"><div className="class-list-heading"><div><h2><BookOpen size={22}/> Danh sách lớp học {classes&&<span className="class-list-count">({filtered.length})</span>}</h2><p>{teacher?'Các lớp bạn đang quản lý.':'Các lớp bạn đang tham gia.'}</p></div><div className="class-search"><Search size={17}/><input aria-label="Tìm kiếm lớp học" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="Tìm kiếm lớp học..."/></div></div>{!classes?<Loading/>:visible.length?<><div className="class-card-grid">{visible.map(item=><Link to={`/classes/${item.id}`} className="class-card" key={item.id}><div className="class-card-top"><span className="class-sector">LỚP HỌC</span><span className="class-status"><span/>Đang hoạt động</span></div><h3>{item.name}</h3><p className="class-teacher"><School size={16}/> {teacher?'Lớp bạn quản lý':item.teacherName}</p><div className="class-card-metrics"><span><UsersRound size={15}/> {item.memberCount??0} học viên</span><span><ClipboardList size={15}/> Mã {item.joinCode}</span></div><div className="class-card-footer"><span>{item.memberCount===0?'Chưa có học viên':'Đang theo dõi lớp'}</span><span className="class-view-link">Mở lớp <ArrowRight size={15}/></span></div></Link>)}</div><Pagination total={filtered.length} page={currentPage} onPageChange={setPage}/></>:<div className="card empty-state">{filter?'Không tìm thấy lớp phù hợp.':'Bạn chưa có lớp nào.'}</div>}</section>
   </div></Layout>
 }
 
 export function ClassDetailPage(){
   const {id}=useParams(),classId=Number(id),{user}=useAuth(),{subscribe,connected}=useSystemSocket(),[params,setParams]=useSearchParams()
   const raw=params.get('view')||'overview',view=(raw==='all'?'overview':raw) as View
-  const [detail,setDetail]=useState<Classroom|null>(null),[overview,setOverview]=useState<ClassOverview|null>(null),[lessons,setLessons]=useState<Lesson[]>([]),[messages,setMessages]=useState<ClassMessage[]>([]),[resultsByAssignment,setResultsByAssignment]=useState<Record<number,AssignmentResult[]>>({})
+  const [detail,setDetail]=useState<Classroom|null>(null),[overview,setOverview]=useState<ClassOverview|null>(null),[materials,setMaterials]=useState<TeacherMaterialSummary[]>([]),[messages,setMessages]=useState<ClassMessage[]>([]),[resultsByAssignment,setResultsByAssignment]=useState<Record<number,AssignmentResult[]>>({})
   const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[filter,setFilter]=useState(''),[selected,setSelected]=useState(Number(params.get('assignmentId'))||0),[className,setClassName]=useState(''),[editing,setEditing]=useState<Assignment|null>(null)
-  const [draft,setDraft]=useState({title:'',lessonId:0,dueAt:'',instructions:'',passPercent:80}),isOwner=detail?.teacherId===user?.id
+  const isOwner=detail?.teacherId===user?.id
+  const [examRevision,setExamRevision]=useState(0)
+  const [examComposer,setExamComposer]=useState(false)
+  const [materialsError,setMaterialsError]=useState('')
+  const [loadingMaterials,setLoadingMaterials]=useState(false)
   const [refreshing,setRefreshing]=useState(false)
-  async function reload(){try{setError('');const [next,stats]=await Promise.all([api.classroom(classId),api.classroomOverview(classId)]);setDetail(next);setClassName(next.name);setOverview(stats);if(user?.role==='TEACHER')setLessons(await api.lessons());if(view==='chat')setMessages(await api.classMessages(classId))}catch(e){setError((e as Error).message)}}
+  async function reload(){try{setError('');const [next,stats]=await Promise.all([api.classroom(classId),api.classroomOverview(classId)]);setDetail(next);setClassName(next.name);setOverview(stats);if(view==='chat')setMessages(await api.classMessages(classId))}catch(e){setError((e as Error).message)}}
+  const materialRequest = useRef(0)
+  const loadMaterials=useCallback(async()=>{
+    const request=++materialRequest.current
+    setLoadingMaterials(true);setMaterialsError('')
+    try{const rows=await api.teacherMaterials();if(request===materialRequest.current)setMaterials(rows)}
+    catch(e){if(request===materialRequest.current)setMaterialsError((e as Error).message)}
+    finally{if(request===materialRequest.current)setLoadingMaterials(false)}
+  },[user?.id])
+  useEffect(()=>{
+    if(user?.role!=='TEACHER'||(view!=='assignments'&&view!=='exams'))return
+    const refresh=()=>{if(document.visibilityState==='visible')void loadMaterials()}
+    const storage=(event:StorageEvent)=>{if(event.key===teacherMaterialChanged)refresh()}
+    void loadMaterials()
+    window.addEventListener('focus',refresh)
+    document.addEventListener('visibilitychange',refresh)
+    window.addEventListener(teacherMaterialChanged,refresh)
+    window.addEventListener('storage',storage)
+    return()=>{
+      materialRequest.current++
+      window.removeEventListener('focus',refresh)
+      document.removeEventListener('visibilitychange',refresh)
+      window.removeEventListener(teacherMaterialChanged,refresh)
+      window.removeEventListener('storage',storage)
+    }
+  },[classId,view,user?.role,loadMaterials])
   useEffect(()=>{void reload()},[classId,view])
   useEffect(()=>subscribe(message=>{
     if(message.action.startsWith('CLASS_')&&message.action!=='CLASS_OPEN'&&message.action!=='CLASS_LIST')void reload()
@@ -66,12 +98,11 @@ export function ClassDetailPage(){
   },[classId,view,detail?.assignments])
   const assignments=detail?.assignments||[],attention=useMemo(()=>assignments.filter(a=>a.status!=='CLOSED').sort((a,b)=>new Date(a.dueAt).getTime()-new Date(b.dueAt).getTime()).slice(0,5),[assignments])
   const go=(next:View)=>setParams(next==='overview'?{}:{view:next})
-  async function refresh(){setRefreshing(true);try{await reload()}finally{setRefreshing(false)}}
+  async function refresh(){setRefreshing(true);try{await Promise.all([reload(),...(user?.role==='TEACHER'&&(view==='assignments'||view==='exams')?[loadMaterials()]:[])])}finally{setRefreshing(false)}}
   async function rename(e:FormEvent){e.preventDefault();setBusy(true);try{await api.renameClass(classId,className);setNotice('Đã đổi tên lớp.');await reload()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
   async function copyCode(){if(!detail)return;try{await navigator.clipboard.writeText(detail.joinCode);setNotice('Đã sao chép mã tham gia.')}catch{setError('Không thể sao chép mã tham gia.')}}
   async function remove(memberId:number,name:string){if(!window.confirm(`Xóa ${name} khỏi lớp?`))return;setBusy(true);try{await api.removeClassMember(classId,memberId);setNotice('Đã xóa học viên khỏi lớp.');await reload()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
-  async function createAssignment(e:FormEvent){e.preventDefault();setBusy(true);try{await api.createAssignment(classId,{...draft,dueAt:new Date(draft.dueAt).toISOString()});setDraft({title:'',lessonId:0,dueAt:'',instructions:'',passPercent:80});setNotice('Đã giao nhiệm vụ cho lớp.');await reload()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
-  async function updateAssignment(e:FormEvent){e.preventDefault();if(!editing)return;setBusy(true);try{await api.updateAssignment(classId,editing.id,{title:editing.title,instructions:editing.instructions,passPercent:editing.passPercent,dueAt:new Date(editing.dueAt).toISOString(),status:editing.status});setEditing(null);setNotice('Đã cập nhật nhiệm vụ.');await reload()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
+  async function updateAssignment(e:FormEvent){e.preventDefault();if(!editing)return;setBusy(true);try{await api.updateAssignment(classId,editing.id,{title:editing.title,instructions:editing.instructions,passPercent:editing.passPercent,dueAt:new Date(editing.dueAt).toISOString(),status:editing.status});setEditing(null);setNotice('Đã cập nhật bài tập.');await reload()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
   async function send(e:FormEvent){e.preventDefault();if(!message.trim())return;setBusy(true);try{const sent=await api.sendClassMessage(classId,message.trim());setMessages(current=>[...current,sent]);setMessage('')}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
   async function report(messageId:number){const reason=window.prompt('Lý do báo cáo tin nhắn (tối đa 500 ký tự):');if(reason?.trim())try{await api.reportClassMessage(classId,messageId,reason.trim());setNotice('Đã gửi báo cáo cho quản trị viên.')}catch(e){setError((e as Error).message)}}
   function exportResults(){const rows=[['Bài tập','Học viên','Số câu đúng','Tổng câu','Trạng thái','Đạt','Nộp lúc'],...assignments.flatMap(assignment=>(resultsByAssignment[assignment.id]||[]).map(item=>[assignment.title,item.displayName,item.correctCount,item.totalQuestions,item.status,item.passed?'Có':'Không',item.completedAt?new Date(item.completedAt).toLocaleString('vi-VN'):'']))];const csv=(value:unknown)=>`"${String(value??'').replaceAll('"','""')}"`;const blob=new Blob(['\ufeff',rows.map(row=>row.map(csv).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`bang-diem-${detail?.name||classId}.csv`;link.click()}
@@ -125,10 +156,14 @@ export function ClassDetailPage(){
         </section>
         {error&&<div className="error-banner" role="alert">{error}<button className="button secondary" onClick={()=>void reload()}><RefreshCw size={15}/>Tải lại</button></div>}{notice&&<div className="success-banner" role="status">{notice}</div>}
         {view==='overview'&&<Overview overview={overview} attention={attention} go={go} results={resultsOf}/>}
-        {view==='assignments'&&<Assignments assignments={assignments} lessons={lessons} draft={draft} setDraft={setDraft} editing={editing} setEditing={setEditing} create={createAssignment} update={updateAssignment} isOwner={!!isOwner} busy={busy} results={resultsOf} filter={filter} setFilter={setFilter}/>}
+        {view==='assignments'&&<Assignments assignments={assignments} materials={materials} materialsError={materialsError} loadingMaterials={loadingMaterials} retryMaterials={()=>void loadMaterials()} classId={classId} onAssigned={()=>{void reload()}} editing={editing} setEditing={setEditing} update={updateAssignment} isOwner={!!isOwner} busy={busy} results={resultsOf} filter={filter} setFilter={setFilter}/>}
         {view==='members'&&<Members detail={detail} isOwner={!!isOwner} userId={user?.id} remove={remove}/>}
         {view==='grades'&&<Grades assignments={assignments} resultsByAssignment={resultsByAssignment} selected={selected} setSelected={resultsOf} exportResults={exportResults}/>}
-        {view==='exams'&&<LiveClassExam key={classId} classId={classId} isOwner={!!isOwner}/>}
+        {view==='exams'&&<div className="class-tab-content">
+          {isOwner&&<div className="class-exam-heading"><div><h2>Không gian kiểm tra</h2><p>Tạo đề từ kho câu hỏi và theo dõi kết quả của lớp.</p></div><button type="button" className="button primary" aria-expanded={examComposer} aria-controls="new-class-exam" onClick={()=>setExamComposer(value=>!value)}><Plus size={17}/>{examComposer?'Đóng tạo kiểm tra':'Tạo kiểm tra mới'}</button></div>}
+          {isOwner&&examComposer&&<section id="new-class-exam" className="card feature-card class-panel class-material-composer"><MaterialDeliveryForm materials={materials} materialsError={materialsError} loadingMaterials={loadingMaterials} onRetryMaterials={()=>void loadMaterials()} fixedClassId={classId} kind="exam" onCreated={()=>{setExamRevision(value=>value+1);void reload()}}/></section>}
+          <LiveClassExam key={`${classId}:${examRevision}`} classId={classId} isOwner={!!isOwner} allowCreate={false}/>
+        </div>}
         {view==='chat'&&<Chat messages={messages} message={message} setMessage={setMessage} send={send} report={report} busy={busy} userId={user?.id}/>}
       </div>
     </Layout>
@@ -185,19 +220,26 @@ function Overview({overview,attention,go,results}:{overview:ClassOverview|null;a
   )
 }
 
-function Assignments({assignments,lessons,draft,setDraft,editing,setEditing,create,update,isOwner,busy,results,filter,setFilter}:{assignments:Assignment[];lessons:Lesson[];draft:{title:string;lessonId:number;dueAt:string;instructions:string;passPercent:number};setDraft:(value:{title:string;lessonId:number;dueAt:string;instructions:string;passPercent:number})=>void;editing:Assignment|null;setEditing:(value:Assignment|null)=>void;create:(event:FormEvent)=>void;update:(event:FormEvent)=>void;isOwner:boolean;busy:boolean;results:(id:number)=>void;filter:string;setFilter:(value:string)=>void}){
+function Assignments({assignments,materials,materialsError,loadingMaterials,retryMaterials,classId,onAssigned,editing,setEditing,update,isOwner,busy,results,filter,setFilter}:{
+  assignments:Assignment[];materials:TeacherMaterialSummary[];materialsError:string;loadingMaterials:boolean;retryMaterials:()=>void;classId:number;onAssigned:()=>void;
+  editing:Assignment|null;setEditing:(value:Assignment|null)=>void;update:(event:FormEvent)=>void;
+  isOwner:boolean;busy:boolean;results:(id:number)=>void;filter:string;setFilter:(value:string)=>void
+}){
+  const [composerOpen,setComposerOpen]=useState(false)
+  const composer=useRef<HTMLElement>(null)
+  useEffect(()=>{if(composerOpen){composer.current?.scrollIntoView({behavior:'smooth',block:'start'});composer.current?.querySelector<HTMLInputElement>('input')?.focus({preventScroll:true})}},[composerOpen])
   const filtered=assignments.filter(item=>item.title.toLocaleLowerCase().includes(filter.toLocaleLowerCase()))
   return (
     <div className="class-tab-content">
       <section className="card feature-card class-panel">
         <div className="class-panel-head">
           <div>
-            <h2><ClipboardList size={24}/> Danh sách nhiệm vụ</h2>
-            <p className="muted">{assignments.length} nhiệm vụ trong lớp</p>
+            <h2><ClipboardList size={24}/> Danh sách bài tập</h2>
+            <p className="muted">{assignments.length} bài tập trong lớp</p>
           </div>
-          {isOwner&&<button type="button" className="button primary" onClick={()=>document.getElementById('new-assignment')?.scrollIntoView({behavior:'smooth'})}><Plus size={18}/> Giao nhiệm vụ mới</button>}
+          {isOwner&&<button type="button" className="button primary" aria-expanded={composerOpen} aria-controls="new-assignment" onClick={()=>setComposerOpen(value=>!value)}><Plus size={18}/> {composerOpen?'Đóng giao bài':'Giao bài tập mới'}</button>}
         </div>
-        <div className="class-tab-toolbar"><input className="search-input" value={filter} onChange={event=>setFilter(event.target.value)} placeholder="Tìm nhiệm vụ..."/></div>
+        <div className="class-tab-toolbar"><input className="search-input" value={filter} onChange={event=>setFilter(event.target.value)} placeholder="Tìm bài tập..."/></div>
         {filtered.length?(
           <div className="class-assignment-grid">
             {filtered.map(item=>{
@@ -222,36 +264,42 @@ function Assignments({assignments,lessons,draft,setDraft,editing,setEditing,crea
               )
             })}
           </div>
-        ):<p className="muted">Chưa có nhiệm vụ phù hợp.</p>}
+        ):<p className="muted">Chưa có bài tập phù hợp.</p>}
       </section>
-      {isOwner&&<section className="card feature-card class-panel" id="new-assignment"><h2><Plus size={21}/> Giao nhiệm vụ mới</h2><form className="form-grid" onSubmit={create}><label>Tên nhiệm vụ<input required maxLength={160} value={draft.title} onChange={event=>setDraft({...draft,title:event.target.value})}/></label><label>Bài học<select required value={draft.lessonId} onChange={event=>setDraft({...draft,lessonId:Number(event.target.value)})}><option value={0}>Chọn bài học</option>{lessons.map(item=><option key={item.id} value={item.id}>{item.title}</option>)}</select></label><label>Hạn nộp<input required type="datetime-local" value={draft.dueAt} onChange={event=>setDraft({...draft,dueAt:event.target.value})}/></label><label>Ngưỡng đạt (%)<input required type="number" min={1} max={100} value={draft.passPercent} onChange={event=>setDraft({...draft,passPercent:Number(event.target.value)})}/></label><label className="full-span">Hướng dẫn<textarea maxLength={1000} value={draft.instructions} onChange={event=>setDraft({...draft,instructions:event.target.value})}/></label><button className="button primary" disabled={busy||!draft.lessonId}>Giao bài</button></form></section>}
-      {editing&&<div className="modal-backdrop"><section className="card modal-card" role="dialog" aria-modal="true"><h2>Sửa nhiệm vụ</h2><form className="form-grid" onSubmit={update}><label className="full-span">Tên nhiệm vụ<input required value={editing.title} onChange={event=>setEditing({...editing,title:event.target.value})}/></label><label>Hạn nộp<input required type="datetime-local" value={localDate(editing.dueAt)} onChange={event=>setEditing({...editing,dueAt:event.target.value})}/></label><label>Ngưỡng đạt (%)<input type="number" min={1} max={100} value={editing.passPercent} onChange={event=>setEditing({...editing,passPercent:Number(event.target.value)})}/></label><label>Trạng thái<select value={editing.status} onChange={event=>setEditing({...editing,status:event.target.value})}><option value="PUBLISHED">Đang mở</option><option value="CLOSED">Đã đóng</option></select></label><label className="full-span">Hướng dẫn<textarea value={editing.instructions} onChange={event=>setEditing({...editing,instructions:event.target.value})}/></label><div className="button-row"><button type="button" className="button secondary" onClick={()=>setEditing(null)}>Hủy</button><button className="button primary" disabled={busy}>Lưu</button></div></form></section></div>}
+      {isOwner&&composerOpen&&<section ref={composer} className="card feature-card class-panel class-material-composer" id="new-assignment">
+        <MaterialDeliveryForm materials={materials} materialsError={materialsError} loadingMaterials={loadingMaterials} onRetryMaterials={retryMaterials} fixedClassId={classId} onCreated={onAssigned}/>
+      </section>}
+      {editing&&<div className="modal-backdrop"><section className="card modal-card" role="dialog" aria-modal="true"><h2>Sửa bài tập</h2><form className="form-grid" onSubmit={update}><label className="full-span">Tên bài tập<input required value={editing.title} onChange={event=>setEditing({...editing,title:event.target.value})}/></label><label>Hạn nộp<input required type="datetime-local" value={localDate(editing.dueAt)} onChange={event=>setEditing({...editing,dueAt:event.target.value})}/></label><label>Ngưỡng đạt (%)<input type="number" min={1} max={100} value={editing.passPercent} onChange={event=>setEditing({...editing,passPercent:Number(event.target.value)})}/></label><label>Trạng thái<select value={editing.status} onChange={event=>setEditing({...editing,status:event.target.value})}><option value="PUBLISHED">Đang mở</option><option value="CLOSED">Đã đóng</option></select></label><label className="full-span">Hướng dẫn<textarea value={editing.instructions} onChange={event=>setEditing({...editing,instructions:event.target.value})}/></label><div className="button-row"><button type="button" className="button secondary" onClick={()=>setEditing(null)}>Hủy</button><button className="button primary" disabled={busy}>Lưu</button></div></form></section></div>}
     </div>
   )
 }
 
 function Members({detail,userId,isOwner,remove}:{detail:Classroom;userId?:number;isOwner:boolean;remove:(id:number,name:string)=>void}){
+  const [query,setQuery]=useState('')
+  const [page,setPage]=useState(1)
+  const members=detail.members||[]
+  const filtered=members.filter(member=>`${member.displayName} ${member.username}`.toLocaleLowerCase('vi-VN').includes(query.toLocaleLowerCase('vi-VN')))
+  const current=Math.min(page,Math.max(1,Math.ceil(filtered.length/PAGE_SIZE)))
+  const rows=filtered.slice((current-1)*PAGE_SIZE,current*PAGE_SIZE)
+  useEffect(()=>setPage(1),[query])
   return (
-    <section className="card feature-card class-panel">
+    <section className="card feature-card class-panel class-members-panel">
       <div className="class-panel-head">
         <div>
           <h2><UsersRound size={24}/> Danh sách thành viên</h2>
-          <p className="muted">{detail.members?.length||0} học viên trong lớp</p>
+          <p className="muted">Quản lý học viên và tài khoản tham gia lớp.</p>
         </div>
+        <span className="class-member-total"><UsersRound size={16}/>{members.length} học viên</span>
       </div>
+      <div className="class-teacher-strip"><span className="avatar">{detail.teacherName.slice(0,1).toUpperCase()}</span><div><small>GIÁO VIÊN PHỤ TRÁCH</small><strong>{detail.teacherName}</strong></div><ShieldCheck size={21}/></div>
+      <div className="class-members-toolbar"><h3>Học viên <span>{filtered.length}</span></h3><label className="class-member-search"><Search size={17}/><input aria-label="Tìm thành viên" placeholder="Tìm tên hoặc tài khoản…" value={query} onChange={event=>setQuery(event.target.value)}/></label></div>
       <div className="class-table-wrap">
         <table className="class-table">
           <thead><tr><th>Thành viên</th><th>Tài khoản</th><th>Vai trò</th>{isOwner&&<th className="right">Thao tác</th>}</tr></thead>
           <tbody>
-            <tr>
-              <td><span className="class-member-cell"><span className="avatar">{detail.teacherName.slice(0,1)}</span><strong>{detail.teacherName}</strong></span></td>
-              <td className="mono">—</td>
-              <td><span className="tag">Giáo viên</span></td>
-              {isOwner&&<td/>}
-            </tr>
-            {detail.members?.map(member=>(
+            {rows.map(member=>(
               <tr key={member.id}>
-                <td><span className="class-member-cell"><span className="avatar">{member.displayName.slice(0,1)}</span><strong>{member.displayName}</strong></span></td>
+                <td><span className="class-member-cell"><span className="avatar">{member.displayName.slice(0,1).toUpperCase()}</span><strong>{member.displayName}{member.id===userId&&<small className="class-self-label">Bạn</small>}</strong></span></td>
                 <td className="mono">{member.username}</td>
                 <td><span className="class-role-chip">Học viên</span></td>
                 {isOwner&&<td className="right">{member.id!==userId&&<button className="text-button" onClick={()=>remove(member.id,member.displayName)}>Xóa khỏi lớp</button>}</td>}
@@ -260,6 +308,8 @@ function Members({detail,userId,isOwner,remove}:{detail:Classroom;userId?:number
           </tbody>
         </table>
       </div>
+      {!rows.length&&<div className="class-members-empty"><UsersRound size={32}/><h3>{query?'Không tìm thấy học viên':'Chưa có học viên tham gia'}</h3><p>{query?'Thử tìm bằng tên hoặc tài khoản khác.':'Chia sẻ mã lớp ở đầu trang để học viên tham gia lớp của bạn.'}</p></div>}
+      <Pagination total={filtered.length} page={current} onPageChange={setPage}/>
     </section>
   )
 }

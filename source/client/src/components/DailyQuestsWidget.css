@@ -1,0 +1,100 @@
+.daily-quests-area { display: grid; gap: 20px; min-width: 0; container-type: inline-size; scroll-margin-top: 90px; }
+.dq-panel, .dq-streak { color: #14213d; background: #fff; border: 1px solid #e5e7f1; border-radius: 24px; box-shadow: 0 4px 20px -2px #14213d06, 0 12px 32px -4px #6674e80a; overflow: hidden; }
+.dq-panel { padding: 24px; }
+.dq-header { padding-bottom: 20px; border-bottom: 1px solid #e9ecf4; }
+.dq-header-line, .dq-heading-row, .dq-task-labels, .dq-progress-label, .dq-reward-summary { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.dq-eyebrow { display: inline-flex; align-items: center; gap: 6px; color: #5663c9; font-size: 10px; font-weight: 800; letter-spacing: .1em; }
+.dq-refresh { display: grid; place-items: center; width: 32px; height: 32px; background: #f3f4fc; border: 1px solid #e9ebf5; border-radius: 50%; color: #6571aa; cursor: pointer; }
+.dq-refresh:hover { background: #e9edff; color: #414fc2; }
+.dq-heading-row { margin-top: 6px; }
+.dq-heading-row h2 { margin: 0; font-size: 21px; line-height: 1.4; letter-spacing: -.6px; }
+.dq-header > p { margin: 8px 0 0; font-size: 12px; line-height: 1.7; color: #748099; }
+.dq-count { display: inline-flex; align-items: center; gap: 5px; flex-shrink: 0; padding: 5px 9px; border-radius: 8px; background: #edf0ff; color: #4b57c9; font-size: 12px; font-weight: 800; }
+.dq-count.is-complete { color: #087f73; background: #e8faf6; }
+.dq-reward-summary { margin-top: 16px; font-size: 10px; color: #77829c; flex-wrap: wrap; }
+.dq-reward-summary > span:first-child { display: inline-flex; gap: 4px; align-items: center; color: #5260c3; }
+.dq-list { display: grid; gap: 14px; padding: 20px 0; }
+.dq-task { --tier: #07836b; --tier-bg: #eaf9f2; --tier-border: #cfeee0; padding: 17px; background: #fafbff; border: 1px solid #e7eaf3; border-radius: 17px; transition: border-color .2s, box-shadow .2s; }
+.dq-task.medium { --tier: #a96a0a; --tier-bg: #fff7e7; --tier-border: #f6e4bd; }
+.dq-task.hard { --tier: #c74870; --tier-bg: #fff0f4; --tier-border: #fad7e2; }
+.dq-task:hover { border-color: var(--tier-border); }
+.dq-task.is-ready { border-color: #b8c0fa; box-shadow: 0 3px 12px #5260c30a; background: #f8f9ff; }
+.dq-task.is-claimed { background: #fbfefc; }
+.dq-task-top { display: flex; align-items: flex-start; gap: 12px; }
+.dq-task-icon { display: grid; place-items: center; flex: 0 0 40px; height: 40px; border: 1px solid var(--tier-border); border-radius: 13px; background: var(--tier-bg); color: var(--tier); }
+.dq-task-copy { min-width: 0; flex: 1; }
+.dq-task-labels { justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+.dq-tier { color: var(--tier); background: var(--tier-bg); border-radius: 5px; padding: 2px 7px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; }
+.dq-task-reward { color: var(--tier); font-size: 10px; font-weight: 700; }
+.dq-task-copy h3 { margin: 7px 0 0; font-size: 14px; font-weight: 750; line-height: 1.6; overflow-wrap: anywhere; }
+.dq-task-copy p { margin: 4px 0 0; color: #6d7991; font-size: 12px; line-height: 1.65; }
+.dq-progress-label { margin-top: 15px; padding-top: 12px; border-top: 1px solid #e8ebf3; color: #7b849b; font-size: 10px; line-height: 1.5; }
+.dq-progress-label strong { color: var(--tier); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dq-progress { height: 5px; margin-top: 7px; overflow: hidden; border-radius: 8px; background: #e9ecf6; }
+.dq-progress > span { display: block; height: 100%; border-radius: inherit; background: var(--tier, #6674e8); transition: width .4s ease; }
+.dq-task.is-ready .dq-progress > span { background: #5967d7; }
+.dq-task-footer { display: flex; justify-content: flex-end; margin-top: 13px; }
+.dq-button { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 38px; padding: 9px 15px; border: 1px solid transparent; border-radius: 999px; font-size: 11px; font-weight: 750; line-height: 1.4; text-decoration: none; cursor: pointer; transition: background .15s, box-shadow .15s, transform .15s; }
+.dq-button.primary { color: #fff; background: #4b57c9; box-shadow: 0 3px 9px #4b57c924; }
+.dq-button.primary:hover { background: #3d48b4; box-shadow: 0 4px 14px #4b57c933; }
+.dq-button.secondary { color: #4c59bd; background: #edf0fb; border-color: #e0e5f5; }
+.dq-button.secondary:hover { background: #e2e7fc; }
+.dq-button:active:not(:disabled) { transform: scale(.98); }
+.dq-button:disabled, .dq-refresh:disabled { cursor: default; opacity: .6; box-shadow: none; }
+.dq-claimed { display: inline-flex; align-items: center; gap: 5px; padding: 8px 11px; border: 1px solid #ccebdd; border-radius: 999px; background: #eefaf4; color: #187854; font-size: 10px; font-weight: 700; }
+.dq-task-hint { color: #8991a5; font-size: 10px; line-height: 1.6; }
+.dq-chest { position: relative; padding: 20px; background: linear-gradient(130deg, #f3f2ff, #faf7ff 65%, #fff8ec); border: 1px solid #e4e0fa; border-radius: 18px; }
+.dq-chest-intro { display: flex; align-items: center; gap: 12px; }
+.dq-chest-icon { flex: 0 0 54px; height: 54px; display: grid; place-items: center; color: #6b5bcc; background: #e8e3fc; border: 1px solid #d9d1f7; border-radius: 16px; transform: rotate(-5deg); }
+.dq-chest .dq-eyebrow { font-size: 8px; letter-spacing: .08em; color: #8c82b8; }
+.dq-chest h3 { margin: 4px 0 5px; font-size: 18px; letter-spacing: -.4px; }
+.dq-chest-reward { display: flex; align-items: center; gap: 6px; color: #71629f; font-size: 9px; font-weight: 650; flex-wrap: wrap; }
+.dq-chest-reward i { width: 3px; height: 3px; border-radius: 50%; background: #a294c8; }
+.dq-chest-dots { display: flex; gap: 6px; margin: 18px 0 9px; }
+.dq-chest-dots span { display: grid; place-items: center; width: 23px; height: 23px; border: 1px solid #e0dbef; background: #fff9; border-radius: 50%; color: #a397b9; font-size: 10px; font-weight: 700; }
+.dq-chest-dots .is-done { color: #fff; background: #7c6ad6; border-color: #7c6ad6; }
+.dq-chest > p { color: #83789b; font-size: 11px; line-height: 1.7; margin: 12px 0 15px; }
+.dq-button.chest { width: 100%; background: #5c4bbd; color: #fff; min-height: 43px; }
+.dq-button.chest:disabled { background: #e6e2f0; border-color: #ddd8eb; color: #8e83a9; opacity: 1; }
+.dq-button.chest:hover:not(:disabled) { background: #4d3da7; }
+.dq-chest.is-ready { border-color: #bcb0ed; box-shadow: 0 4px 18px #7562c616; }
+.dq-chest.is-claimed { background: linear-gradient(130deg, #f1faf6, #f8fbff); border-color: #d3ebde; }
+.dq-chest.is-claimed .dq-chest-icon { color: #17835f; background: #dff3e9; border-color: #c8e7d7; }
+.dq-chest-done { display: flex; align-items: center; justify-content: center; gap: 7px; padding: 11px; color: #187b59; background: #e5f5ed; border-radius: 10px; font-size: 12px; font-weight: 750; }
+.dq-streak { padding: 23px; background: linear-gradient(125deg, #fffaf1, #fff 75%); border-color: #f0e6d4; }
+.dq-streak-heading { display: flex; gap: 11px; align-items: center; }
+.dq-flame { display: grid; place-items: center; flex: 0 0 42px; height: 45px; border-radius: 14px; color: #d1841e; background: #fff0d8; }
+.dq-streak .dq-eyebrow { color: #b0864f; font-size: 9px; }
+.dq-streak h2 { font-size: 15px; margin: 5px 0 0; letter-spacing: -.3px; }
+.dq-streak-metrics { display: grid; grid-template-columns: 1fr 1fr; margin-top: 22px; }
+.dq-streak-metrics > div { display: grid; gap: 7px; }
+.dq-streak-metrics > div + div { padding-left: 20px; border-left: 1px solid #efe7d9; }
+.dq-streak-metrics strong { display: flex; align-items: baseline; gap: 5px; color: #bc7519; font-size: 28px; line-height: 1; font-variant-numeric: tabular-nums; }
+.dq-streak-metrics > div + div strong { color: #5663bb; font-size: 25px; }
+.dq-streak-metrics strong svg { align-self: center; }
+.dq-streak-metrics small { font-size: 11px; font-weight: 600; color: #8c8e9c; }
+.dq-streak-metrics span { font-size: 10px; color: #8b8790; }
+.dq-streak-status { display: flex; align-items: center; gap: 7px; margin-top: 20px; padding: 11px 12px; border-radius: 10px; background: #fff3df; color: #9d6b25; font-size: 11px; font-weight: 700; }
+.dq-streak-status.is-done { background: #e8f7ed; color: #277b53; }
+.dq-streak > p { margin: 11px 0 0; font-size: 10px; color: #938b81; line-height: 1.75; }
+.dq-loading { padding-top: 20px; display: grid; gap: 14px; }
+.dq-skeleton { display: flex; gap: 12px; padding: 20px; border: 1px solid #eceef5; border-radius: 16px; }
+.dq-skeleton i { display: block; height: 10px; border-radius: 6px; background: #eaeef8; animation: dq-pulse 1.4s ease-in-out infinite; }
+.dq-skeleton > i { width: 40px; height: 40px; }
+.dq-skeleton > div { flex: 1; display: grid; gap: 12px; }
+.dq-skeleton > div i:nth-child(2) { width: 70%; }
+.dq-empty { padding: 35px 5px 15px; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; color: #6674b7; }
+.dq-empty strong { font-size: 14px; }
+.dq-empty p { font-size: 12px; line-height: 1.7; color: #7d889f; margin: 0; }
+.dq-message { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-top: 15px; padding: 12px; border-radius: 10px; font-size: 12px; line-height: 1.6; }
+.dq-message.error { color: #a43847; background: #fff0f2; border: 1px solid #f6d6db; }
+.dq-message button { color: inherit; border: 0; background: transparent; text-decoration: underline; cursor: pointer; }
+.dq-toast:not(:empty) { display: flex; align-items: flex-start; gap: 8px; margin-top: 15px; padding: 13px; background: #edf9f2; border: 1px solid #cdebd8; color: #24754d; border-radius: 10px; font-size: 12px; line-height: 1.7; }
+.dq-toast svg { flex-shrink: 0; margin-top: 2px; }
+.dq-panel button:focus-visible, .dq-panel a:focus-visible { outline: 3px solid #a0acf4; outline-offset: 3px; }
+.dq-spin { animation: dq-spin 1s linear infinite; }
+.streak-pill { display: inline-flex; align-items: center; gap: 5px; padding: 6px 10px; color: #a96917; background: #fff2dc; border: 1px solid #f3dfbd; border-radius: 999px; font-size: 12px; font-weight: 750; white-space: nowrap; }
+@keyframes dq-spin { to { transform: rotate(360deg); } }
+@keyframes dq-pulse { 50% { opacity: .45; } }
+@container (max-width: 340px) { .dq-panel, .dq-streak { padding: 17px; border-radius: 19px; } .dq-heading-row h2 { font-size: 18px; } .dq-task { padding: 14px; } .dq-chest { padding: 16px; } .dq-chest-intro { gap: 9px; } .dq-chest h3 { font-size: 16px; } .dq-chest-icon { flex-basis: 44px; height: 46px; } }
+@media (prefers-reduced-motion: reduce) { .daily-quests-area *, .daily-quests-area *::before { animation: none !important; transition: none !important; } }

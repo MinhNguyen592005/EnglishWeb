@@ -2,6 +2,7 @@ import { AlertCircle, ArrowRight, CircleUserRound, Eye, EyeOff, LockKeyhole, Roc
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
+import { useRegistrationWelcome } from '../app/RegistrationWelcomeContext'
 import { api } from '../services/api'
 
 export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
@@ -13,6 +14,7 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const { setUser } = useAuth()
+  const {showAfterRegistration}=useRegistrationWelcome()
   const navigate = useNavigate()
   const isRegister = mode === 'register'
 
@@ -39,8 +41,9 @@ export function AuthPage({ mode }: { mode: 'login' | 'register' }) {
       } else {
         profile = await api.login(username, password)
       }
+      if (isRegister && profile.role === 'LEARNER') showAfterRegistration(profile.id)
       setUser(profile)
-      navigate(profile.role === 'ADMIN' ? '/admin' : profile.role === 'TEACHER' ? '/teacher' : '/dashboard', { replace: true })
+      navigate(profile.role === 'ADMIN' ? '/admin' : profile.role === 'TEACHER' ? '/teacher' : isRegister ? '/placement' : '/', { replace: true })
     } catch (e) {
       setError((e as Error).message)
     } finally {

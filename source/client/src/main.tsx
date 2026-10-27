@@ -1,9 +1,13 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './app/AuthContext'
+import { DailyQuestsProvider } from './app/DailyQuestsContext'
 import { SystemSocketProvider } from './app/SystemSocketContext'
-import { Loading } from './components/States'
+import { PlacementProvider, usePlacement } from './app/PlacementContext'
+import { RegistrationWelcomeProvider } from './app/RegistrationWelcomeContext'
+import { PlacementPage } from './pages/PlacementPage'
+import { ErrorState, Loading } from './components/States'
 import { AuthPage } from './pages/AuthPage'
 import { AttemptPage, ResultRoute } from './pages/AttemptPage'
 import { Dashboard, LessonPage, PracticeSelect } from './pages/LearningPages'
@@ -20,11 +24,25 @@ import './styles.css'
 
 function Protected({ children, learnerOnly = false }: { children: React.ReactNode; learnerOnly?: boolean }) {
   const { user, loading } = useAuth()
+  const placement=usePlacement()
+  const location=useLocation()
   if(loading) return <Loading/>
   if(!user) return <Navigate to="/login" replace/>
   if(user.role==='ADMIN') return <Navigate to="/admin" replace/>
   if(learnerOnly && user.role!=='LEARNER') return <Navigate to="/teacher" replace/>
+  if(user.role==='LEARNER'&&user.placementEligible&&location.pathname!=='/placement'){
+    if(placement.loading)return <Loading/>
+    if(placement.error)return <ErrorState message={placement.error} retry={placement.reload}/>
+    if(placement.data?.required)return <Navigate to="/placement" replace/>
+  }
   return <>{children}</>
+}
+function AppSupport(){
+  const {user}=useAuth()
+  const placement=usePlacement()
+  const location=useLocation()
+  if(location.pathname==='/placement'||(user?.role==='LEARNER'&&user.placementEligible&&(placement.loading||placement.error||placement.data?.required)))return null
+  return <SupportChatWidget/>
 }
 function AdminOnly({children}:{children:React.ReactNode}) {
   const {user,loading}=useAuth()
@@ -38,12 +56,27 @@ function TeacherOnly({children}:{children:React.ReactNode}) {
   return user?.role==='TEACHER'?<>{children}</>:<Navigate to="/403" replace/>
 }
 const home=(role?:string)=>role==='ADMIN'?'/admin':role==='TEACHER'?'/teacher':'/dashboard'
+function AccountHome(){
+  const {user,loading}=useAuth()
+  const placement=usePlacement()
+  if(loading)return <Loading/>
+  if(!user)return <Navigate to="/login" replace/>
+  if(user.role==='LEARNER'&&user.placementEligible){
+    if(placement.loading)return <Loading/>
+    if(placement.error)return <ErrorState message={placement.error} retry={placement.reload}/>
+    return <Navigate to={placement.data?.required?'/placement':placement.data?.resumePath??'/roadmap'} replace/>
+  }
+  return <Navigate to={home(user.role)} replace/>
+}
 function AppRoutes() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  // Resolve the existing session before showing a login form or redirecting.
+  if(loading)return <Loading/>
   return <Routes>
-    <Route path="/" element={<Navigate to={user?home(user.role):'/login'} replace/>}/>
-    <Route path="/login" element={user?<Navigate to={home(user.role)} replace/>:<AuthPage mode="login"/>}/>
-    <Route path="/register" element={user?<Navigate to={home(user.role)} replace/>:<AuthPage mode="register"/>}/>
+    <Route path="/" element={<AccountHome/>}/>
+    <Route path="/login" element={user?<AccountHome/>:<AuthPage mode="login"/>}/>
+    <Route path="/register" element={user?<AccountHome/>:<AuthPage mode="register"/>}/>
+    <Route path="/placement" element={<Protected learnerOnly><PlacementPage/></Protected>}/>
     <Route path="/dashboard" element={<Protected learnerOnly><Dashboard/></Protected>}/>
     <Route path="/roadmap" element={<Protected learnerOnly><Roadmap/></Protected>}/>
     <Route path="/lessons/:id" element={<Protected learnerOnly><LessonPage/></Protected>}/>
@@ -64,4 +97,4 @@ function AppRoutes() {
     <Route path="*" element={<Protected><NotFound/></Protected>}/>
   </Routes>
 }
-ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><AuthProvider><SystemSocketProvider><AppRoutes/><SupportChatWidget/></SystemSocketProvider></AuthProvider></BrowserRouter></React.StrictMode>)
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><AuthProvider><DailyQuestsProvider><SystemSocketProvider><PlacementProvider><RegistrationWelcomeProvider><AppRoutes/><AppSupport/></RegistrationWelcomeProvider></PlacementProvider></SystemSocketProvider></DailyQuestsProvider></AuthProvider></BrowserRouter></React.StrictMode>)

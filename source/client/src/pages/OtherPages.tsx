@@ -1,7 +1,8 @@
-import { ArrowRight, Award, Check, Clock3, Crown, Gem, Palette, Pencil, School, Shield, Sparkles, Trophy, UsersRound, ClipboardList, HelpCircle, X } from 'lucide-react'
+import { ArrowRight, Award, Check, Clock3, Crown, Flame, Gem, Palette, Pencil, School, Shield, Sparkles, Trophy, UsersRound, ClipboardList, HelpCircle, X } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
+import { useDailyQuests } from '../app/DailyQuestsContext'
 import { Layout } from '../components/Layout'
 import { ErrorState, Loading } from '../components/States'
 import { api } from '../services/api'
@@ -54,6 +55,8 @@ function TeacherProfilePage() {
   </div></Layout>
 }
 function LearnerProfilePage() {
+  const { data: dailyQuests } = useDailyQuests()
+  const streak = dailyQuests?.streak
   const { user } = useAuth()
   const [history, setHistory] = useState<Attempt[] | null>(null)
   const [error, setError] = useState('')
@@ -85,6 +88,7 @@ function LearnerProfilePage() {
       <section className="card profile-section"><div className="profile-section-heading"><div><span className="section-label">BADGE SHOWCASE</span><h2>Huy hiệu nổi bật</h2></div><Crown size={22}/></div><div className="profile-badge-list">{badges.map(b=><div className={`profile-badge ${!b.unlocked?'locked':''}`} key={b.name}><span className="profile-badge-icon">{b.icon}</span><div><strong>{b.name}</strong><small>{b.detail}</small></div>{b.unlocked?<Check size={16}/>:<Shield size={16}/>}</div>)}</div></section>
     </div>
     <section className="card profile-rewards"><div><span className="section-label">ARENA REWARDS</span><h2>Phần thưởng từ XP PvP</h2><p className="muted">Tích lũy XP PvP để mở khóa khung, danh hiệu và badge mới.</p></div><div className="profile-reward-track"><span className="profile-reward-node claimed">640</span><div><strong>Blue Orbit</strong><small>Đã mở khóa · 500 XP PvP</small></div><span className="profile-reward-node">800</span><div><strong>Solar Gold</strong><small>Còn 160 XP để mở khóa</small></div><span className="profile-reward-node">1500</span></div></section>
+    <section className="card profile-stat"><Flame size={28} color="#f59e0b"/><strong>Chuỗi {streak?.currentStreak || 0} ngày</strong><p>Kỷ lục: {streak?.longestStreak || 0} ngày liên tiếp</p><small>{streak?.completedToday ? '✓ Đã duy trì chuỗi hôm nay' : 'Chưa hoàn thành rương hôm nay'}</small></section>
     <section className="card profile-history"><h2>Lịch sử học tập</h2>{!history ? error ? <ErrorState message={error}/> : <Loading/> : history.length ? history.map(a => <Link to={a.status==='IN_PROGRESS'?`/attempts/${a.id}`:`/attempts/${a.id}/result`} key={a.id} className="history-row"><div className="card-icon purple"><Clock3 size={20}/></div><div><strong>{a.kind==='PRACTICE'?'Luyện tập':a.kind==='CHAPTER_BOSS'?'Boss cuối chương':'Boss bài học'}</strong><span>{a.correctCount}/{a.totalQuestions} câu đúng · {a.status==='IN_PROGRESS'?'Đang làm':a.status==='WON'?'Hoàn thành':'Chưa đạt'}</span></div><ArrowRight size={18}/></Link>) : <div className="empty-state">Chưa có lượt làm nào. <Link to="/practice">Bắt đầu luyện tập</Link></div>}</section>
     {editing&&<div className="profile-editor-backdrop" role="presentation" onClick={()=>setEditing(false)}><section className="profile-editor" role="dialog" aria-modal="true" aria-labelledby="profile-editor-title" onClick={e=>e.stopPropagation()}><button className="profile-editor-close" onClick={()=>setEditing(false)} aria-label="Đóng"><X size={18}/></button><span className="section-label">CUSTOMIZE PROFILE</span><h2 id="profile-editor-title">Chỉnh sửa thông tin</h2><p className="muted">Đây là bản xem trước tĩnh. Cosmetic sẽ kết nối phần thưởng PvP sau.</p><label>Danh hiệu<select value={title} onChange={e=>setTitle(e.target.value)}>{titles.map(item=><option key={item}>{item}</option>)}</select></label><label>Khung avatar<select value={frame} onChange={e=>setFrame(e.target.value)}>{frames.map(item=><option key={item.id} value={item.id}>{item.name} · {item.rarity}</option>)}</select></label><label>Màu hồ sơ<select value={accent} onChange={e=>setAccent(e.target.value)}><option value="indigo">Indigo Orbit</option><option value="emerald">Emerald Nova</option><option value="gold">Solar Gold</option></select></label><button className="button primary profile-save" onClick={()=>setEditing(false)}>Lưu lựa chọn</button></section></div>}
   </div></Layout>

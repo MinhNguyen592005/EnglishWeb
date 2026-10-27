@@ -1,9 +1,10 @@
-import { ArrowRight, BookOpen, CheckCircle2, ChevronRight, CircleAlert, Clock3, Rocket, ShieldCheck, Sparkles, Target, Trophy, Zap } from 'lucide-react'
+import { ArrowRight, BookOpen, ChevronRight, CircleAlert, Rocket, ShieldCheck, Sparkles, Target, Trophy, Zap } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import { Layout } from '../components/Layout'
+import { DailyQuestsWidget } from '../components/DailyQuestsWidget'
 import { ErrorState, Loading } from '../components/States'
 import { difficultyName, sortLessons, topicName } from './RoadmapPage'
 import type { Lesson, Attempt } from '../types'
@@ -20,11 +21,6 @@ function useLessons() {
   return { data, error, reload }
 }
 const progress = (lessons: Lesson[]) => lessons.filter(l => l.status === 'COMPLETED').length
-const dailyTasks = [
-  { title: 'Ôn lại một cấu trúc ngữ pháp', reward: '+20 XP', status: 'done' as const },
-  { title: 'Đạt 80% độ chính xác trong bài luyện', reward: '+100 XP', status: 'available' as const },
-  { title: 'Hoàn thành một bài học hôm nay', reward: '+50 XP', status: 'available' as const }
-]
 
 export function Dashboard() {
   const { user } = useAuth()
@@ -34,6 +30,7 @@ export function Dashboard() {
   const completedCount=progress(data)
   const progressPercent=data.length ? Math.round(completedCount/data.length*100) : 0
   const current = ordered.find(l => l.status === 'AVAILABLE')
+  const bossLesson = current ?? ordered.find(lesson => lesson.status !== 'LOCKED')
   const pendingTopic=[...new Set(ordered.map(l=>l.topicSlug))].find(slug=>{
     const chapter=ordered.filter(l=>l.topicSlug===slug)
     return chapter.every(l=>l.status==='COMPLETED')&&!chapter[0].chapterCompleted
@@ -56,8 +53,8 @@ export function Dashboard() {
       <div className="grid h-[74px] w-[74px] shrink-0 place-items-center rounded-[20px] bg-[#EEF0FF] text-[#4B57C9] shadow-sm"><Rocket size={36}/></div>
     </div>
 
-    <div className="grid gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(280px,1fr)]">
-      <div className="grid content-start gap-5">
+    <div className="grid gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(340px,1fr)]">
+      <div className="contents lg:grid lg:content-start lg:gap-5">
         <section className="relative min-h-[276px] overflow-hidden rounded-[20px] bg-gradient-to-br from-[#4B57C9] via-[#6674E8] to-[#8D98F4] p-7 text-white shadow-lg shadow-[#6674E8]/20 sm:p-8">
           <div className="relative z-10 max-w-[72%] sm:max-w-[66%]">
             <span className="text-xs font-bold tracking-[0.14em] text-[#E5E8FF]">HÀNH TRÌNH HIỆN TẠI</span>
@@ -95,29 +92,7 @@ export function Dashboard() {
           <div className="mt-4 flex justify-end"><Link className="group inline-flex min-h-10 items-center gap-2 rounded-full bg-[#4F46E5] px-6 py-3 text-sm font-semibold text-white shadow-md shadow-[#4F46E5]/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4338CA] hover:shadow-lg hover:shadow-[#4F46E5]/30 active:translate-y-0 active:scale-95" to={nextHref}>{current ? 'Tiếp tục học' : pendingTopic ? 'Khám phá mục tiêu' : 'Xem lộ trình'} <ArrowRight className="transition-transform duration-200 group-hover:translate-x-1" size={17}/></Link></div>
         </section>
 
-        <section className="rounded-[15px] border border-[#E5EAF2] bg-white p-6 shadow-sm sm:p-7">
-          <div className="mb-5 flex items-center justify-between gap-4 border-b border-[#E5EAF2] pb-4">
-            <div className="flex items-center gap-3">
-              <div className="grid h-11 w-11 place-items-center rounded-xl bg-[#EEF0FF] text-[#4B57C9]"><Target size={21}/></div>
-              <div><h2 className="text-lg font-bold">Nhiệm vụ hằng ngày</h2><p className="mt-0.5 text-xs text-[#7A8AA4]">Hoàn thành để duy trì nhịp học</p></div>
-            </div>
-            <span className="text-[10px] font-bold uppercase tracking-wider text-[#9AA5BD]">Cập nhật 24h</span>
-          </div>
-          <div className="grid gap-3">
-            {dailyTasks.map(task => <div className="flex items-center justify-between gap-4 rounded-xl border border-[#E5EAF2] bg-white p-3.5 transition hover:border-[#C7CEFF] hover:shadow-sm" key={task.title}>
-              <div className="flex min-w-0 items-center gap-3">
-                <div className={`grid h-9 w-9 shrink-0 place-items-center rounded-full ${task.status==='done' ? 'bg-[#E8FAF6] text-[#087F73]' : 'bg-[#EEF0FF] text-[#4B57C9]'}`}>
-                  {task.status==='done' ? <CheckCircle2 size={18}/> : <Clock3 size={17}/>}
-                </div>
-                <div className="min-w-0"><p className={`truncate text-sm font-semibold ${task.status==='done' ? 'text-[#7A8AA4] line-through' : 'text-[#14213D]'}`}>{task.title}</p><span className="text-xs font-semibold text-[#C2410C]">{task.reward}</span></div>
-              </div>
-              {task.status==='done' ? <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-[#10B981] px-3.5 py-1.5 text-xs font-semibold text-white shadow-sm shadow-[#10B981]/25 ring-1 ring-[#A7F3D0]"><CheckCircle2 size={14}/> Đã hoàn thành</span> : <Link className="group inline-flex h-[38px] shrink-0 items-center gap-1.5 rounded-full bg-[#4F46E5] px-4 text-xs font-semibold text-white shadow-sm shadow-[#4F46E5]/20 transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#4338CA] hover:shadow-md active:translate-y-0 active:scale-95" to="/practice">Làm bài ngay <ArrowRight className="transition-transform duration-200 group-hover:translate-x-1" size={14}/></Link>}
-            </div>)}
-          </div>
-        </section>
-      </div>
-
-      <aside className="grid content-start gap-5">
+        <div className="order-3 grid content-start gap-5 lg:order-none">
         <section className="rounded-[15px] border border-[#E5EAF2] bg-white p-6 shadow-sm">
           <div className="flex items-center justify-between gap-3 border-b border-[#E5EAF2] pb-4">
             <div className="flex items-center gap-3">
@@ -141,6 +116,10 @@ export function Dashboard() {
         </section>
 
         {!hasLessons && <section className="flex gap-3 rounded-[15px] border border-[#F4B544]/40 bg-[#FFF7E6] p-5 text-sm text-[#925500]" role="status"><CircleAlert className="shrink-0" size={19}/><span>Dữ liệu bài học chưa sẵn sàng. Bạn có thể thử tải lại hoặc mở lộ trình.</span></section>}
+        </div>
+      </div>
+      <aside className="order-2 grid content-start gap-5 lg:order-none">
+        <DailyQuestsWidget bossHref={bossLesson ? `/lessons/${bossLesson.id}` : null}/>
       </aside>
     </div>
   </Layout>

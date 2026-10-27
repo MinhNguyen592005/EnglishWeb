@@ -55,6 +55,8 @@ class ClassroomSocketIntegrationTest {
         try(var c=DriverManager.getConnection(url,username,password);var s=c.createStatement()){s.executeUpdate("CREATE DATABASE `"+schema+"` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");}
         source=new DriverManagerDataSource(url+schema,username,password);db=new JdbcTemplate(source);
         new ResourceDatabasePopulator(new ClassPathResource("db/migration/V1__initial.sql"),new ClassPathResource("db/migration/V3__classrooms_arena_admin.sql"),new ClassPathResource("db/migration/V5__assignment_duration.sql"),new ClassPathResource("db/migration/V6__arena_chat.sql"),new ClassPathResource("db/migration/V7__arena_reports.sql"),new ClassPathResource("db/migration/V15__learner_reports.sql")).execute(source);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V26__assignment_question_snapshot.sql")).execute(source);
+        new ResourceDatabasePopulator(new ClassPathResource("db/migration/V27__teacher_material_library.sql")).execute(source);
         users=mock(UserRepository.class);learning=mock(LearningService.class);published=mock(org.springframework.context.ApplicationEventPublisher.class);
         for(int i=1;i<=22;i++) {
             var u=new User("user"+i,"User "+i,"hash");u.id=(long)i;u.role=i==1?"TEACHER":"LEARNER";

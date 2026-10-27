@@ -1,7 +1,9 @@
-import { BookOpen, CircleHelp, Compass, FileWarning, House, LogOut, Menu, PencilLine, Rocket, School, ScrollText, ShieldCheck, Swords, UsersRound, X } from 'lucide-react'
+import { BookOpen, CircleHelp, Compass, Flame, FileWarning, House, LogOut, Menu, Rocket, School, ScrollText, ShieldCheck, Swords, UsersRound, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { Link, NavLink, useNavigate, useLocation } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
+import { useDailyQuests } from '../app/DailyQuestsContext'
+import './DailyQuestsWidget.css'
 import { api } from '../services/api'
 
 const learnerLinks = [
@@ -14,7 +16,7 @@ const learnerLinks = [
 const teacherLinks = [
   { to: '/teacher', label: 'Tổng quan', icon: House },
   { to: '/classes', label: 'Lớp học', icon: School },
-  { to: '/teacher/questions', label: 'Soạn câu hỏi', icon: PencilLine }
+  { to: '/teacher/questions', label: 'Kho học liệu', icon: BookOpen }
 ]
 const adminLinks = [
   {to:'/admin',label:'Tổng quan',icon:House},
@@ -31,6 +33,8 @@ export function Layout({ children, title }: { children: ReactNode; title: string
   const links=isAdmin?adminLinks:isTeacher?teacherLinks:learnerLinks
   const [menu, setMenu] = useState(false)
   const [logoutError, setLogoutError] = useState('')
+  const { data: dailyQuests } = useDailyQuests()
+  const streak = dailyQuests?.streak.currentStreak ?? null
   const navigate = useNavigate()
   const location=useLocation()
   function isLinkActive(to:string) {
@@ -58,6 +62,7 @@ export function Layout({ children, title }: { children: ReactNode; title: string
     <strong>{title}</strong>
   </div>
   <div className="topbar-actions">
+    {!isAdmin&&!isTeacher&&streak!==null&&<span className="streak-pill" title={`Chuỗi ngày liên tiếp: ${streak} ngày`}><Flame size={15}/> {streak}</span>}
     {isAdmin && <span className="admin-realtime-pill"><i/> Trực tuyến</span>}
     <Link to={isAdmin ? '/admin' : '/profile'} className="topbar-profile" aria-label={isAdmin ? 'Mở trang quản trị' : 'Mở hồ sơ cá nhân'}>
       <span className="avatar">{user?.displayName.slice(0,1).toUpperCase()}</span>

@@ -2,13 +2,13 @@ import { useEffect, useState, useMemo } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import { AlertTriangle, ArrowRight, FileCheck2, Eye, FileWarning, Lock, ScrollText, Search, ShieldAlert, Unlock, UsersRound, X, SlidersHorizontal } from 'lucide-react'
 import { Layout } from '../components/Layout'
+import { Pagination, PAGE_SIZE } from '../components/Pagination'
 import { api } from '../services/api'
 import type { AdminUser, AdminReport } from '../types'
 import { SupportInbox } from '../components/SupportChat'
 import { BusinessOverview } from './BusinessOverview'
 import { ServerDashboardPage } from './ServerDashboardPage'
 import { useSystemSocket } from '../app/SystemSocketContext'
-// @ts-expect-error CSS imports are handled by the bundler and have no TypeScript declarations.
 import './admin.css'
 type Audit={id:number;actor:string;action:string;targetType:string;targetId:number;detail:string;createdAt:string}
 type ReportFilter='all'|'open'|'review'|'resolved'
@@ -34,33 +34,21 @@ function reportStatus(status:string){return status==='OPEN'?'Mới':status==='IN
 function roleLabel(role:string){return role==='ADMIN'?'Admin':role==='TEACHER'?'Giáo viên':role==='LEARNER'?'Học sinh':'Không xác định'}
 
 // Thanh phân trang dùng chung cho bảng tài khoản và nhật ký
-function Pager({shown,total,current,pages,pageSize,setPageSize,setPage}:{shown:number;total:number;current:number;pages:number;pageSize:number;setPageSize:(value:number)=>void;setPage:(value:number)=>void}){
-  return (
-    <div className="users-pagination">
-      <span>Hiển thị {shown} / {total}</span>
-      <label>Số dòng <select value={pageSize} onChange={event=>setPageSize(Number(event.target.value))}><option value={10}>10</option><option value={20}>20</option><option value={50}>50</option></select></label>
-      <button type="button" className="button secondary" disabled={current===1} onClick={()=>setPage(current-1)}>Trước</button>
-      <strong>Trang {current} / {pages}</strong>
-      <button type="button" className="button secondary" disabled={current===pages} onClick={()=>setPage(current+1)}>Sau</button>
-    </div>
-  )
-}
-
 function UsersPanel({users,presence,filter,setFilter,busy,onLock}:{users:AdminUser[];presence:Map<number,number>;filter:string;setFilter:(value:string)=>void;busy:boolean;onLock:(user:AdminUser)=>void}){
-  const [roleFilter,setRoleFilter]=useState<'all'|'ADMIN'|'TEACHER'|'LEARNER'|'locked'>('all'),[page,setPage]=useState(1),[pageSize,setPageSize]=useState(10)
+  const [roleFilter,setRoleFilter]=useState<'all'|'ADMIN'|'TEACHER'|'LEARNER'|'locked'>('all'),[page,setPage]=useState(1)
   const visible=users.filter(user=>`${user.username} ${user.displayName}`.toLocaleLowerCase().includes(filter.toLocaleLowerCase())).filter(user=>roleFilter==='all'||(roleFilter==='locked'?user.locked:user.role===roleFilter))
-  const pages=Math.max(1,Math.ceil(visible.length/pageSize)),current=Math.min(page,pages),rows=visible.slice((current-1)*pageSize,current*pageSize)
-  useEffect(()=>setPage(1),[filter,roleFilter,pageSize])
+  const pages=Math.max(1,Math.ceil(visible.length/PAGE_SIZE)),current=Math.min(page,pages),rows=visible.slice((current-1)*PAGE_SIZE,current*PAGE_SIZE)
+  useEffect(()=>setPage(1),[filter,roleFilter])
   const counts={all:users.length,ADMIN:users.filter(user=>user.role==='ADMIN').length,TEACHER:users.filter(user=>user.role==='TEACHER').length,LEARNER:users.filter(user=>user.role==='LEARNER').length,locked:users.filter(user=>user.locked).length}
-  return <section className="card feature-card users-board"><div className="users-board-head"><div><span className="section-label">QUẢN LÝ TÀI KHOẢN</span><h2>Tài khoản hệ thống</h2><p className="muted">Vai trò chỉ được hiển thị. Trạng thái online dựa trên phiên kết nối thực tế.</p></div><span className="users-total">{visible.length} tài khoản</span></div><div className="users-filters" role="tablist" aria-label="Lọc tài khoản">{([['all','Tất cả'],['ADMIN','Admin'],['TEACHER','Giáo viên'],['LEARNER','Học sinh'],['locked','Đã khóa']] as const).map(([key,label])=><button type="button" role="tab" aria-selected={roleFilter===key} className={roleFilter===key?'active':''} onClick={()=>setRoleFilter(key)} key={key}>{label}<b>{counts[key]}</b></button>)}</div><div className="table-wrap"><table className="users-table"><thead><tr><th>Tài khoản</th><th>Vai trò</th><th>XP / Cấp</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>{rows.map(user=><tr key={user.id}><td><div className="user-cell"><span className="user-avatar">{user.displayName.slice(0,1).toUpperCase()}</span><span><strong>{user.displayName}</strong><small>{user.username}</small></span></div></td><td><span className={`role-badge ${user.role.toLowerCase()}`}>{roleLabel(user.role)}</span></td><td>{user.role==='LEARNER'?`${user.totalXp} / Cấp ${Math.floor(user.totalXp/1000)+1}`:<span className="muted">—</span>}</td><td><span className={`presence-status ${presence.has(user.id)?'online':'offline'} ${user.locked?'locked':''}`}><i/>{user.locked?'Đã khóa':presence.has(user.id)?'Đang online':'Offline'}</span></td><td><div className="user-actions"><button type="button" className={`button ${user.locked?'unlock-button':'lock-button'}`} disabled={busy} onClick={()=>onLock(user)}>{user.locked?<Unlock size={15}/>:<Lock size={15}/>} {user.locked?'Mở khóa':'Khóa'}</button><span className="reset-password-disabled" title="Backend chưa hỗ trợ reset mật khẩu">Reset MK</span></div></td></tr>)}</tbody></table></div>{!rows.length&&<div className="users-empty"><UsersRound size={28}/><strong>Không tìm thấy tài khoản</strong><span>Không có tài khoản phù hợp với bộ lọc hiện tại.</span>{(filter||roleFilter!=='all')&&<button type="button" className="button secondary" onClick={()=>{setFilter('');setRoleFilter('all')}}>Xóa bộ lọc</button>}</div>}<Pager shown={rows.length} total={visible.length} current={current} pages={pages} pageSize={pageSize} setPageSize={setPageSize} setPage={setPage}/></section>
+  return <section className="card feature-card users-board"><div className="users-board-head"><div><span className="section-label">QUẢN LÝ TÀI KHOẢN</span><h2>Tài khoản hệ thống</h2><p className="muted">Vai trò chỉ được hiển thị. Trạng thái online dựa trên phiên kết nối thực tế.</p></div><span className="users-total">{visible.length} tài khoản</span></div><div className="users-filters" role="tablist" aria-label="Lọc tài khoản">{([['all','Tất cả'],['ADMIN','Admin'],['TEACHER','Giáo viên'],['LEARNER','Học sinh'],['locked','Đã khóa']] as const).map(([key,label])=><button type="button" role="tab" aria-selected={roleFilter===key} className={roleFilter===key?'active':''} onClick={()=>setRoleFilter(key)} key={key}>{label}<b>{counts[key]}</b></button>)}</div><div className="table-wrap"><table className="users-table"><thead><tr><th>Tài khoản</th><th>Vai trò</th><th>XP / Cấp</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>{rows.map(user=><tr key={user.id}><td><div className="user-cell"><span className="user-avatar">{user.displayName.slice(0,1).toUpperCase()}</span><span><strong>{user.displayName}</strong><small>{user.username}</small></span></div></td><td><span className={`role-badge ${user.role.toLowerCase()}`}>{roleLabel(user.role)}</span></td><td>{user.role==='LEARNER'?`${user.totalXp} / Cấp ${Math.floor(user.totalXp/1000)+1}`:<span className="muted">—</span>}</td><td><span className={`presence-status ${presence.has(user.id)?'online':'offline'} ${user.locked?'locked':''}`}><i/>{user.locked?'Đã khóa':presence.has(user.id)?'Đang online':'Offline'}</span></td><td><div className="user-actions"><button type="button" className={`button ${user.locked?'unlock-button':'lock-button'}`} disabled={busy} onClick={()=>onLock(user)}>{user.locked?<Unlock size={15}/>:<Lock size={15}/>} {user.locked?'Mở khóa':'Khóa'}</button><span className="reset-password-disabled" title="Backend chưa hỗ trợ reset mật khẩu">Reset MK</span></div></td></tr>)}</tbody></table></div>{!rows.length&&<div className="users-empty"><UsersRound size={28}/><strong>Không tìm thấy tài khoản</strong><span>Không có tài khoản phù hợp với bộ lọc hiện tại.</span>{(filter||roleFilter!=='all')&&<button type="button" className="button secondary" onClick={()=>{setFilter('');setRoleFilter('all')}}>Xóa bộ lọc</button>}</div>}<Pagination total={visible.length} page={current} onPageChange={setPage}/></section>
 }
 
 // Nhật ký quản trị: tìm kiếm + phân trang, cùng phong cách với bảng tài khoản
 function AuditPanel({audit}:{audit:Audit[]}){
-  const [search,setSearch]=useState(''),[page,setPage]=useState(1),[pageSize,setPageSize]=useState(10)
+  const [search,setSearch]=useState(''),[page,setPage]=useState(1)
   const visible=audit.filter(item=>`${item.actor} ${item.action} ${item.targetType} ${item.detail}`.toLocaleLowerCase().includes(search.toLocaleLowerCase()))
-  const pages=Math.max(1,Math.ceil(visible.length/pageSize)),current=Math.min(page,pages),rows=visible.slice((current-1)*pageSize,current*pageSize)
-  useEffect(()=>setPage(1),[search,pageSize])
+  const pages=Math.max(1,Math.ceil(visible.length/PAGE_SIZE)),current=Math.min(page,pages),rows=visible.slice((current-1)*PAGE_SIZE,current*PAGE_SIZE)
+  useEffect(()=>setPage(1),[search])
   return (
     <section className="card feature-card audit-board">
       <div className="users-board-head">
@@ -102,7 +90,7 @@ function AuditPanel({audit}:{audit:Audit[]}){
           {search&&<button type="button" className="button secondary" onClick={()=>setSearch('')}>Xóa tìm kiếm</button>}
         </div>
       )}
-      <Pager shown={rows.length} total={visible.length} current={current} pages={pages} pageSize={pageSize} setPageSize={setPageSize} setPage={setPage}/>
+      <Pagination total={visible.length} page={current} onPageChange={setPage}/>
     </section>
   )
 }

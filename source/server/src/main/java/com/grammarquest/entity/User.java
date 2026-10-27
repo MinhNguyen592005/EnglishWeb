@@ -11,6 +11,7 @@ public class User {
     @Column(nullable=false) public String role = "LEARNER";
     @Column(nullable=false) public boolean locked = false;
     @Column(name="total_xp", nullable=false) public long totalXp = 0;
+    @Column(name="placement_eligible", nullable=false) public boolean placementEligible = false;
     protected User() {}
     public User(String username, String displayName, String passwordHash) {
         this.username=username; this.displayName=displayName; this.passwordHash=passwordHash;

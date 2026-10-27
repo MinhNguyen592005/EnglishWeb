@@ -1,5 +1,6 @@
 package com.grammarquest.controller;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grammarquest.entity.*;
 import com.grammarquest.repository.*;
 import com.grammarquest.service.LearningService;
@@ -34,9 +35,16 @@ public class ClassroomController {
                                    @Min(1) @Max(100) int passPercent, @NotNull Instant dueAt,
                                    @NotBlank @Pattern(regexp="PUBLISHED|CLOSED") String status) {}
     public record Join(@NotBlank String code) {}
-    public record NewAssignment(@NotBlank @Size(max=160) String title, @NotNull Long lessonId,
+    public record NewAssignment(@NotBlank @Size(max=160) String title, Long lessonId,
                                 @Size(max=1000) String instructions, @Min(1) @Max(100) int passPercent,
-                                @NotNull Instant dueAt) {}
+                                @NotNull Instant dueAt, @Size(min=1,max=30) List<@NotNull @Positive Long> questionIds, @Positive Long materialId) {
+        public NewAssignment(String title,Long lessonId,String instructions,int passPercent,Instant dueAt) {
+            this(title,lessonId,instructions,passPercent,dueAt,null,null);
+        }
+        public NewAssignment(String title,Long lessonId,String instructions,int passPercent,Instant dueAt,List<Long> questionIds) {
+            this(title,lessonId,instructions,passPercent,dueAt,questionIds,null);
+        }
+    }
     public record Message(@NotBlank @Size(max=1000) String body) {}
     public record Report(@NotBlank @Size(max=500) String reason) {}
 
@@ -153,14 +161,42 @@ public class ClassroomController {
         return result;
     }
     private List<Map<String,Object>> assignments(long id) {
-        return db.queryForList("select a.id,a.title,a.instructions,a.lesson_id as lessonId,l.title as lessonTitle,a.pass_percent as passPercent,a.due_at as dueAt,a.status from assignments a join lessons l on l.id=a.lesson_id where a.class_id=? order by a.id desc",id);
+        return db.queryForList("select a.id,a.title,a.instructions,a.lesson_id as lessonId,a.material_id as materialId,coalesce(m.name,l.title,'Bộ câu hỏi') as lessonTitle,a.pass_percent as passPercent,a.due_at as dueAt,a.status from assignments a left join lessons l on l.id=a.lesson_id left join teacher_materials m on m.id=a.material_id where a.class_id=? order by a.id desc",id);
     }
     @PostMapping("/{id}/assignments") @Transactional public Map<String,Object> assign(Authentication auth,@PathVariable long id,@Valid @RequestBody NewAssignment body) {
         User u=current(auth); owner(id,u);
         if(body.dueAt().isBefore(Instant.now())) throw new ApiException(HttpStatus.BAD_REQUEST,"DUE_PAST","Hạn nộp phải ở tương lai");
-        Integer count=db.queryForObject("select count(*) from lessons where id=? and published=true",Integer.class,body.lessonId());
-        if(count==null||count==0) throw new ApiException(HttpStatus.BAD_REQUEST,"LESSON_NOT_FOUND","Bài học không tồn tại");
-        long assignmentId=insert("insert into assignments(class_id,lesson_id,title,instructions,pass_percent,due_at) values(?,?,?,?,?,?)",id,body.lessonId(),body.title().trim(),Objects.toString(body.instructions(),"").trim(),body.passPercent(),Timestamp.from(body.dueAt()));
+        Long lessonId=body.lessonId();
+        List<Long> selectedIds=body.questionIds();
+        if(body.materialId()!=null) {
+            Integer own=db.queryForObject("select count(*) from teacher_materials where id=? and teacher_id=? and archived=false",Integer.class,body.materialId(),u.id);
+            if(own==null||own==0) throw new ApiException(HttpStatus.BAD_REQUEST,"MATERIAL_NOT_FOUND","Bộ bài không thuộc kho của bạn hoặc đã lưu trữ");
+            selectedIds=db.queryForList("select id from questions where material_id=? and owner_id=? and deleted=false and teacher_active=true order by material_order,id",Long.class,body.materialId(),u.id);
+            if(selectedIds.isEmpty()||selectedIds.size()>30) throw new ApiException(HttpStatus.BAD_REQUEST,"INVALID_MATERIAL","Bộ bài cần từ 1 đến 30 câu hỏi");
+            lessonId=null;
+        } else {
+            if(lessonId==null) throw new ApiException(HttpStatus.BAD_REQUEST,"MATERIAL_REQUIRED","Chọn bộ bài từ kho của bạn");
+            Integer count=db.queryForObject("select count(*) from lessons where id=? and published=true",Integer.class,lessonId);
+            if(count==null||count==0) throw new ApiException(HttpStatus.BAD_REQUEST,"LESSON_NOT_FOUND","Bài học không tồn tại");
+        }
+        String snapshot=null;
+        if(selectedIds!=null) {
+            if(new HashSet<>(selectedIds).size()!=selectedIds.size())
+                throw new ApiException(HttpStatus.BAD_REQUEST,"DUPLICATE_QUESTIONS","Danh sách câu hỏi bị trùng");
+            var json=new ObjectMapper();
+            var selected=json.createArrayNode();
+            for(Long questionId:selectedIds) {
+                var rows=db.queryForList("select id,lesson_id,prompt,option_a,option_b,option_c,option_d,correct_option,question_type,accepted_answer,explanation from questions where id=? and owner_id=? and teacher_active=true and deleted=false",questionId,u.id);
+                if(rows.isEmpty()) throw new ApiException(HttpStatus.BAD_REQUEST,"INVALID_QUESTIONS","Câu hỏi không thuộc kho của bạn hoặc đã được lưu trữ");
+                var q=rows.getFirst();var node=selected.addObject();
+                node.put("id",((Number)q.get("id")).longValue());
+                if(q.get("lesson_id")!=null) node.put("lessonId",((Number)q.get("lesson_id")).longValue());
+                for(var field:Map.of("prompt","prompt","optionA","option_a","optionB","option_b","optionC","option_c","optionD","option_d","correctOption","correct_option","questionType","question_type","acceptedAnswer","accepted_answer","explanation","explanation").entrySet())
+                    node.put(field.getKey(),Objects.toString(q.get(field.getValue()),""));
+            }
+            snapshot=selected.toString();
+        }
+        long assignmentId=insert("insert into assignments(class_id,lesson_id,title,instructions,pass_percent,due_at,question_snapshot_json,material_id) values(?,?,?,?,?,?,?,?)",id,lessonId,body.title().trim(),Objects.toString(body.instructions(),"").trim(),body.passPercent(),Timestamp.from(body.dueAt()),snapshot,body.materialId());
         notifier.classroom(id);
         return row("select id,title,lesson_id as lessonId,pass_percent as passPercent,due_at as dueAt,status from assignments where id=?",assignmentId);
     }
@@ -176,10 +212,13 @@ public class ClassroomController {
     @PostMapping("/{id}/assignments/{assignmentId}/start") @Transactional public LearningService.AttemptView start(Authentication auth,@PathVariable long id,@PathVariable long assignmentId) {
         User u=current(auth); access(id,u);
         if(!"LEARNER".equals(u.role))throw denied();
-        Map<String,Object> a=row("select lesson_id as lessonId,due_at as dueAt,status from assignments where id=? and class_id=?",assignmentId,id);
+        Map<String,Object> a=row("select lesson_id as lessonId,due_at as dueAt,status,pass_percent as passPercent,question_snapshot_json as questionSnapshot from assignments where id=? and class_id=?",assignmentId,id);
         if(!"PUBLISHED".equals(a.get("status"))||((Timestamp)a.get("dueAt")).toInstant().isBefore(Instant.now()))
             throw new ApiException(HttpStatus.CONFLICT,"ASSIGNMENT_CLOSED","Nhiệm vụ đã đóng hoặc quá hạn");
-        var attempt=learning.startAssignment(auth.getName(),((Number)a.get("lessonId")).longValue(),((Number)classroom(id).get("teacherId")).longValue());
+        Long assignedLesson=a.get("lessonId")==null?null:((Number)a.get("lessonId")).longValue();
+        var attempt=a.get("questionSnapshot")==null
+            ?learning.startAssignment(auth.getName(),assignedLesson,((Number)classroom(id).get("teacherId")).longValue())
+            :learning.startAssignmentSnapshot(auth.getName(),assignedLesson,a.get("questionSnapshot").toString(),((Number)a.get("passPercent")).intValue());
         db.update("insert into assignment_attempts(assignment_id,attempt_id,submit_deadline_at) values(?,?,?)",assignmentId,attempt.id(),Timestamp.from(Instant.now().plusSeconds(900)));
         notifier.classroom(id);
         return attempt;

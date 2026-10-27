@@ -42,6 +42,35 @@ class LearningServiceTest {
         item=new AttemptItem(boss.id,1,q);
         when(users.findByUsernameIgnoreCase("minh")).thenReturn(Optional.of(learner));
     }
+    @Test void selectedAssignmentUsesSavedContentAndOrderInsteadOfRandomBank() throws Exception {
+        Question first=new Question();first.id=80L;first.prompt="Saved question one";
+        first.optionA="A";first.optionB="B";first.optionC="C";first.optionD="D";
+        first.correctOption="B";first.explanation="Hidden until answered";
+        Question second=new Question();second.id=81L;second.prompt="Saved text question";
+        second.questionType="FILL_BLANK";second.acceptedAnswer="goes";second.explanation="Hidden answer";
+        String snapshot=new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(List.of(second,first));
+        when(attempts.save(any(Attempt.class))).thenAnswer(call -> {
+            Attempt attempt=call.getArgument(0);attempt.id=99L;return attempt;
+        });
+        var attempt=service.startAssignmentSnapshot("minh",1L,snapshot,80);
+        assertEquals(2,attempt.totalQuestions());
+        assertEquals(2,attempt.requiredCorrect());
+        assertEquals("Saved text question",attempt.questions().get(0).prompt());
+        assertEquals("Saved question one",attempt.questions().get(1).prompt());
+        assertEquals("FILL_BLANK",attempt.questions().get(0).questionType());
+        assertNull(attempt.questions().get(0).correctOption());
+        assertNull(attempt.questions().get(0).explanation());
+        verifyNoInteractions(questions);
+        verify(items).saveAll(argThat(entries -> {
+            var saved=new ArrayList<AttemptItem>();entries.forEach(saved::add);
+            return saved.size()==2&&saved.getFirst().questionId.equals(81L)&&saved.getFirst().acceptedAnswer.equals("goes");
+        }));
+    }
+    @Test void brokenOrEmptyAssignmentSnapshotsDoNotCreateAttempts() {
+        assertEquals("INVALID_ASSIGNMENT",assertThrows(ApiException.class,() -> service.startAssignmentSnapshot("minh",1L,"not-json",80)).code);
+        assertEquals("INVALID_ASSIGNMENT",assertThrows(ApiException.class,() -> service.startAssignmentSnapshot("minh",1L,"[]",80)).code);
+        verifyNoInteractions(attempts,items,questions);
+    }
     @Test void unfinishedBossNeverSendsCorrectAnswerOrExplanation() {
         item.answer="A";
         when(attempts.findById(20L)).thenReturn(Optional.of(boss));

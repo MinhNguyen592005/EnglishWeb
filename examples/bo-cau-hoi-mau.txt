@@ -1,0 +1,43 @@
+[MCQ]
+Câu 1: She _____ to school by bus every day.
+A. go
+B. goes
+C. going
+D. gone
+Đáp án: B
+Giải thích: Chủ ngữ She ở ngôi thứ ba số ít nên động từ go thêm -es trong thì hiện tại đơn.
+
+Câu 2: They _____ football in the park yesterday.
+A. play
+B. plays
+C. played
+D. playing
+Đáp án: C
+Giải thích: Yesterday là dấu hiệu của thì quá khứ đơn. Động từ play có dạng quá khứ là played.
+
+[FILL_BLANK]
+Câu 3: They have lived in Hanoi _____ 2020.
+Đáp án: since
+Giải thích: Since đi với mốc thời gian cụ thể; 2020 là một mốc thời gian.
+
+Câu 4: There _____ three books on the desk. Điền dạng hiện tại đơn của động từ be.
+Đáp án: are
+Giải thích: Three books là danh từ số nhiều nên dùng There are.
+
+[ERROR_CORRECTION]
+Câu 5: Viết lại toàn bộ câu sau sau khi sửa lỗi: She don't like coffee.
+Đáp án: She doesn't like coffee.
+Giải thích: Chủ ngữ She dùng trợ động từ doesn't ở thì hiện tại đơn; động từ like giữ nguyên mẫu.
+
+Câu 6: Viết lại toàn bộ câu sau sau khi sửa lỗi: He go to school yesterday.
+Đáp án: He went to school yesterday.
+Giải thích: Yesterday chỉ quá khứ nên go phải chuyển thành went.
+
+[REWRITE]
+Câu 7: Viết lại câu It started raining two hours ago. Bắt đầu bằng It has và dùng thì hiện tại hoàn thành tiếp diễn.
+Đáp án: It has been raining for two hours.
+Giải thích: Hành động bắt đầu trong quá khứ và vẫn tiếp diễn được diễn đạt bằng has been raining; for đi với khoảng thời gian.
+
+Câu 8: Viết lại câu The box is too heavy for me to lift. Dùng cấu trúc so ... that và giữ nguyên nghĩa.
+Đáp án: The box is so heavy that I cannot lift it.
+Giải thích: Cấu trúc too ... to có thể chuyển sang so ... that với mệnh đề diễn đạt cùng kết quả.

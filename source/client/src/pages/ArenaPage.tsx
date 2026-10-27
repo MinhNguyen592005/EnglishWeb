@@ -1,4 +1,4 @@
-import { Award, Check, Clock3, Copy, FileText, Info, Loader2, LogIn, MessageCircle, Plus, Send, Swords, TrendingUp, Trophy, User } from 'lucide-react'
+import { Award, Check, Clock3, Copy, Info, Loader2, LogIn, MessageCircle, Plus, Send, Swords, Trophy, User } from 'lucide-react'
 import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useAuth } from '../app/AuthContext'
 import { useSystemSocket } from '../app/SystemSocketContext'
