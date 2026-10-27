@@ -5,6 +5,14 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 class AuthRegistrationValidationTest {
+    @Test void passwordLimitUsesUtf8Bytes() {
+        assertDoesNotThrow(() -> AuthController.validatePassword("a".repeat(72)));
+        assertDoesNotThrow(() -> AuthController.validatePassword("€".repeat(24)));
+        assertEquals("PASSWORD_TOO_LONG", assertThrows(com.grammarquest.exception.ApiException.class,
+            () -> AuthController.validatePassword("a".repeat(73))).code);
+        assertEquals("PASSWORD_TOO_LONG", assertThrows(com.grammarquest.exception.ApiException.class,
+            () -> AuthController.validatePassword("€".repeat(25))).code);
+    }
     @Test void validatesNamesAfterTrimming() {
         try (var factory = Validation.buildDefaultValidatorFactory()) {
             var validator = factory.getValidator();

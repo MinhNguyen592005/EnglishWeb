@@ -51,6 +51,17 @@ class LearningServiceTest {
         assertNull(visible.correctOption());
         assertNull(visible.explanation());
     }
+    @Test void expiredAssignmentCannotMutateAnswerThroughLearningService() {
+        when(attempts.findWithLockById(20L)).thenReturn(Optional.of(boss));
+        when(items.findByAttemptIdOrderByOrdinalNoAsc(20L)).thenReturn(List.of(item));
+        when(db.query(anyString(), any(org.springframework.jdbc.core.RowMapper.class), eq(20L)))
+            .thenReturn(List.of(java.sql.Timestamp.from(java.time.Instant.now().minusSeconds(60))));
+        assertEquals("ASSIGNMENT_TIME_OVER", assertThrows(ApiException.class,
+            () -> service.answer("minh",20L,1,"B")).code);
+        assertNull(item.answer);
+        assertEquals(0,boss.correctCount);
+        verifyNoInteractions(xp);
+    }
     @Test void duplicateAnswerCannotBeChanged() {
         item.answer="A";
         when(attempts.findWithLockById(20L)).thenReturn(Optional.of(boss));
@@ -76,6 +87,16 @@ class LearningServiceTest {
         when(db.queryForList(anyString(),eq(String.class))).thenReturn(List.of("conditionals"));
         ApiException error=assertThrows(ApiException.class,() -> service.lesson("minh",2L));
         assertEquals("LESSON_LOCKED",error.code);
+    }
+    @Test void adminBlockedOrDeletedLessonCannotBeOpenedEvenIfPublicationIsStale() {
+        Lesson lesson=new Lesson();lesson.id=2L;lesson.topicSlug="conditionals";lesson.published=true;lesson.adminBlocked=true;
+        when(lessons.findById(2L)).thenReturn(Optional.of(lesson));
+        assertEquals("LESSON_NOT_FOUND",assertThrows(ApiException.class,()->service.lesson("minh",2L)).code);
+        assertEquals("LESSON_NOT_FOUND",assertThrows(ApiException.class,()->service.start("minh","PRACTICE",2L)).code);
+        lesson.adminBlocked=false;lesson.deleted=true;
+        assertEquals("LESSON_NOT_FOUND",assertThrows(ApiException.class,()->service.lesson("minh",2L)).code);
+        assertEquals("LESSON_NOT_FOUND",assertThrows(ApiException.class,()->service.start("minh","PRACTICE",2L)).code);
+        verifyNoInteractions(questions,attempts,items,xp);
     }
     @Test void nextPlanetCannotBeOpenedBeforePreviousChapterBoss() {
         Lesson next=new Lesson(); next.id=12L; next.ordinalNo=0; next.topicSlug="conditionals"; next.published=true;

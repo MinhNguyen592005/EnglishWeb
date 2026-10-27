@@ -41,7 +41,7 @@ public class ArenaMatchmaker {
         if(existing!=null&&existing.error!=null&&existing.socket.equals(socket)){queue.remove(username);existing=null;}
         if(existing!=null){if(!existing.socket.equals(socket))throw bad("ALREADY_QUEUED","Tài khoản đang tìm trận ở tab khác");return view(existing,System.currentTimeMillis());}
         if(active(user.id))throw bad("ALREADY_IN_ROOM","Bạn đang ở một phòng đấu khác");
-        Integer qCount = db.queryForObject("select count(*) from questions where published=true and (question_type is null or question_type='MCQ')",Integer.class);
+        Integer qCount = db.queryForObject("select count(*) from questions where published=true and deleted=false and admin_blocked=false and owner_id is null and (question_type is null or question_type='MCQ')",Integer.class);
         if(qCount == null || qCount < 10)throw bad("QUESTION_BANK_INCOMPLETE","Chưa đủ 10 câu hỏi để tìm trận");
         long now = System.currentTimeMillis();
         var entry=new Entry(username,socket,user.totalXp/1000+1,user.pvpElo,now);

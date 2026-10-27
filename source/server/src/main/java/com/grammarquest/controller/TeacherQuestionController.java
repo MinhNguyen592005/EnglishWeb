@@ -59,7 +59,7 @@ public class TeacherQuestionController {
         return u;
     }
     private void lesson(Long id){
-        if(db.queryForObject("select count(*) from lessons where id=? and published=true",Integer.class,id)==0)
+        if(db.queryForObject("select count(*) from lessons where id=? and published=true and deleted=false and admin_blocked=false",Integer.class,id)==0)
             throw new ApiException(HttpStatus.BAD_REQUEST,"LESSON_NOT_FOUND","Bài học không tồn tại");
     }
     private void own(long id,User u){

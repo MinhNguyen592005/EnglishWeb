@@ -61,8 +61,13 @@ public class AuthController {
         }
     }
     @GetMapping("/csrf") public Map<String,String> csrf(CsrfToken token) { return Map.of("token", token.getToken()); }
+    static void validatePassword(String password) {
+        if(password.getBytes(java.nio.charset.StandardCharsets.UTF_8).length>72)
+            throw new ApiException(HttpStatus.BAD_REQUEST,"PASSWORD_TOO_LONG","Mật khẩu không được vượt quá 72 byte UTF-8");
+    }
     @org.springframework.transaction.annotation.Transactional
     @PostMapping("/register") public ResponseEntity<Profile> register(@Valid @RequestBody Register body) {
+        validatePassword(body.password());
         String name=body.username();
         if(users.existsByUsernameIgnoreCase(name)) throw new ApiException(HttpStatus.CONFLICT,"USERNAME_TAKEN","Tên đăng nhập đã được dùng");
         User user=new User(name,body.displayName().trim(),encoder.encode(body.password()));user.placementEligible=true;user=users.save(user);
@@ -70,6 +75,7 @@ public class AuthController {
         return ResponseEntity.status(201).body(Profile.from(user));
     }
     @PostMapping("/login") public Profile login(@Valid @RequestBody Login body, HttpServletRequest request, HttpServletResponse response) {
+        validatePassword(body.password());
         Authentication auth;
         try { auth=manager.authenticate(new UsernamePasswordAuthenticationToken(body.username(),body.password())); }
         catch(AuthenticationException e) { throw new ApiException(HttpStatus.UNAUTHORIZED,"LOGIN_FAILED","Tài khoản hoặc mật khẩu không đúng"); }

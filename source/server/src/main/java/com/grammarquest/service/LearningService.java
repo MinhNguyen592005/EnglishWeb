@@ -23,6 +23,7 @@ public class LearningService {
     private final AttemptItemRepository items;
     private final XpLedgerRepository xp;
     private final JdbcTemplate db;
+    private final AssignmentAnswerGuard assignmentGuard;
     private final DailyQuestService dailyQuests;
     public LearningService(UserRepository users, LessonRepository lessons, QuestionRepository questions,
                            AttemptRepository attempts, AttemptItemRepository items, XpLedgerRepository xp, JdbcTemplate db) {
@@ -39,6 +40,7 @@ public class LearningService {
                            DailyQuestService dailyQuests,StudyRewardService studyRewards) {
         this.users=users; this.lessons=lessons; this.questions=questions; this.attempts=attempts; this.items=items; this.xp=xp; this.db=db;
         this.dailyQuests=dailyQuests;this.studyRewards=studyRewards;
+        this.assignmentGuard=new AssignmentAnswerGuard(db);
     }
     public record LessonView(Long id, String topicSlug, String topicTitle, int topicSortOrder, String title, String summary, String theory, int ordinalNo,
                              String difficulty, String status, boolean chapterCompleted) {}
@@ -133,7 +135,7 @@ public class LearningService {
     @Transactional(readOnly=true)
     public LessonView lesson(String username, Long id) {
         User user=learner(username);
-        Lesson lesson=lessons.findById(id).filter(l -> l.published && publishedTopics().contains(l.topicSlug))
+        Lesson lesson=lessons.findById(id).filter(l -> l.published && !l.deleted && !l.adminBlocked && publishedTopics().contains(l.topicSlug))
             .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,"LESSON_NOT_FOUND","Không tìm thấy bài học"));
         if(!unlocked(user,lesson)) throw new ApiException(HttpStatus.FORBIDDEN,"LESSON_LOCKED","Hãy hoàn thành boss bài trước");
         String status=passed(user.id,"LESSON_BOSS",id)?"COMPLETED":"AVAILABLE";
@@ -160,10 +162,10 @@ public class LearningService {
         if(!kind.equals("CHAPTER_BOSS")) {
             if(lessonId==null) throw new ApiException(HttpStatus.BAD_REQUEST,"LESSON_REQUIRED","Cần chọn bài học");
             lesson=lessons.findById(lessonId)
-                .filter(l -> l.published && publishedTopics().contains(l.topicSlug)).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,"LESSON_NOT_FOUND","Không tìm thấy bài học"));
+                .filter(l -> l.published && !l.deleted && !l.adminBlocked && publishedTopics().contains(l.topicSlug)).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,"LESSON_NOT_FOUND","Không tìm thấy bài học"));
             if(!assignment&&!unlocked(user,lesson)) throw new ApiException(HttpStatus.FORBIDDEN,"LESSON_LOCKED","Hãy hoàn thành boss bài trước");
         } else {
-            chapterTopic=lessonId==null?"conditionals":lessons.findById(lessonId).filter(l -> l.published)
+            chapterTopic=lessonId==null?"conditionals":lessons.findById(lessonId).filter(l -> l.published && !l.deleted && !l.adminBlocked)
                 .map(l -> l.topicSlug).orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND,"LESSON_NOT_FOUND","Không tìm thấy bài học"));
             if(!topicUnlocked(user,chapterTopic)) throw new ApiException(HttpStatus.FORBIDDEN,"CHAPTER_LOCKED","Chủ đề này chưa mở khóa");
             String topic=chapterTopic;
@@ -227,6 +229,7 @@ public class LearningService {
         } else if(option==null||!option.matches("[ABCD]")) throw new ApiException(HttpStatus.BAD_REQUEST,"INVALID_OPTION","Đáp án phải là A, B, C hoặc D");
         if(answerOf(item)!=null && !answerOf(item).equals(option)) throw new ApiException(HttpStatus.CONFLICT,"ALREADY_ANSWERED","Câu này đã được trả lời");
         if(answerOf(item)==null) {
+            assignmentGuard.check(id);
             if(!a.status.equals("IN_PROGRESS")) throw new ApiException(HttpStatus.CONFLICT,"ATTEMPT_FINISHED","Lượt làm đã kết thúc");
             if(entries.stream().anyMatch(i -> i.ordinalNo<ordinal && answerOf(i)==null))
                 throw new ApiException(HttpStatus.CONFLICT,"ANSWER_ORDER","Hãy trả lời theo thứ tự");

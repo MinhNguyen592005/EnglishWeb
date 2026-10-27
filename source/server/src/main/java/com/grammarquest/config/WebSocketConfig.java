@@ -13,6 +13,8 @@ import org.springframework.web.socket.config.annotation.*;
 @EnableWebSocket
 @EnableScheduling
 public class WebSocketConfig implements WebSocketConfigurer {
+    @org.springframework.beans.factory.annotation.Value("${app.allowed-origin}")
+    private String allowedOrigin;
     private final SystemSocketHandler handler;
     private final com.grammarquest.security.SocketSessionRegistry sessions;
     public WebSocketConfig(SystemSocketHandler handler,com.grammarquest.security.SocketSessionRegistry sessions) { this.handler = handler;this.sessions=sessions; }
@@ -28,7 +30,7 @@ public class WebSocketConfig implements WebSocketConfigurer {
 
     @Override
     public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
-        registry.addHandler(sessions.decorate(handler), "/api/ws-system").setAllowedOrigins("*").addInterceptors(sessions.handshake());
+        registry.addHandler(sessions.decorate(handler), "/api/ws-system").setAllowedOrigins(allowedOrigin.split("\\s*,\\s*")).addInterceptors(sessions.handshake());
 
     }
 

@@ -109,6 +109,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
   const [busy, setBusy] = useState(false)
   const [saving, setSaving] = useState(false)
   const [now, setNow] = useState(Date.now())
+  const [choiceAnswers, setChoiceAnswers] = useState<Record<string, number>>({})
   const [textAnswers, setTextAnswers] = useState<Record<string, string>>({})
 
   const answerQueue = useRef<Promise<unknown>>(Promise.resolve())
@@ -129,6 +130,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
       for (const timer of Object.values(debounceTimers.current)) clearTimeout(timer)
       debounceTimers.current = {}
       setTextAnswers({})
+      setChoiceAnswers({})
     }
     current.current = next
     setExam(next)
@@ -261,7 +263,8 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
 
   function answer(questionId: string, val: number | string): Promise<void> {
     const active = current.current
-    if (!active) return Promise.reject(new Error('No active exam'))
+    if (!active || submitting.current) return Promise.reject(new Error('Exam is not accepting answers'))
+    if (typeof val === 'number') setChoiceAnswers(prev => ({ ...prev, [questionId]: val }))
     pendingAnswers.current++
     setSaving(true)
     setError('')
@@ -287,6 +290,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
   }
 
   const handleTextChange = (questionId: string, val: string) => {
+    if (submitting.current) return
     setTextAnswers(prev => ({ ...prev, [questionId]: val }))
     if (debounceTimers.current[questionId]) {
       clearTimeout(debounceTimers.current[questionId])
@@ -298,6 +302,7 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
   }
 
   const handleTextBlur = (questionId: string) => {
+    if (submitting.current) return
     if (debounceTimers.current[questionId]) {
       clearTimeout(debounceTimers.current[questionId])
       delete debounceTimers.current[questionId]
@@ -319,15 +324,18 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
     for (const timer of Object.values(debounceTimers.current)) clearTimeout(timer)
     debounceTimers.current = {}
     try {
-      await answerQueue.current
-      // Flush every local text draft, including edits whose previous save failed.
-      for (const q of active.questions) {
-        if (isTextType(q.questionType) && textAnswers[q.id] !== undefined) {
-          await answer(q.id, textAnswers[q.id].trim())
-        }
-      }
+      // Failed autosaves must not poison submission; send the final draft atomically.
+      await answerQueue.current.catch(() => {})
       if (current.current?.id !== active.id) return
-      apply(await request<Exam>('EXAM_SUBMIT', 'EXAM_DATA', { examId: active.id, version: active.version }))
+      const answers: Record<string, number | string> = {}
+      for (const q of active.questions) {
+        const value = isTextType(q.questionType)
+          ? textAnswers[q.id] ?? current.current.answers?.[q.id]
+          : choiceAnswers[q.id] ?? current.current.answers?.[q.id]
+        if (typeof value === 'string') answers[q.id] = value.trim()
+        else if (typeof value === 'number') answers[q.id] = value
+      }
+      apply(await request<Exam>('EXAM_SUBMIT', 'EXAM_DATA', { examId: active.id, version: active.version, answers }))
       setNotice('Đã nộp bài. Giáo viên đã nhận được kết quả.')
     } catch (e) {
       setError((e as Error).message)
@@ -580,13 +588,13 @@ export function LiveClassExam({ classId, isOwner }: { classId: number; isOwner: 
                   ) : (
                     (q.options || []).map((option, index) => (
                       <label
-                        className={`live-exam-option ${exam.answers?.[q.id] === index ? 'selected' : ''}`}
+                        className={`live-exam-option ${(choiceAnswers[q.id] ?? exam.answers?.[q.id]) === index ? 'selected' : ''}`}
                         key={index}
                       >
                         <input
                           type="radio"
                           name={`exam-${exam.id}-${q.id}`}
-                          checked={exam.answers?.[q.id] === index}
+                          checked={(choiceAnswers[q.id] ?? exam.answers?.[q.id]) === index}
                           onChange={() => { void answer(q.id, index).catch(() => {}) }}
                         />
                         <span>{String.fromCharCode(65 + index)}. {option}</span>

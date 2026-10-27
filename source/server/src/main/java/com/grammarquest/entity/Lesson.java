@@ -12,5 +12,7 @@ public class Lesson {
     @Column(nullable=false) public String difficulty = "BEGINNER";
     @Column(columnDefinition="TEXT") public String theory;
     public boolean published;
+    public boolean deleted;
+    @Column(name="admin_blocked") public boolean adminBlocked;
     protected Lesson() {}
 }

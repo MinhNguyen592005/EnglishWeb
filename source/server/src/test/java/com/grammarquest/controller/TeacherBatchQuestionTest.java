@@ -46,7 +46,7 @@ class TeacherBatchQuestionTest {
         var teacher = new User("teacher", "Teacher", "pass");
         teacher.role = "TEACHER";
         when(users.findByUsernameIgnoreCase("teacher")).thenReturn(Optional.of(teacher));
-        when(db.queryForObject("select count(*) from lessons where id=? and published=true", Integer.class, 99L)).thenReturn(0);
+        when(db.queryForObject("select count(*) from lessons where id=? and published=true and deleted=false and admin_blocked=false", Integer.class, 99L)).thenReturn(0);
 
         var controller = new TeacherQuestionController(db, users);
         var batch = new TeacherQuestionController.BatchBody(99L, List.of(
@@ -66,7 +66,7 @@ class TeacherBatchQuestionTest {
         var teacher = new User("teacher", "Teacher", "pass");
         teacher.role = "TEACHER";
         when(users.findByUsernameIgnoreCase("teacher")).thenReturn(Optional.of(teacher));
-        when(db.queryForObject("select count(*) from lessons where id=? and published=true", Integer.class, 1L)).thenReturn(1);
+        when(db.queryForObject("select count(*) from lessons where id=? and published=true and deleted=false and admin_blocked=false", Integer.class, 1L)).thenReturn(1);
 
         var controller = new TeacherQuestionController(db, users);
         var batch = new TeacherQuestionController.BatchBody(1L, List.of(
@@ -98,7 +98,7 @@ class TeacherBatchQuestionTest {
         var teacher = new User("teacher", "Teacher", "pass");
         teacher.role = "TEACHER";
         when(users.findByUsernameIgnoreCase("teacher")).thenReturn(Optional.of(teacher));
-        when(db.queryForObject("select count(*) from lessons where id=? and published=true", Integer.class, 1L)).thenReturn(1);
+        when(db.queryForObject("select count(*) from lessons where id=? and published=true and deleted=false and admin_blocked=false", Integer.class, 1L)).thenReturn(1);
 
         var controller = new TeacherQuestionController(db, users);
         var batch = new TeacherQuestionController.BatchBody(1L, List.of(

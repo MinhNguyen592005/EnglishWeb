@@ -49,7 +49,7 @@ public class TeacherCurriculumController {
             this(prompt, optionA, optionB, optionC, optionD, correctOption, explanation, "MCQ", null);
         }
     }
-    public record Publish(boolean published) {}
+    public record Publish(@NotNull Boolean published) {}
 
     private String validateQuestionType(String qType, String optA, String optB, String optC, String optD, String correct, String accepted) {
         String type = qType == null || qType.isBlank() ? "MCQ" : qType.trim().toUpperCase(Locale.ROOT);
@@ -110,7 +110,7 @@ public class TeacherCurriculumController {
             body.title(),body.description(),body.outcome(),body.sortOrder(),body.planetStyle(),slug);
         audit(actor,"TOPIC_EDIT","TOPIC",0,slug);return Map.of("slug",slug);
     }
-    @PatchMapping("/topics/{slug}/publication") @Transactional public Map<String,Object> publishTopic(Authentication auth,@PathVariable String slug,@RequestBody Publish body) {
+    @PatchMapping("/topics/{slug}/publication") @Transactional public Map<String,Object> publishTopic(Authentication auth,@PathVariable String slug,@Valid @RequestBody Publish body) {
         User actor=teacher(auth);requireTopic(slug);
         if(body.published() && db.queryForObject("select count(*) from lessons where topic_slug=? and published=true",Integer.class,slug)==0)
             throw new ApiException(HttpStatus.CONFLICT,"TOPIC_EMPTY","Cần ít nhất một bài học đã xuất bản trước khi mở hành tinh");
@@ -135,7 +135,7 @@ public class TeacherCurriculumController {
             body.topicSlug(),body.ordinalNo(),body.title(),body.summary(),body.theory(),body.difficulty(),id);
         audit(actor,"LESSON_EDIT","LESSON",id,body.title());return Map.of("id",id);
     }
-    @PatchMapping("/lessons/{id}/publication") @Transactional public Map<String,Object> publishLesson(Authentication auth,@PathVariable long id,@RequestBody Publish body) {
+    @PatchMapping("/lessons/{id}/publication") @Transactional public Map<String,Object> publishLesson(Authentication auth,@PathVariable long id,@Valid @RequestBody Publish body) {
         User actor=teacher(auth);requireLesson(id);
         if(body.published() && db.queryForObject("select count(*) from lessons where id=? and admin_blocked=true",Integer.class,id)>0)
             throw new ApiException(HttpStatus.CONFLICT,"CONTENT_BLOCKED","Bài học đang bị admin chặn");
@@ -208,7 +208,7 @@ public class TeacherCurriculumController {
             body.lessonId(),body.prompt().trim(),Objects.toString(body.optionA(),"").trim(),Objects.toString(body.optionB(),"").trim(),Objects.toString(body.optionC(),"").trim(),Objects.toString(body.optionD(),"").trim(),type.equals("MCQ") ? body.correctOption() : "A",body.explanation().trim(),type,type.equals("MCQ") ? null : body.acceptedAnswer().trim(),id);
         audit(actor,"QUESTION_EDIT","QUESTION",id,body.prompt().trim());return Map.of("id",id);
     }
-    @PatchMapping("/questions/{id}/publication") @Transactional public Map<String,Object> publishQuestion(Authentication auth,@PathVariable long id,@RequestBody Publish body) {
+    @PatchMapping("/questions/{id}/publication") @Transactional public Map<String,Object> publishQuestion(Authentication auth,@PathVariable long id,@Valid @RequestBody Publish body) {
         User actor=teacher(auth);requireQuestion(id);
         if(body.published() && db.queryForObject("select count(*) from questions where id=? and admin_blocked=true",Integer.class,id)>0)
             throw new ApiException(HttpStatus.CONFLICT,"CONTENT_BLOCKED","Câu hỏi đang bị admin chặn");

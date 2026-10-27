@@ -16,7 +16,8 @@ $generatedPaths = @(
     'source/server/review-tests.log',
     'source/server/capacity-roadmap-tests.log',
     'source/server/capacity-roadmap-full.log',
-    'source/server/capacity-roadmap-final.log'
+    'source/server/capacity-roadmap-final.log',
+    'scripts/study-course/__pycache__'
 )
 if ($IncludeTestArtifacts) { $generatedPaths += 'source/client/artifacts' }
 

@@ -129,7 +129,7 @@ public class ClassroomController {
     @PostMapping("/{id}/assignments") @Transactional public Map<String,Object> assign(Authentication auth,@PathVariable long id,@Valid @RequestBody NewAssignment body) {
         User u=current(auth); owner(id,u);
         if(body.dueAt().isBefore(Instant.now())) throw new ApiException(HttpStatus.BAD_REQUEST,"DUE_PAST","Hạn nộp phải ở tương lai");
-        Integer count=db.queryForObject("select count(*) from lessons where id=? and published=true",Integer.class,body.lessonId());
+        Integer count=db.queryForObject("select count(*) from lessons where id=? and published=true and deleted=false and admin_blocked=false",Integer.class,body.lessonId());
         if(count==null||count==0) throw new ApiException(HttpStatus.BAD_REQUEST,"LESSON_NOT_FOUND","Bài học không tồn tại");
         long assignmentId=insert("insert into assignments(class_id,lesson_id,title,instructions,pass_percent,due_at) values(?,?,?,?,?,?)",id,body.lessonId(),body.title().trim(),Objects.toString(body.instructions(),"").trim(),body.passPercent(),Timestamp.from(body.dueAt()));
         notifier.classroom(id);

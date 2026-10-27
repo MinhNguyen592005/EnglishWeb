@@ -64,7 +64,7 @@ public class SecurityConfig {
           }).accessDeniedHandler((req,res,ex) -> {
               res.setStatus(HttpServletResponse.SC_FORBIDDEN);
               res.setContentType("application/json;charset=UTF-8");
-              json.writeValue(res.getWriter(),java.util.Map.of("code","FORBIDDEN","message","Không có quyền hoặc CSRF token không hợp lệ","fields",java.util.Map.of(),"requestId",java.util.Objects.toString(req.getAttribute("requestId"),"")));
+              json.writeValue(res.getWriter(),java.util.Map.of("code",ex instanceof org.springframework.security.web.csrf.CsrfException?"CSRF_INVALID":"FORBIDDEN","message","Không có quyền hoặc CSRF token không hợp lệ","fields",java.util.Map.of(),"requestId",java.util.Objects.toString(req.getAttribute("requestId"),"")));
           }))
           .logout(l -> l.logoutUrl("/api/v1/auth/logout").invalidateHttpSession(true)
               .deleteCookies("JSESSIONID").logoutSuccessHandler((req,res,auth) -> res.setStatus(204)));

@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.sql.Statement;
 import java.util.*;
 
-/** The STUDY.md course owns its tables and rules; legacy learning is untouched. */
+/** The study course owns its tables and rules; legacy learning is untouched. */
 @Service
 public class RoadmapCourseService {
     private final JdbcTemplate db;

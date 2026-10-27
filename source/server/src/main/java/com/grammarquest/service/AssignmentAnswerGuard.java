@@ -12,12 +12,12 @@ public class AssignmentAnswerGuard {
     private final JdbcTemplate db;
     public AssignmentAnswerGuard(JdbcTemplate db) { this.db=db; }
     public void check(long attemptId) {
-        var deadlines=db.query("select submit_deadline_at from assignment_attempts where attempt_id=?",(rs,n)->rs.getTimestamp(1),attemptId);
+        var deadlines=db.query("select submit_deadline_at from assignment_attempts where attempt_id=? for update",(rs,n)->rs.getTimestamp(1),attemptId);
         if(!deadlines.isEmpty()) {
             Timestamp deadline=deadlines.getFirst();
             if(deadline!=null&&Instant.now().isAfter(deadline.toInstant()))
                 throw new ApiException(HttpStatus.CONFLICT,"ASSIGNMENT_TIME_OVER","Đã hết 15 phút làm nhiệm vụ này");
-            var rules=db.queryForList("select ass.status,ass.due_at as dueAt,(select count(*) from class_members m where m.class_id=ass.class_id and m.user_id=a.user_id) as memberCount from assignment_attempts aa join assignments ass on ass.id=aa.assignment_id join attempts a on a.id=aa.attempt_id where aa.attempt_id=?",attemptId);
+            var rules=db.queryForList("select ass.status,ass.due_at as dueAt,case when m.user_id is null then 0 else 1 end as memberCount from assignment_attempts aa join assignments ass on ass.id=aa.assignment_id join attempts a on a.id=aa.attempt_id left join class_members m on m.class_id=ass.class_id and m.user_id=a.user_id where aa.attempt_id=? for update",attemptId);
             if(!rules.isEmpty()) {
                 var rule=rules.getFirst();
                 if(((Number)rule.get("memberCount")).intValue()==0)

@@ -468,7 +468,7 @@ public class ArenaController {
     }
 
     private void beginMatchQuestionsAndClocks(long id, int countdownSeconds) {
-        var ids=db.queryForList("select id from questions where published=true and (question_type is null or question_type='MCQ') order by rand() limit 10",Long.class);
+        var ids=db.queryForList("select id from questions where published=true and deleted=false and admin_blocked=false and owner_id is null and (question_type is null or question_type='MCQ') order by rand() limit 10",Long.class);
         if(ids.size()<10) throw bad("QUESTION_BANK_INCOMPLETE","Cần ít nhất 10 câu hỏi để thi đấu");
         for(int i=0;i<10;i++) db.update("insert into arena_rounds(room_id,round_no,question_id,prompt,option_a,option_b,option_c,option_d,correct_option,explanation) select ?,?,id,prompt,option_a,option_b,option_c,option_d,correct_option,explanation from questions where id=?",id,i+1,ids.get(i));
         Instant now=Instant.now();

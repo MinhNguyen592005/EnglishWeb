@@ -14,7 +14,7 @@ class ArenaMatchmakerTest {
     private final ArenaMatchFactory factory=mock(ArenaMatchFactory.class);
     private final ArenaMatchmaker queue=new ArenaMatchmaker(users,db,factory);
     ArenaMatchmakerTest(){
-        when(db.queryForObject(eq("select count(*) from questions where published=true and (question_type is null or question_type='MCQ')"),eq(Integer.class))).thenReturn(10);
+        when(db.queryForObject(eq("select count(*) from questions where published=true and deleted=false and admin_blocked=false and owner_id is null and (question_type is null or question_type='MCQ')"),eq(Integer.class))).thenReturn(10);
         when(db.queryForObject(eq("select count(*) from arena_rooms where (host_id=? or guest_id=?) and status in ('WAITING','IN_PROGRESS')"),eq(Integer.class),anyLong(),anyLong())).thenReturn(0);
     }
     private void user(String name,long id,long level){

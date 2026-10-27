@@ -2,6 +2,7 @@ import type { AdminContent, AdminLesson, AdminQuestion, AdminUser, Attempt, Clas
 
 type ApiError = { code?: string; message?: string; fields?: Record<string, string> }
 let csrfToken: string | null = null
+let csrfRefresh: Promise<void> | null = null
 const id = () => crypto.randomUUID()
 const offlineMessage = 'Không kết nối được máy chủ Grammar Quest. Hãy chạy Spring Boot ở cổng 8080 và kiểm tra MySQL.'
 
@@ -10,7 +11,11 @@ async function fetchFromServer(path: string, init: RequestInit): Promise<Respons
   catch { throw new Error(offlineMessage) }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export class ApiRequestError extends Error {
+  constructor(message: string, public status: number, public code?: string) { super(message) }
+}
+
+async function request<T>(path: string, init: RequestInit = {}, retryCsrf = true): Promise<T> {
   const method = init.method || 'GET'
   if (method !== 'GET' && !csrfToken) await refreshCsrf()
   const response = await fetchFromServer(`/api/v1${path}`, {
@@ -19,13 +24,21 @@ async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   })
   if (!response.ok) {
     const body = await response.json().catch(() => ({})) as ApiError
+    if (response.status === 403 && body.code === 'CSRF_INVALID' && retryCsrf) {
+      await refreshCsrf()
+      return request<T>(path, init, false)
+    }
     if ((response.status === 401 && path !== '/auth/login') || body.code === 'ACCOUNT_LOCKED') window.dispatchEvent(new Event('grammarquest:unauthenticated'))
-    throw new Error(body.message || (response.status >= 500 ? offlineMessage : `Máy chủ trả lỗi ${response.status}`))
+    throw new ApiRequestError(body.message || (response.status >= 500 ? offlineMessage : `Máy chủ trả lỗi ${response.status}`), response.status, body.code)
   }
   if (response.status === 204) return undefined as T
   return response.json() as Promise<T>
 }
-export async function refreshCsrf() {
+export function refreshCsrf(): Promise<void> {
+  if (!csrfRefresh) csrfRefresh = loadCsrf().finally(() => { csrfRefresh = null })
+  return csrfRefresh
+}
+async function loadCsrf() {
   const response = await fetchFromServer('/api/v1/auth/csrf', { credentials: 'include' })
   if (!response.ok) throw new Error(response.status >= 500 ? offlineMessage : `Máy chủ từ chối thiết lập bảo mật phiên (HTTP ${response.status}).`)
   try { csrfToken = (await response.json() as { token: string }).token }

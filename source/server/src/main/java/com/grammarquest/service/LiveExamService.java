@@ -146,6 +146,25 @@ public class LiveExamService {
         }
         return clean;
     }
+    // The final client snapshot is validated before replacing persisted answers.
+    ObjectNode submissionAnswers(JsonNode questions,JsonNode input) {
+        require(input.isObject()&&input.size()<=questions.size(),"Danh sách đáp án không hợp lệ");
+        Map<String,JsonNode> indexed=new HashMap<>();
+        questions.forEach(q->indexed.put(q.path("id").asText(),q));
+        var result=json.createObjectNode();
+        input.fields().forEachRemaining(entry->{
+            var question=indexed.get(entry.getKey());var value=entry.getValue();
+            require(question!=null,"Câu hỏi không còn trong đề");
+            if(isTextType(question.path("questionType").asText(question.path("question_type").asText()))) {
+                require(value.isTextual()&&value.asText().length()<=255,"Đáp án tự luận phải là văn bản, tối đa 255 ký tự");
+                if(!value.asText().isBlank())result.put(entry.getKey(),value.asText().trim());
+            } else {
+                require(value.isInt()&&value.asInt()>=0&&value.asInt()<4,"Đáp án trắc nghiệm không hợp lệ");
+                result.set(entry.getKey(),value);
+            }
+        });
+        return result;
+    }
     @Transactional
     public Object action(String username,String action,JsonNode p) {
         User u=user(username);
@@ -198,8 +217,9 @@ public class LiveExamService {
                     qType = qType.trim().toUpperCase(Locale.ROOT);
 
                     if(isTextType(qType)){
-                        String textAns=p.has("answer")?p.path("answer").asText(""): (p.has("textAnswer")?p.path("textAnswer").asText(""):p.path("option").asText(""));
-                        textAns=textAns.trim();
+                        var value=p.has("answer")?p.path("answer"):(p.has("textAnswer")?p.path("textAnswer"):p.path("option"));
+                        require(value.isTextual(),"Đáp án tự luận phải là văn bản");
+                        String textAns=value.asText().trim();
                         require(textAns.length()<=255,"Câu trả lời quá dài (tối đa 255 ký tự)");
                         if(textAns.isEmpty()){
                             answers.remove(question);
@@ -211,6 +231,7 @@ public class LiveExamService {
                         answers.put(question,option.asInt());
                     }
                 }
+                if(action.equals("EXAM_SUBMIT")&&p.has("answers"))answers=submissionAnswers(qs,p.get("answers"));
                 int currentCorrect = score(qs, answers);
                 boolean isSubmit = action.equals("EXAM_SUBMIT");
                 db.update("update class_exam_submissions set answers_json=?,correct_count=?,answered_count=?,submitted=?,updated_at=current_timestamp(6) where exam_id=? and user_id=?",answers.toString(),currentCorrect,answers.size(),isSubmit,examId,u.id);

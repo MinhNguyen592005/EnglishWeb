@@ -1,25 +1,31 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './app/AuthContext'
 import { SystemSocketProvider } from './app/SystemSocketContext'
 import { PlacementProvider, usePlacement } from './app/PlacementContext'
 import { RegistrationWelcomeProvider } from './app/RegistrationWelcomeContext'
-import { PlacementPage } from './pages/PlacementPage'
 import { ErrorState, Loading } from './components/States'
-import { AuthPage } from './pages/AuthPage'
-import { AttemptPage, ResultRoute } from './pages/AttemptPage'
-import { Dashboard, LessonPage, PracticeSelect } from './pages/LearningPages'
-import { Roadmap } from './pages/RoadmapPage'
-import { Forbidden, NotFound, ProfilePage } from './pages/OtherPages'
-import { ClassesPage, ClassDetailPage } from './pages/ClassroomPages'
-import { ArenaPage } from './pages/ArenaPage'
-import { AdminPage } from './pages/AdminPage'
-import { TeacherQuestionsPage } from './pages/TeacherQuestionsPage'
-import { TeacherDashboardPage } from './pages/TeacherDashboardPage'
-import { TeacherCurriculumPage } from './pages/TeacherCurriculumPage'
 import { SupportChatWidget } from './components/SupportChat'
 import './styles.css'
+const PlacementPage = lazy(() => import('./pages/PlacementPage').then(module => ({ default: module.PlacementPage })))
+const AuthPage = lazy(() => import('./pages/AuthPage').then(module => ({ default: module.AuthPage })))
+const AttemptPage = lazy(() => import('./pages/AttemptPage').then(module => ({ default: module.AttemptPage })))
+const ResultRoute = lazy(() => import('./pages/AttemptPage').then(module => ({ default: module.ResultRoute })))
+const Dashboard = lazy(() => import('./pages/LearningPages').then(module => ({ default: module.Dashboard })))
+const LessonPage = lazy(() => import('./pages/LearningPages').then(module => ({ default: module.LessonPage })))
+const PracticeSelect = lazy(() => import('./pages/LearningPages').then(module => ({ default: module.PracticeSelect })))
+const Roadmap = lazy(() => import('./pages/RoadmapPage').then(module => ({ default: module.Roadmap })))
+const Forbidden = lazy(() => import('./pages/OtherPages').then(module => ({ default: module.Forbidden })))
+const NotFound = lazy(() => import('./pages/OtherPages').then(module => ({ default: module.NotFound })))
+const ProfilePage = lazy(() => import('./pages/OtherPages').then(module => ({ default: module.ProfilePage })))
+const ClassesPage = lazy(() => import('./pages/ClassroomPages').then(module => ({ default: module.ClassesPage })))
+const ClassDetailPage = lazy(() => import('./pages/ClassroomPages').then(module => ({ default: module.ClassDetailPage })))
+const ArenaPage = lazy(() => import('./pages/ArenaPage').then(module => ({ default: module.ArenaPage })))
+const AdminPage = lazy(() => import('./pages/AdminPage').then(module => ({ default: module.AdminPage })))
+const TeacherQuestionsPage = lazy(() => import('./pages/TeacherQuestionsPage').then(module => ({ default: module.TeacherQuestionsPage })))
+const TeacherDashboardPage = lazy(() => import('./pages/TeacherDashboardPage').then(module => ({ default: module.TeacherDashboardPage })))
+const TeacherCurriculumPage = lazy(() => import('./pages/TeacherCurriculumPage').then(module => ({ default: module.TeacherCurriculumPage })))
 
 function Protected({ children, learnerOnly = false }: { children: React.ReactNode; learnerOnly?: boolean }) {
   const { user, loading } = useAuth()
@@ -96,4 +102,4 @@ function AppRoutes() {
     <Route path="*" element={<Protected><NotFound/></Protected>}/>
   </Routes>
 }
-ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><AuthProvider><SystemSocketProvider><PlacementProvider><RegistrationWelcomeProvider><AppRoutes/><AppSupport/></RegistrationWelcomeProvider></PlacementProvider></SystemSocketProvider></AuthProvider></BrowserRouter></React.StrictMode>)
+ReactDOM.createRoot(document.getElementById('root')!).render(<React.StrictMode><BrowserRouter><AuthProvider><SystemSocketProvider><PlacementProvider><RegistrationWelcomeProvider><Suspense fallback={<Loading/>}><AppRoutes/><AppSupport/></Suspense></RegistrationWelcomeProvider></PlacementProvider></SystemSocketProvider></AuthProvider></BrowserRouter></React.StrictMode>)

@@ -23,7 +23,6 @@ public class LearningController {
     }
     @GetMapping("/attempts/{id}") public LearningService.AttemptView attempt(Authentication a,@PathVariable Long id) { return learning.get(a.getName(),id); }
     @PostMapping("/attempts/{id}/answers") public LearningService.AnswerView answer(Authentication a,@PathVariable Long id,@Valid @RequestBody Answer body) {
-        assignmentGuard.check(id);
         return learning.answer(a.getName(),id,body.ordinalNo(),body.option());
     }
     @GetMapping("/attempts") public List<LearningService.AttemptView> history(Authentication a) { return learning.history(a.getName()); }

@@ -24,9 +24,9 @@ public class AdminController {
     private final UserRepository users;
     public AdminController(JdbcTemplate db, UserRepository users) { this.db=db; this.users=users; }
     public record RoleChange(@NotBlank String role) {}
-    public record LockChange(boolean locked) {}
+    public record LockChange(@NotNull Boolean locked) {}
     public record Decision(@NotBlank String action, @Size(max=500) String note, @NotBlank @Pattern(regexp="CLASS|ARENA|USER") String source) {}
-    public record Publish(boolean published) {}
+    public record Publish(@NotNull Boolean published) {}
     public record LessonInput(@NotBlank @Size(max=80) String topicSlug, @Min(0) int ordinalNo,
                               @NotBlank @Size(max=160) String title, @NotBlank @Size(max=255) String summary,
                               @NotBlank String theory, @Pattern(regexp="BEGINNER|INTERMEDIATE|ADVANCED") String difficulty) {}
@@ -39,7 +39,7 @@ public class AdminController {
                                @NotBlank @Size(max=255) String optionB,
                                @NotBlank @Size(max=255) String optionC,
                                @NotBlank @Size(max=255) String optionD,
-                               @Pattern(regexp="[ABCD]") String correctOption,
+                               @NotBlank @Pattern(regexp="[ABCD]") String correctOption,
                                @NotBlank String explanation) {}
     private User admin(Authentication auth) {
         User u=users.findByUsernameIgnoreCase(auth.getName()).orElseThrow();
@@ -60,7 +60,7 @@ public class AdminController {
                 slug,title,"Khám phá kiến thức của chủ đề này.","Hoàn thành các bài học và vượt boss để tiến lên.");
     }
     private void protectLastAdmin(User target) {
-        if(target.role.equals("ADMIN")&&db.queryForList("select id from users where role='ADMIN' and locked=false order by id for update",Long.class).size()<=1)
+        if(target.role.equals("ADMIN")&&!target.locked&&db.queryForList("select id from users where role='ADMIN' and locked=false order by id for update",Long.class).size()<=1)
             throw new ApiException(HttpStatus.CONFLICT,"LAST_ADMIN","Không thể khóa hoặc hạ quyền admin đang hoạt động cuối cùng");
     }
     @GetMapping("/overview") public Map<String,Object> overview(Authentication auth) {
@@ -172,7 +172,7 @@ public class AdminController {
         ensureTopic(body.topicSlug(),body.title());
         if(db.queryForObject("select count(*) from lessons where topic_slug=? and ordinal_no=? and id<>?",Integer.class,body.topicSlug(),body.ordinalNo(),id)>0)
             throw new ApiException(HttpStatus.CONFLICT,"LESSON_ORDER_EXISTS","Thứ tự bài đã tồn tại trong chủ đề này");
-        if(db.update("update lessons set topic_slug=?,ordinal_no=?,title=?,summary=?,theory=?,difficulty=coalesce(?,difficulty) where id=?",body.topicSlug(),body.ordinalNo(),body.title(),body.summary(),body.theory(),body.difficulty(),id)==0)
+        if(db.update("update lessons set topic_slug=?,ordinal_no=?,title=?,summary=?,theory=?,difficulty=coalesce(?,difficulty) where id=? and deleted=false",body.topicSlug(),body.ordinalNo(),body.title(),body.summary(),body.theory(),body.difficulty(),id)==0)
             throw new ApiException(HttpStatus.NOT_FOUND,"LESSON_NOT_FOUND","Không tìm thấy bài học");
         audit(actor,"LESSON_EDIT","LESSON",id,body.title());
         return Map.of("id",id);
@@ -216,7 +216,7 @@ public class AdminController {
     }
     @PutMapping("/questions/{id}") @Transactional public Map<String,Object> editQuestion(Authentication auth,@PathVariable long id,@Valid @RequestBody EditQuestion body) {
         User actor=admin(auth);
-        if(db.update("update questions set prompt=?,option_a=?,option_b=?,option_c=?,option_d=?,correct_option=?,explanation=? where id=? and owner_id is null",
+        if(db.update("update questions set prompt=?,option_a=?,option_b=?,option_c=?,option_d=?,correct_option=?,explanation=? where id=? and owner_id is null and deleted=false",
             body.prompt(),body.optionA(),body.optionB(),body.optionC(),body.optionD(),body.correctOption(),body.explanation(),id)==0)
             throw new ApiException(HttpStatus.NOT_FOUND,"QUESTION_NOT_FOUND","Không tìm thấy câu hỏi");
         audit(actor,"QUESTION_EDIT","QUESTION",id,"Updated question content");

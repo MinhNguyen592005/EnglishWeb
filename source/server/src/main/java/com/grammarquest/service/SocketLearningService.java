@@ -18,8 +18,6 @@ public class SocketLearningService {
     public LearningService.AttemptView start(String username,String kind,Long lessonId) { return learning.start(username,kind,lessonId); }
     public LearningService.AttemptView attempt(String username,long id) { return learning.get(username,id); }
     public LearningService.AnswerView answer(String username,long id,int ordinal,String option) {
-        learning.get(username,id); // Xác minh sở hữu trước khi kiểm tra hạn nộp.
-        guard.check(id);
         return learning.answer(username,id,ordinal,option);
     }
     public record Activity(String action, String topic, String lesson) {}

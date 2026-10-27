@@ -64,8 +64,8 @@
 @media(max-width:800px){.business-charts{grid-template-columns:1fr}.topbar-actions>.button{font-size:10px;padding:7px}}
 .sidebar .nav-list{align-content:start}.nav-group{margin:8px 0}.nav-group h2{margin-top:8px}.nav-group .nav-link{padding:8px 12px}
 .class-workspace:not(.view-all):not(.view-grades)>.class-results{display:none}
-.idle-reminder{position:fixed;right:24px;bottom:24px;z-index:100;display:flex;align-items:flex-start;gap:12px;max-width:420px;padding:20px;background:#fff;border:1px solid #ded8ff;border-left:4px solid #7963de;border-radius:16px;box-shadow:0 12px 40px #33285b20;color:#26324b}.idle-reminder-icon{font-size:24px}.idle-reminder strong{font-size:14px}.idle-reminder p{font-size:13px;line-height:1.6;margin:6px 0 0;color:#65718b}.idle-reminder button{border:0;background:transparent;font-size:24px;color:#78849b;cursor:pointer;padding:0 4px;line-height:1}.idle-reminder button:focus-visible{outline:2px solid #7963de;border-radius:4px}
-@media(max-width:700px){.idle-reminder{left:12px;right:12px;bottom:85px;max-width:none;padding:16px}}
+.idle-reminder{position:fixed;right:24px;bottom:100px;z-index:100;display:flex;align-items:flex-start;gap:12px;max-width:420px;padding:20px;background:#fff;border:1px solid #ded8ff;border-left:4px solid #7963de;border-radius:16px;box-shadow:0 12px 40px #33285b20;color:#26324b}.idle-reminder-icon{font-size:24px}.idle-reminder strong{font-size:14px}.idle-reminder p{font-size:13px;line-height:1.6;margin:6px 0 0;color:#65718b}.idle-reminder button{border:0;background:transparent;font-size:24px;color:#78849b;cursor:pointer;padding:0 4px;line-height:1}.idle-reminder button:focus-visible{outline:2px solid #7963de;border-radius:4px}
+@media(max-width:700px){.idle-reminder{left:12px;right:12px;bottom:156px;max-width:none;padding:16px}}
 @media(max-width:1000px){.curriculum-grid{grid-template-columns:1fr}}@media(max-width:650px){.curriculum-grid .stack-actions{width:100%}}
 
 /* PvP ELO, Rank Tiers, Cosmetics (Frames & Badges), Confirmation & Countdown */

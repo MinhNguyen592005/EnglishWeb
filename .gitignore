@@ -1,8 +1,11 @@
 **/node_modules/
 **/dist/
 source/client/artifacts/
+/artifacts/
 **/target/
 **/*.tsbuildinfo
+**/__pycache__/
+**/*.py[cod]
 .npm-cache/
 **/.env
 **/.env.local

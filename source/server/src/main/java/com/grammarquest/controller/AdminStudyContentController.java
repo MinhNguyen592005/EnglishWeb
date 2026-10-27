@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grammarquest.exception.ApiException;
 import com.grammarquest.repository.UserRepository;
 import com.grammarquest.service.CurriculumChanged;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.*;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -45,9 +47,10 @@ public class AdminStudyContentController {
         }catch(Exception e){throw new IllegalStateException("Invalid course content",e);}
         return Map.of("lessons",lessons,"questions",questions,"examQuestions",db.queryForList("select id,module_id as moduleId,prompt,options_json as options,correct_option as correctOption,explanation,active as published from study_exam_questions order by module_id,id"));
     }
-    public record Publication(String kind,String id,String lessonId,boolean published) {}
+    public record Publication(@NotBlank @Pattern(regexp="LESSON|QUESTION|EXAM_QUESTION") String kind,
+        @NotBlank @Size(max=64) String id,@Size(max=20) String lessonId,@NotNull Boolean published) {}
     @PatchMapping @Transactional
-    public Map<String,Object> publish(Authentication auth,@RequestBody Publication body) {
+    public Map<String,Object> publish(Authentication auth,@Valid @RequestBody Publication body) {
         long actor=admin(auth);int changed;
         if("LESSON".equals(body.kind())) {
             changed=db.update("update study_lessons set published=? where id=?",body.published(),body.id());

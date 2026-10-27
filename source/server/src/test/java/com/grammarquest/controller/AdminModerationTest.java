@@ -13,6 +13,30 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class AdminModerationTest {
+    @Test void demotingLockedAdminDoesNotRemoveAnActiveAdmin() {
+        var db=mock(JdbcTemplate.class);var users=mock(UserRepository.class);var auth=mock(Authentication.class);
+        when(auth.getName()).thenReturn("admin");
+        var actor=new User("admin","Admin","hash");actor.id=1L;actor.role="ADMIN";
+        var target=new User("locked_admin","Locked admin","hash");target.id=2L;target.role="ADMIN";target.locked=true;
+        when(users.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(actor));
+        when(users.findById(2L)).thenReturn(Optional.of(target));
+        new AdminController(db,users).role(auth,2L,new AdminController.RoleChange("LEARNER"));
+        assertEquals("LEARNER",target.role);
+        verify(users).save(target);
+        verify(db,never()).queryForList("select id from users where role='ADMIN' and locked=false order by id for update",Long.class);
+    }
+    @Test void lastActiveAdminStillCannotBeDemotedOrLocked() {
+        var db=mock(JdbcTemplate.class);var users=mock(UserRepository.class);var auth=mock(Authentication.class);
+        when(auth.getName()).thenReturn("admin");
+        var actor=new User("admin","Admin","hash");actor.id=1L;actor.role="ADMIN";
+        when(users.findByUsernameIgnoreCase("admin")).thenReturn(Optional.of(actor));
+        when(users.findById(1L)).thenReturn(Optional.of(actor));
+        when(db.queryForList("select id from users where role='ADMIN' and locked=false order by id for update",Long.class)).thenReturn(List.of(1L));
+        var controller=new AdminController(db,users);
+        assertThrows(ApiException.class,()->controller.role(auth,1L,new AdminController.RoleChange("LEARNER")));
+        assertThrows(ApiException.class,()->controller.lock(auth,1L,new AdminController.LockChange(true)));
+        verify(users,never()).save(actor);
+    }
     @Test void blockingPrivateQuestionDoesNotChangeTeacherArchivePreference() {
         var db=mock(JdbcTemplate.class);var users=mock(UserRepository.class);var auth=mock(Authentication.class);
         when(auth.getName()).thenReturn("admin");

@@ -4,12 +4,13 @@ import assert from 'node:assert/strict'
 
 const browser=await chromium.launch({headless:true,channel:'msedge'})
 const sockets=new Map(),answers=new Map(),actions=[],errors=[],examRest=[],submitted=new Set()
-let exam=null,revision=1
+let exam=null,revision=1,failNextAnswer=false
+const answerMessages=[],submissionMessages=[]
 const learners=[{id:2,username:'alice',displayName:'Alice'},{id:3,username:'bob',displayName:'Bob'}]
 function view(user){
   const base={...structuredClone(exam),revision,owner:user.id===1}
   if(user.id===1)base.ranking=learners.map(u=>({userId:u.id,username:u.username,displayName:u.displayName,correctCount:answers.get(u.id)?.[exam.questions[0].id]===exam.questions[0].correct?1:0,answeredCount:answers.has(u.id)?1:0,status:answers.has(u.id)?'WORKING':'NOT_STARTED'})).sort((a,b)=>b.correctCount-a.correctCount)
-  else {base.questions.forEach(q=>delete q.correct);base.answers=answers.get(user.id)||{};base.submitted=submitted.has(user.id)}
+  else {base.questions.forEach(q=>{delete q.correct;delete q.acceptedAnswer});base.answers=answers.get(user.id)||{};base.submitted=submitted.has(user.id)}
   return base
 }
 function broadcast(){for(const {ws,user} of sockets.values())ws.send(JSON.stringify({action:'EXAM_UPDATE',payload:view(user)}))}
@@ -37,8 +38,8 @@ async function pageFor(user){
         case 'EXAM_LIST':payload=exam?[exam]:[];break
         case 'EXAM_CREATE':exam={...m.payload,id:7,version:1,revision:++revision};payload=view(user);break
         case 'EXAM_OPEN':case 'EXAM_SYNC':payload=view(user);break
-        case 'EXAM_SUBMIT':submitted.add(user.id);payload=view(user);break
-        case 'EXAM_ANSWER':await new Promise(resolve=>setTimeout(resolve,300));answers.set(user.id,{...answers.get(user.id),[m.payload.questionId]:m.payload.answer ?? m.payload.option});revision++;payload=view(user);broadcast();break
+        case 'EXAM_SUBMIT':submissionMessages.push(m.payload);if(m.payload.answers)answers.set(user.id,m.payload.answers);submitted.add(user.id);revision++;payload=view(user);break
+        case 'EXAM_ANSWER':answerMessages.push(m.payload);if(failNextAnswer){failNextAnswer=false;ws.send(JSON.stringify({action:'ERROR',requestId:m.requestId,payload:{message:'Simulated save failure'}}));return}await new Promise(resolve=>setTimeout(resolve,300));answers.set(user.id,{...answers.get(user.id),[m.payload.questionId]:m.payload.answer ?? m.payload.option});revision++;payload=view(user);broadcast();break
         case 'EXAM_EDIT':exam={...exam,...m.payload,version:exam.version+1};revision++;payload=view(user);broadcast();break
       }
       if(m.requestId)ws.send(JSON.stringify({action,payload,requestId:m.requestId}))
@@ -76,9 +77,19 @@ try {
   assert.equal(await bob.getByRole('radio',{name:'B. Answer 1',exact:true}).isChecked(),true)
   await alice.waitForTimeout(5100)
   assert.ok(actions.includes('EXAM_SYNC'),'Students periodically synchronize through the shared socket')
+  // A failed radio autosave must keep the choice and must not poison the submit queue.
+  failNextAnswer=true
+  await bob.getByRole('radio',{name:'C. Answer 2',exact:true}).click()
+  await bob.getByRole('alert').filter({hasText:'Simulated save failure'}).waitFor()
+  assert.equal(await bob.getByRole('radio',{name:'C. Answer 2',exact:true}).isChecked(),true)
+  bob.once('dialog',dialog=>dialog.accept())
+  await bob.locator('.live-exam-body > button').click()
+  await bob.waitForFunction(()=>document.querySelector('.live-exam-body')?.textContent.includes('B\u1ea1n \u0111\u00e3 n\u1ed9p b\u00e0i.'))
+  assert.equal(answers.get(3)[exam.questions[0].id],2,'Atomic submit preserves a choice whose autosave failed')
   // Exercise debounce while the input is focused, then submit before debounce fires.
   exam.questions=[{id:'text1',prompt:'Fill the first blank',questionType:'FILL_BLANK',options:[],acceptedAnswer:'went'},
-    {id:'text2',prompt:'Fill the second blank',questionType:'FILL_BLANK',options:[],acceptedAnswer:'home'}]
+    {id:'text2',prompt:'Fill the second blank',questionType:'FILL_BLANK',options:[],acceptedAnswer:'home'},
+    ...Array.from({length:10},(_,i)=>({id:`text${i+3}`,prompt:`Fill blank ${i+3}`,questionType:'FILL_BLANK',options:[],acceptedAnswer:`answer-${i+3}`}))]
   exam.version++;revision++;broadcast()
   const inputs=alice.locator('.live-exam-text-answer input')
   await inputs.first().fill('we')
@@ -86,12 +97,17 @@ try {
   assert.equal(await inputs.first().evaluate(el=>document.activeElement===el),true,'Autosaving must preserve focus')
   await inputs.first().fill('went')
   await inputs.nth(1).fill('home')
+  for(let i=2;i<12;i++)await inputs.nth(i).fill(`answer-${i+1}`)
   alice.once('dialog',dialog=>dialog.accept())
   await alice.locator('.live-exam-body > button').click()
   await alice.waitForFunction(()=>document.querySelector('.live-exam-body')?.textContent.includes('Bạn đã nộp bài.'))
   assert.equal(answers.get(2).text1,'went')
   assert.equal(answers.get(2).text2,'home')
-  assert.ok(submitted.has(2),'Submission waits for both text answers')
+  assert.ok(submitted.has(2),'Submission waits for text autosaves')
+  assert.equal(Object.keys(answers.get(2)).length,12,'Only current questions are submitted')
+  for(let i=3;i<=12;i++)assert.equal(answers.get(2)[`text${i}`],`answer-${i}`)
+  assert.equal(Object.keys(submissionMessages.at(-1).answers).length,12,'Final answers travel in one request')
+  assert.ok(answerMessages.filter(m=>m.questionId.startsWith('text')).length<=14,'Submit does not replay every text answer individually')
   assert.equal(examRest.length,0);assert.deepEqual(errors,[])
   await mkdir('artifacts/role-views',{recursive:true})
   await teacher.screenshot({path:'artifacts/role-views/live-exam-teacher.png',fullPage:true})
