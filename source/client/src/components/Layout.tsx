@@ -6,6 +6,17 @@ import { useDailyQuests } from '../app/DailyQuestsContext'
 import './DailyQuestsWidget.css'
 import { api } from '../services/api'
 
+const FRAME_CLASSES: Record<string, string> = {
+  FRAME_DEFAULT: 'frame-default',
+  FRAME_BRONZE: 'frame-bronze',
+  FRAME_SILVER: 'frame-silver',
+  FRAME_GOLD: 'frame-gold',
+  FRAME_PLATINUM: 'frame-platinum',
+  FRAME_DIAMOND: 'frame-diamond',
+  FRAME_MASTER: 'frame-master',
+  FRAME_STREAK_5: 'frame-streak'
+}
+
 const learnerLinks = [
   { to: '/dashboard', label: 'Tổng quan', icon: House },
   { to: '/roadmap', label: 'Lộ trình', icon: Compass },
@@ -35,6 +46,7 @@ export function Layout({ children, title }: { children: ReactNode; title: string
   const [logoutError, setLogoutError] = useState('')
   const { data: dailyQuests } = useDailyQuests()
   const streak = dailyQuests?.streak.currentStreak ?? null
+  const frameClass = (!isAdmin && !isTeacher && user?.equippedFrame) ? (FRAME_CLASSES[user.equippedFrame] || '') : ''
   const navigate = useNavigate()
   const location=useLocation()
   function isLinkActive(to:string) {
@@ -65,7 +77,7 @@ export function Layout({ children, title }: { children: ReactNode; title: string
     {!isAdmin&&!isTeacher&&streak!==null&&<span className="streak-pill" title={`Chuỗi ngày liên tiếp: ${streak} ngày`}><Flame size={15}/> {streak}</span>}
     {isAdmin && <span className="admin-realtime-pill"><i/> Trực tuyến</span>}
     <Link to={isAdmin ? '/admin' : '/profile'} className="topbar-profile" aria-label={isAdmin ? 'Mở trang quản trị' : 'Mở hồ sơ cá nhân'}>
-      <span className="avatar">{user?.displayName.slice(0,1).toUpperCase()}</span>
+      <span className={`avatar ${frameClass}`}>{user?.displayName.slice(0,1).toUpperCase()}</span>
       <span className="topbar-profile-copy">
         <strong>{user?.displayName}</strong>
         <small>{isAdmin ? 'Quản trị viên' : isTeacher ? 'Giáo viên' : `Cấp ${user?.level}`}</small>

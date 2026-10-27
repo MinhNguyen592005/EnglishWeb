@@ -77,3 +77,91 @@
 
 .topbar-profile{display:inline-flex;align-items:center;gap:9px;padding:4px 8px 4px 4px;border-radius:999px;color:var(--text);transition:background .15s,transform .15s}.topbar-profile:hover{background:var(--primary-soft);transform:translateY(-1px)}.topbar-profile-copy{display:grid;gap:1px;min-width:0;text-align:left}.topbar-profile-copy strong{max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82rem}.topbar-profile-copy small{color:var(--muted);font-size:.7rem}
 @media(max-width:650px){.topbar-profile-copy{display:none}.topbar-actions{gap:8px}.topbar{padding:0 14px}}
+/* PvP ELO, Rank Tiers, Cosmetics (Frames & Badges), Confirmation & Countdown */
+.pvp-profile-strip{padding:18px 24px;margin-bottom:22px;display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;background:linear-gradient(115deg,#f6f8ff 0%,#fff 100%);border-color:#d8dfff}
+.pvp-strip-user{display:flex;align-items:center;gap:15px}
+.pvp-strip-name-row{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:4px}
+.pvp-tab-pills{display:flex;gap:8px;flex-wrap:wrap}
+.pvp-tab-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 15px;border-radius:10px;border:1px solid var(--border);background:#fff;color:var(--muted);font-weight:700;font-size:.88rem;transition:all .15s}
+.pvp-tab-btn:hover{border-color:#b8c2ff;color:var(--primary-strong)}
+.pvp-tab-btn.active{background:var(--primary-strong);color:#fff;border-color:var(--primary-strong)}
+
+/* Avatar Frames */
+.pvp-avatar{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:1.05rem;background:var(--primary-soft);color:var(--primary-strong);position:relative;flex:none}
+.pvp-avatar.sm{width:36px;height:36px;font-size:.88rem}
+.pvp-avatar.lg{width:64px;height:64px;font-size:1.35rem}
+.frame-default{border:2px solid #cbd5e1}
+.frame-bronze{border:3px solid #cd7f32;box-shadow:0 0 0 2px #f9e5d0}
+.frame-silver{border:3px solid #94a3b8;box-shadow:0 0 0 2px #e2e8f0,0 2px 8px #64748b33}
+.frame-gold{border:3px solid #f59e0b;box-shadow:0 0 0 2px #fef3c7,0 0 12px #f59e0b55}
+.frame-platinum{border:3px solid #06b6d4;box-shadow:0 0 0 2px #cffafe,0 0 14px #06b6d455}
+.frame-diamond{border:3px solid #6366f1;box-shadow:0 0 0 2px #e0e7ff,0 0 16px #818cf880}
+.frame-master{border:3px solid #ec4899;box-shadow:0 0 0 2px #fce7f3,0 0 18px #f43f5e88}
+.frame-streak{border:3px solid #ef4444;box-shadow:0 0 0 2px #fee2e2,0 0 15px #f9731680}
+
+/* Rank Pills & Tier Cards */
+.pvp-rank-pill{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:99px;font-size:.77rem;font-weight:800;letter-spacing:.02em}
+.rank-bronze{background:#fdf3e7;color:#9a5216;border:1px solid #f3d2b0}
+.rank-silver{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}
+.rank-gold{background:#fef9c3;color:#92400e;border:1px solid #fde047}
+.rank-platinum{background:#ecfeff;color:#0e7490;border:1px solid #a5f3fc}
+.rank-diamond{background:#eef2ff;color:#3730a3;border:1px solid #c7d2fe}
+.rank-master{background:linear-gradient(120deg,#fdf2f8,#f5f3ff);color:#9d174d;border:1px solid #f9a8d4}
+
+/* Cosmetic Badges */
+.pvp-badge-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:99px;font-size:.73rem;font-weight:700;background:#eef0ff;color:var(--primary-strong)}
+.pvp-badge-pill.sm{font-size:.69rem;padding:2px 7px;margin-top:3px}
+.badge-gold,.badge-gladiator{background:#fff8db;color:#9c6500}
+.badge-platinum,.badge-diamond{background:#e0f2fe;color:#0369a1}
+.badge-master,.badge-streak-3{background:#ffe4e6;color:#be123c}
+.pvp-badge-showcase{width:64px;height:64px;border-radius:18px;display:grid;place-items:center;background:var(--primary-soft);color:var(--primary-strong);box-shadow:0 6px 16px #4b57c91f}
+.pvp-badge-showcase.badge-gold,.pvp-badge-showcase.badge-gladiator{background:#fef3c7;color:#b45309}
+.pvp-badge-showcase.badge-diamond,.pvp-badge-showcase.badge-platinum{background:#e0e7ff;color:#4338ca}
+.pvp-badge-showcase.badge-master,.pvp-badge-showcase.badge-streak-3{background:#fce7f3;color:#be185d}
+
+.pvp-tiers-grid{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-top:14px}
+.pvp-tier-card{padding:14px;border-radius:12px;display:grid;gap:6px}
+.pvp-tier-card.current{outline:2px solid var(--primary-strong);box-shadow:0 6px 18px #4b57c920}
+.pvp-tier-header{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap}
+.pvp-filter-btn{min-height:36px;padding:6px 12px;font-size:.82rem}
+.pvp-leader-cell{display:flex;align-items:center;gap:11px}
+.pvp-my-row{background:#f7f8ff}
+
+.pvp-cosmetics-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-top:16px}
+.pvp-cosmetic-card{border:1px solid var(--border);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px;background:#fff;transition:border-color .15s,box-shadow .15s}
+.pvp-cosmetic-card.equipped{border-color:var(--primary-strong);background:linear-gradient(180deg,#f7f8ff,#fff);box-shadow:0 6px 20px #4b57c918}
+.pvp-cosmetic-card.locked{background:#fafbfd;opacity:.88}
+.pvp-cosmetic-preview{height:82px;display:grid;place-items:center;background:#f8fafc;border-radius:11px}
+.pvp-cosmetic-body{display:flex;flex-direction:column;flex:1;gap:6px}
+.pvp-cosmetic-body p{font-size:.84rem;margin:0;flex:1}
+.pvp-cosmetic-progress{display:grid;gap:6px;margin-top:8px}
+.pvp-cosmetic-progress small{display:inline-flex;align-items:center;gap:5px;color:var(--muted);font-size:.77rem}
+
+.pvp-decline-warning{padding:10px 14px;border-radius:9px;background:#fffbeb;border:1px solid #fde68a;color:#92400e;font-size:.88rem;margin:10px 0}
+.pvp-ban-banner p{margin:4px 0 0;font-size:.88rem}
+.pvp-confirm-card{border-color:#a5b4fc;background:linear-gradient(180deg,#f8faff,#fff)}
+.pvp-confirm-players{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.pvp-confirm-slot{padding:16px;border-radius:12px;border:1px solid var(--border);background:#fff;display:grid;gap:5px}
+.pvp-confirm-slot.confirmed{border-color:var(--success);background:var(--success-soft)}
+.pvp-confirm-slot span{display:inline-flex;align-items:center;gap:6px;font-weight:700;font-size:.86rem;color:var(--primary-strong)}
+.pvp-confirm-slot.confirmed span{color:var(--success-text)}
+
+.pvp-countdown-banner{padding:16px 18px;border-radius:12px;background:linear-gradient(110deg,#4b57c9,#6674e8);color:#fff;margin-bottom:16px;text-align:center}
+.pvp-countdown-banner strong{display:block;font-size:1.15rem}
+.pvp-countdown-banner p{margin:4px 0 0;font-size:.86rem;color:#e0e7ff}
+.pvp-timers-wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.pvp-match-timer{font-size:.84rem;background:#f1f5f9;padding:5px 10px;border-radius:99px;color:#334155}
+.arena-player-box{display:grid;justify-items:center;gap:3px}
+
+.pvp-elo-summary{display:grid;grid-template-columns:repeat(2,minmax(0,240px));justify-content:center;gap:14px;margin:18px auto}
+.pvp-elo-box{padding:14px;border-radius:12px;border:1px solid var(--border);background:#f8fafc;display:grid;gap:4px}
+.pvp-elo-box span{font-size:.85rem;color:var(--muted)}
+.elo-up{color:var(--success-text);font-size:1.05rem}
+.elo-down{color:var(--danger);font-size:1.05rem}
+.elo-even{color:var(--muted);font-size:1.05rem}
+.pvp-elo-pill{font-size:.78rem;font-weight:800;padding:5px 10px;border-radius:99px;background:#f1f5f9;color:#475569}
+.pvp-elo-pill.up{background:var(--success-soft);color:var(--success-text)}
+.pvp-elo-pill.down{background:var(--danger-soft);color:var(--danger)}
+
+@media(max-width:1050px){.pvp-tiers-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.pvp-cosmetics-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.pvp-tiers-grid,.pvp-cosmetics-grid,.pvp-confirm-players,.pvp-elo-summary{grid-template-columns:1fr}}
