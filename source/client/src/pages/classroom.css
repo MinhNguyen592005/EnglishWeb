@@ -1,0 +1,428 @@
+/* ---------- Danh sách lớp ---------- */
+.class-page {
+  --cl-primary: #4f46d8;
+  --cl-ink: #14213d;
+  --cl-muted: #64748b;
+  --cl-border: #e2e8f0;
+  --cl-surface: #fff;
+  width: min(100%, 1180px);
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem 4rem;
+  color: var(--cl-ink);
+}
+.class-page .page-heading { margin-bottom: 1.75rem; }
+.class-page .class-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: .4rem;
+  color: var(--cl-primary);
+}
+.class-page .page-heading h1 { margin: .45rem 0 .4rem; font-size: clamp(2rem, 4vw, 2.65rem); line-height: 1.1; }
+.class-page .page-heading p,
+.class-page .class-create-banner p,
+.class-page .class-join-banner p,
+.class-page .class-list-heading p { margin: 0; color: var(--cl-muted); }
+.class-page .class-create-banner,
+.class-page .class-join-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+  padding: 1.35rem 1.5rem;
+  border: 1px solid #d8dcff;
+  border-radius: 1rem;
+  background: linear-gradient(110deg, #f1f2ff, #fff);
+}
+.class-page .class-create-banner h2,
+.class-page .class-join-banner h2 { margin: 0 0 .3rem; font-size: 1.1rem; }
+.class-page .class-create-form,
+.class-page .class-join-form { display: flex; align-items: center; gap: .65rem; flex-wrap: wrap; }
+.class-page .class-create-form input,
+.class-page .class-input-icon,
+.class-page .class-search {
+  display: flex;
+  align-items: center;
+  gap: .5rem;
+  min-height: 44px;
+  border: 1px solid var(--cl-border);
+  border-radius: .65rem;
+  background: var(--cl-surface);
+}
+.class-page .class-create-form input,
+.class-page .class-input-icon input,
+.class-page .class-search input {
+  min-width: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--cl-ink);
+}
+.class-page .class-create-form input { width: 240px; padding: 0 .85rem; }
+.class-page .class-input-icon { padding: 0 .75rem; }
+.class-page .class-input-icon input { width: 150px; text-transform: uppercase; }
+.class-page .class-join-copy { display: flex; align-items: center; gap: .85rem; }
+.class-page .class-join-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: .75rem;
+  color: var(--cl-primary);
+  background: #e9edff;
+}
+.class-page .class-list-section { margin-top: 1rem; }
+.class-page .class-list-heading {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.class-page .class-list-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: .55rem;
+  margin: 0 0 .35rem;
+  font-size: 1.35rem;
+}
+.class-page .class-list-heading h2 svg { color: var(--cl-primary); }
+.class-page .class-list-count { color: var(--cl-muted); font-size: .95rem; font-weight: 500; }
+.class-page .class-search { width: min(100%, 290px); padding: 0 .8rem; }
+.class-page .class-search svg { flex: none; color: var(--cl-muted); }
+.class-page .class-search input { width: 100%; padding: 0; }
+.class-page .class-card-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1rem;
+}
+.class-page .class-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 225px;
+  padding: 1.25rem;
+  border: 1px solid var(--cl-border);
+  border-radius: 1rem;
+  background: var(--cl-surface);
+  color: inherit;
+  text-decoration: none;
+  box-shadow: 0 5px 18px rgba(20, 33, 61, .04);
+  transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}
+.class-page .class-card:hover {
+  transform: translateY(-3px);
+  border-color: #a5b4fc;
+  box-shadow: 0 12px 28px rgba(79, 70, 216, .12);
+}
+.class-page .class-card-top,
+.class-page .class-card-footer,
+.class-page .class-card-metrics {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .75rem;
+}
+.class-page .class-sector,
+.class-page .class-status,
+.class-page .class-card-metrics,
+.class-page .class-card-footer { font-size: .78rem; }
+.class-page .class-sector { color: var(--cl-primary); font-weight: 700; letter-spacing: .08em; }
+.class-page .class-status { display: inline-flex; align-items: center; gap: .35rem; color: #15803d; }
+.class-page .class-status > span { width: 7px; height: 7px; border-radius: 50%; background: #22c55e; }
+.class-page .class-card h3 { margin: 1.25rem 0 .55rem; font-size: 1.25rem; overflow-wrap: anywhere; }
+.class-page .class-teacher { display: flex; align-items: center; gap: .45rem; margin: 0; color: var(--cl-muted); }
+.class-page .class-card-metrics { justify-content: flex-start; flex-wrap: wrap; margin-top: auto; padding-top: 1.25rem; color: var(--cl-muted); }
+.class-page .class-card-metrics span { display: inline-flex; align-items: center; gap: .35rem; }
+.class-page .class-card-footer { margin-top: 1rem; padding-top: .85rem; border-top: 1px solid #edf1f5; color: var(--cl-muted); }
+.class-page .class-view-link { display: inline-flex; align-items: center; gap: .3rem; color: var(--cl-primary); font-weight: 700; }
+.class-page .empty-state { padding: 2rem; text-align: center; }
+.class-page .error-banner { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.class-page .class-pagination { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-top: 1.5rem; color: var(--cl-muted); font-size: .85rem; }
+.class-page .class-pagination .button { min-width: 76px; }
+
+@media (max-width: 700px) {
+  .class-page { padding: 1.5rem 1rem 3rem; }
+  .class-page .class-create-banner,
+  .class-page .class-join-banner,
+  .class-page .class-list-heading { align-items: stretch; flex-direction: column; }
+  .class-page .class-create-form,
+  .class-page .class-join-form { align-items: stretch; }
+  .class-page .class-create-form input,
+  .class-page .class-input-icon { flex: 1; width: auto; }
+  .class-page .class-create-form .button,
+  .class-page .class-join-form .button { justify-content: center; }
+  .class-page .class-search { width: 100%; }
+}
+
+/* Style cho ClassDetailPage — chuyển từ thiết kế HTML/Tailwind (trang quản lý lớp của giáo viên).
+   Import SAU './classroom.css'. Mọi selector nằm trong .class-workspace nên ghi đè được
+   style cũ của cùng class mà không cần sửa classroom.css. */
+
+.class-workspace {
+  --cw-primary: #4f46e5;
+  --cw-soft: #eef0ff;
+  --cw-ink: #0d1b36;
+  --cw-muted: #454653;
+  --cw-border: #e5eaf2;
+  --cw-teal: #006b5f;
+  --cw-teal-soft: rgba(113, 248, 228, .35);
+  --cw-error: #ba1a1a;
+  --cw-error-soft: #ffdad6;
+  --cw-amber: #f59e0b;
+  --cw-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --cw-shadow: 0 4px 20px -2px rgba(20, 33, 61, .04), 0 12px 32px -4px rgba(102, 116, 232, .06);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  max-width: 1240px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+@keyframes cw-spin { to { transform: rotate(360deg); } }
+@keyframes cw-pulse { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.4); opacity: .6; } }
+.class-workspace .spin { animation: cw-spin .7s linear infinite; }
+
+/* ---------- Hero ---------- */
+.class-workspace .class-hero {
+  position: relative; overflow: hidden;
+  padding: 1.5rem 1.5rem 1.5rem; border-radius: 24px;
+  background: #fff; border: 1px solid var(--cw-border); box-shadow: var(--cw-shadow);
+}
+.class-workspace > .class-overview,
+.class-workspace > .class-tab-content,
+.class-workspace > .class-panel { margin-top: .25rem; }
+.class-workspace .class-hero.with-tabs { padding-bottom: 0; }
+.class-workspace .class-hero::before {
+  content: ''; position: absolute; top: -96px; right: -96px; width: 384px; height: 384px;
+  border-radius: 50%; background: rgba(223, 224, 255, .5); filter: blur(48px); pointer-events: none;
+}
+.class-workspace .class-hero > * { position: relative; }
+
+.class-workspace .class-hero .breadcrumb {
+  display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin-bottom: .75rem;
+  font-size: .75rem; font-weight: 600; color: var(--cw-muted);
+}
+.class-workspace .class-hero .breadcrumb a,
+.class-workspace .class-hero .breadcrumb .current { display: inline-flex; align-items: center; gap: .375rem; }
+.class-workspace .class-hero .breadcrumb a { color: inherit; text-decoration: none; transition: color .15s; }
+.class-workspace .class-hero .breadcrumb a:hover { color: var(--cw-primary); }
+.class-workspace .class-hero .breadcrumb .current { color: var(--cw-ink); }
+.class-workspace .class-hero .breadcrumb .current svg { color: var(--cw-primary); }
+
+.class-workspace .class-detail-header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1.25rem; }
+.class-workspace .class-title-row { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem; }
+.class-workspace .class-title-row h1 { margin: 0; font-size: 1.75rem; line-height: 1.3; letter-spacing: -.01em; color: var(--cw-ink); }
+.class-workspace .class-role-badge,
+.class-workspace .class-live-pill {
+  display: inline-flex; align-items: center; gap: .375rem; padding: .25rem .75rem;
+  border-radius: 999px; font-size: .6875rem; font-weight: 600; border: 1px solid rgba(0, 107, 95, .2);
+}
+.class-workspace .class-role-badge { background: var(--cw-teal-soft); color: #007165; }
+.class-workspace .class-live-pill { background: #f2f3ff; color: var(--cw-teal); }
+.class-workspace .class-live-pill.offline { color: #64748b; border-color: #cbd5e1; }
+.class-workspace .class-live-dot { width: 8px; height: 8px; border-radius: 50%; background: currentColor; animation: cw-pulse 2s cubic-bezier(.4, 0, .6, 1) infinite; }
+.class-workspace .class-live-pill.offline .class-live-dot { animation: none; }
+
+.class-workspace .class-meta-ribbon { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin-top: .5rem; font-size: .875rem; color: var(--cw-muted); }
+.class-workspace .class-meta-ribbon > span { display: inline-flex; align-items: center; gap: .375rem; }
+.class-workspace .class-meta-ribbon svg { color: var(--cw-primary); }
+.class-workspace .class-meta-ribbon strong { font-weight: 600; color: var(--cw-ink); }
+.class-workspace .class-meta-ribbon .sep { color: #c6c5d5; }
+.class-workspace .class-code-chip { padding: .125rem .625rem; border-radius: 8px; background: #e9edff; border: 1px solid rgba(198, 197, 213, .6); }
+.class-workspace .class-code-chip code { font-family: var(--cw-mono); font-weight: 700; color: var(--cw-ink); }
+
+.class-workspace .class-header-actions { display: flex; flex-wrap: wrap; align-items: center; gap: .625rem; }
+.class-workspace .class-header-actions .button { display: inline-flex; align-items: center; gap: .5rem; border-radius: 999px; }
+.class-workspace .class-rename-form { display: flex; gap: .5rem; }
+.class-workspace .class-rename-form input { height: 40px; padding: 0 1rem; border-radius: 999px; border: 1px solid var(--cw-border); min-width: 0; width: 200px; }
+.class-workspace .class-rename-form input:focus { outline: none; border-color: var(--cw-primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, .12); }
+
+/* ---------- Tabs ---------- */
+.class-workspace .class-tabs {
+  display: flex; align-items: center; gap: .25rem; min-width: 0;
+  margin: 1.5rem -1.5rem 0; padding: 0 1.5rem; overflow-x: auto;
+  border-top: 1px solid var(--cw-border); border-bottom: 0; background: none;
+}
+.class-workspace .class-tabs button {
+  display: inline-flex; align-items: center; gap: .5rem; flex: none;
+  padding: .875rem 1.25rem; margin: 0; border: 0; border-bottom: 2px solid transparent; border-radius: 0;
+  background: none; color: var(--cw-muted); font-size: .875rem; font-weight: 500; white-space: nowrap; cursor: pointer;
+  transition: color .15s, border-color .15s;
+}
+.class-workspace .class-tabs button:hover { color: var(--cw-primary); }
+.class-workspace .class-tabs button.active { color: var(--cw-primary); border-bottom-color: var(--cw-primary); font-weight: 700; background: none; }
+.class-workspace .class-tab-count { padding: .0625rem .5rem; border-radius: 999px; background: #e9edff; color: var(--cw-muted); font-size: .6875rem; font-weight: 600; }
+.class-workspace .class-tabs button.active .class-tab-count { background: var(--cw-primary); color: #fff; }
+
+/* ---------- Tổng quan: 5 thẻ KPI ---------- */
+.class-workspace .class-overview { display: flex; flex-direction: column; gap: 2rem; }
+.class-workspace .class-overview-metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 1rem; }
+.class-workspace .class-overview-metric {
+  position: relative; overflow: hidden; display: flex; flex-direction: column; gap: .75rem;
+  padding: 1.25rem 1.25rem 1.5rem; border-radius: 24px; text-align: left; font: inherit; color: inherit; cursor: pointer;
+  background: #fff; border: 1px solid rgba(198, 197, 213, .5); box-shadow: var(--cw-shadow);
+  transition: transform .2s cubic-bezier(.16, 1, .3, 1), box-shadow .2s cubic-bezier(.16, 1, .3, 1);
+}
+.class-workspace .class-overview-metric:hover { transform: translateY(-2px); box-shadow: 0 8px 30px -4px rgba(20, 33, 61, .08), 0 20px 48px -6px rgba(102, 116, 232, .12); }
+.class-workspace .class-overview-metric:focus-visible { outline: 3px solid rgba(79, 70, 229, .4); outline-offset: 2px; }
+.class-workspace .class-overview-metric::after { content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: rgba(79, 70, 229, .2); transition: background .2s; }
+.class-workspace .class-overview-metric:hover::after { background: var(--cw-primary); }
+.class-workspace .metric-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; }
+.class-workspace .metric-label { font-size: .75rem; font-weight: 600; letter-spacing: .04em; color: var(--cw-muted); }
+.class-workspace .class-overview-metric .metric-icon {
+  flex: none; display: grid; place-items: center; width: 40px; height: 40px; border-radius: 16px;
+  background: #e9edff; color: var(--cw-primary); transition: background .2s, color .2s;
+}
+.class-workspace .class-overview-metric:hover .metric-icon { background: var(--cw-primary); color: #fff; }
+.class-workspace .metric-value { display: flex; align-items: baseline; gap: .5rem; margin-top: .25rem; }
+.class-workspace .metric-value strong { font-size: 2.25rem; line-height: 1; font-weight: 700; letter-spacing: -.02em; color: var(--cw-ink); }
+.class-workspace .metric-value em { font-style: normal; font-size: .875rem; color: var(--cw-muted); }
+.class-workspace .class-overview-metric small { font-size: .75rem; font-weight: 500; color: var(--cw-muted); }
+
+.class-workspace .metric-teal .metric-icon { background: rgba(113, 248, 228, .5); color: var(--cw-teal); }
+.class-workspace .metric-teal:hover .metric-icon { background: var(--cw-teal); color: #fff; }
+.class-workspace .metric-teal .metric-value strong { color: var(--cw-teal); }
+.class-workspace .metric-teal::after { background: rgba(0, 107, 95, .3); }
+.class-workspace .metric-teal:hover::after { background: var(--cw-teal); }
+.class-workspace .metric-danger { border-color: rgba(255, 218, 214, .9); }
+.class-workspace .metric-danger .metric-label { color: var(--cw-error); }
+.class-workspace .metric-danger .metric-icon { background: var(--cw-error-soft); color: var(--cw-error); }
+.class-workspace .metric-danger:hover .metric-icon { background: var(--cw-error); color: #fff; }
+.class-workspace .metric-danger .metric-value strong,
+.class-workspace .metric-danger .metric-value em,
+.class-workspace .metric-danger small { color: var(--cw-error); }
+.class-workspace .metric-danger::after,
+.class-workspace .metric-danger:hover::after { background: var(--cw-error); }
+
+/* ---------- Panel dùng chung ---------- */
+.class-workspace .class-panel { border-radius: 24px; padding: 2rem; background: #fff; border: 1px solid rgba(198, 197, 213, .5); box-shadow: var(--cw-shadow); }
+.class-workspace .class-tab-content { display: flex; flex-direction: column; gap: 1.5rem; }
+.class-workspace .class-panel-head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.25rem; }
+.class-workspace .class-panel-head h2 { display: flex; align-items: center; gap: .5rem; margin: 0; font-size: 1.5rem; letter-spacing: -.01em; color: var(--cw-ink); }
+.class-workspace .class-panel-head h2 svg { color: var(--cw-primary); }
+.class-workspace .class-panel-head p { margin: .25rem 0 0; font-size: .875rem; }
+.class-workspace .class-panel-title { display: flex; align-items: center; gap: .625rem; }
+.class-workspace .class-panel-title h2 { font-size: 1.125rem; }
+.class-workspace .class-panel-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 12px; background: var(--cw-primary); color: #fff; }
+.class-workspace .class-panel-head .button { display: inline-flex; align-items: center; gap: .5rem; border-radius: 999px; }
+.class-workspace .class-tab-toolbar { margin-bottom: 1rem; }
+.class-workspace .class-tab-toolbar .search-input { width: min(100%, 320px); height: 40px; padding: 0 1rem; border-radius: 999px; border: 1px solid var(--cw-border); background: #f8fafc; }
+.class-workspace .class-tab-toolbar .search-input:focus { outline: none; border-color: var(--cw-primary); background: #fff; }
+
+/* ---------- Pill trạng thái + chip ---------- */
+.class-workspace .class-state-pill { display: inline-flex; align-items: center; gap: .25rem; padding: .125rem .625rem; border-radius: 999px; font-size: .6875rem; font-weight: 700; background: #f1f5f9; color: #475569; }
+.class-workspace .state-overdue { background: var(--cw-error-soft); color: #93000a; }
+.class-workspace .state-urgent { background: #fef3c7; color: #78350f; }
+.class-workspace .state-open { background: var(--cw-teal-soft); color: #007165; }
+.class-workspace .state-closed { background: #f1f5f9; color: #64748b; }
+.class-workspace .class-chip { padding: .125rem .625rem; border-radius: 6px; background: #f1f5f9; color: #64748b; font-size: .75rem; font-weight: 500; }
+.class-workspace code { font-family: var(--cw-mono); font-size: .6875rem; color: var(--cw-muted); }
+
+/* ---------- Việc cần xử lý ---------- */
+.class-workspace .class-priority-list { display: flex; flex-direction: column; gap: .875rem; }
+.class-workspace .class-priority-item,
+.class-workspace .class-assignment-card {
+  --bar: #94a3b8;
+  position: relative; overflow: hidden; border-radius: 24px;
+  background: #fff; border: 1px solid rgba(198, 197, 213, .5); box-shadow: var(--cw-shadow);
+}
+.class-workspace .class-priority-item::before,
+.class-workspace .class-assignment-card::before { content: ''; position: absolute; inset: 0 auto 0 0; width: 6px; background: var(--bar); }
+.class-workspace .tone-overdue { --bar: var(--cw-error); }
+.class-workspace .tone-urgent { --bar: var(--cw-amber); }
+.class-workspace .tone-open { --bar: var(--cw-teal); }
+.class-workspace .tone-closed { --bar: #94a3b8; }
+.class-workspace .class-priority-item { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 1rem; padding: 1.25rem 1.25rem 1.25rem 1.75rem; }
+.class-workspace .class-priority-body { display: flex; flex-direction: column; gap: .375rem; flex: 1 1 320px; min-width: 0; }
+.class-workspace .class-priority-tags { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.class-workspace .class-priority-item h3,
+.class-workspace .class-assignment-card h3 { margin: 0; font-size: 1.0625rem; font-weight: 600; color: var(--cw-ink); overflow-wrap: anywhere; }
+.class-workspace .class-priority-meta { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem 1rem; margin: 0; font-size: .8125rem; color: var(--cw-muted); }
+.class-workspace .class-priority-meta > span,
+.class-workspace .class-assignment-meta > span { display: inline-flex; align-items: center; gap: .375rem; }
+.class-workspace .class-priority-meta svg,
+.class-workspace .class-assignment-meta svg { color: var(--cw-primary); }
+.class-workspace .class-priority-item .button,
+.class-workspace .class-assignment-actions .button { display: inline-flex; align-items: center; gap: .375rem; border-radius: 999px; font-size: .75rem; font-weight: 600; }
+
+/* ---------- Nhiệm vụ: lưới thẻ ---------- */
+.class-workspace .class-assignment-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1rem; }
+.class-workspace .class-assignment-card { display: flex; flex-direction: column; align-items: flex-start; gap: .5rem; padding: 1.25rem 1.25rem 1.25rem 1.75rem; border-radius: 20px; background: rgba(242, 243, 255, .5); }
+.class-workspace .class-assignment-top { display: flex; align-items: center; justify-content: space-between; gap: .5rem; width: 100%; }
+.class-workspace .class-assignment-desc { margin: 0; font-size: .8125rem; color: var(--cw-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.class-workspace .class-assignment-meta { display: flex; flex-wrap: wrap; gap: .375rem 1rem; font-size: .75rem; color: var(--cw-muted); }
+.class-workspace .class-assignment-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin-top: auto; padding-top: .5rem; }
+
+/* ---------- Bảng thành viên / bảng điểm ---------- */
+.class-workspace .class-table-wrap { overflow-x: auto; }
+.class-workspace .class-table { width: 100%; border-collapse: collapse; text-align: left; font-size: .875rem; }
+.class-workspace .class-table thead { background: #f2f3ff; border-bottom: 1px solid rgba(198, 197, 213, .5); }
+.class-workspace .class-table th { padding: .75rem; font-size: .75rem; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; color: var(--cw-ink); }
+.class-workspace .class-table td { padding: .75rem; border-bottom: 1px solid rgba(198, 197, 213, .25); vertical-align: middle; }
+.class-workspace .class-table .right { text-align: right; }
+.class-workspace .class-table .mono { font-family: var(--cw-mono); color: var(--cw-muted); }
+.class-workspace .class-member-cell { display: inline-flex; align-items: center; gap: .625rem; }
+.class-workspace .class-member-cell strong { font-weight: 600; color: var(--cw-ink); }
+.class-workspace .class-role-chip { padding: .125rem .5rem; border-radius: 999px; background: #e9edff; color: var(--cw-muted); font-size: .75rem; font-weight: 600; }
+
+.class-workspace .grades-select { width: min(100%, 420px); height: 44px; margin-bottom: 1rem; padding: 0 1rem; border-radius: 16px; border: 1px solid var(--cw-border); background: #fff; }
+.class-workspace .grades-status-tabs { display: flex; flex-wrap: wrap; gap: .5rem; margin-bottom: 1rem; }
+.class-workspace .grades-status-tabs button { display: inline-flex; align-items: center; gap: .45rem; padding: .55rem .85rem; border: 1px solid var(--cw-border); border-radius: 999px; background: #fff; color: var(--cw-muted); font: inherit; font-size: .8rem; cursor: pointer; }
+.class-workspace .grades-status-tabs button span { display: grid; place-items: center; min-width: 1.35rem; height: 1.35rem; padding: 0 .25rem; border-radius: 999px; background: #eef0ff; color: var(--cw-primary); font-size: .7rem; font-weight: 700; }
+.class-workspace .grades-status-tabs button.active { border-color: var(--cw-primary); background: var(--cw-primary); color: #fff; }
+.class-workspace .grades-status-tabs button.active span { background: #fff; color: var(--cw-primary); }
+.class-workspace .grades-assignment-list { display: grid; gap: .65rem; margin-bottom: 1.25rem; }
+.class-workspace .grades-assignment-card { display: flex; align-items: center; gap: .75rem; width: 100%; padding: .85rem 1rem; border: 1px solid var(--cw-border); border-radius: 14px; background: #fff; color: var(--cw-ink); text-align: left; cursor: pointer; transition: border-color .15s, background .15s, box-shadow .15s; }
+.class-workspace .grades-assignment-card:hover,
+.class-workspace .grades-assignment-card.selected { border-color: var(--cw-primary); background: #f7f8ff; box-shadow: 0 4px 14px rgba(79,70,229,.08); }
+.class-workspace .grades-assignment-icon { display: grid; place-items: center; flex: none; width: 38px; height: 38px; border-radius: 11px; color: var(--cw-primary); background: #eef0ff; }
+.class-workspace .grades-assignment-icon.pending { color: #a16207; background: #fef3c7; }
+.class-workspace .grades-assignment-copy { display: grid; gap: .2rem; min-width: 0; flex: 1; }
+.class-workspace .grades-assignment-copy strong { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.class-workspace .grades-assignment-copy small { color: var(--cw-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.class-workspace .grades-assignment-card > svg { flex: none; color: #94a3b8; }
+.class-workspace .class-grade-detail-heading { margin: 1.5rem 0 .75rem; padding-top: 1.25rem; border-top: 1px solid var(--cw-border); }
+.class-workspace .class-grade-detail-heading h3 { margin: 0; font-size: 1.1rem; }
+.class-workspace .class-grade-detail-heading p { margin: .25rem 0 0; }
+.class-workspace .class-empty-state { display: flex; align-items: center; gap: .65rem; padding: 1.2rem; border: 1px dashed #cbd5e1; border-radius: 16px; color: var(--cw-muted); }
+.class-workspace .class-empty-state svg { flex: none; color: var(--cw-teal); }
+.class-workspace .class-empty-state p { margin: 0; }
+.class-workspace .class-grade-summary { display: flex; flex-wrap: wrap; align-items: center; gap: .75rem 1rem; margin-bottom: 1rem; padding: 1.25rem 1.5rem; border-radius: 16px; background: #f2f3ff; }
+.class-workspace .grade-avg { display: flex; flex-direction: column; margin-right: auto; }
+.class-workspace .grade-avg span { font-size: .75rem; color: var(--cw-muted); }
+.class-workspace .grade-avg strong { font-size: 1.5rem; font-weight: 700; color: var(--cw-primary); }
+.class-workspace .grade-stat { padding: .25rem .75rem; border-radius: 999px; background: #fff; border: 1px solid rgba(198, 197, 213, .5); font-size: .75rem; font-weight: 600; color: var(--cw-ink); }
+.class-workspace .class-status-chip { padding: .125rem .5rem; border-radius: 999px; background: var(--cw-teal-soft); color: #007165; font-size: .75rem; font-weight: 600; }
+.class-workspace .class-status-chip.doing { background: #fef3c7; color: #78350f; }
+.class-workspace .class-pass-chip { font-size: .75rem; font-weight: 700; }
+.class-workspace .class-pass-chip.yes { color: var(--cw-teal); }
+.class-workspace .class-pass-chip.no { color: var(--cw-error); }
+
+/* ---------- Chat lớp ---------- */
+.class-workspace .class-chat .chat-list { display: flex; flex-direction: column; gap: .75rem; padding: 1rem; margin-bottom: 1rem; border-radius: 16px; background: #f2f3ff; max-height: 420px; overflow-y: auto; }
+.class-workspace .class-chat .chat-message { display: flex; align-items: flex-start; gap: .75rem; max-width: 100%; padding: 0; background: none; border: 0; box-shadow: none; }
+.class-workspace .class-chat .chat-message.mine { flex-direction: row-reverse; }
+.class-workspace .class-chat .chat-bubble { padding: .75rem; border-radius: 16px; background: #fff; box-shadow: 0 1px 2px rgba(15, 23, 42, .06); font-size: .875rem; min-width: 0; }
+.class-workspace .class-chat .chat-message.mine .chat-bubble { background: var(--cw-soft); }
+.class-workspace .class-chat .chat-bubble strong { margin-right: .5rem; font-weight: 600; color: var(--cw-primary); }
+.class-workspace .class-chat .chat-bubble time { font-size: .6875rem; color: #64748b; }
+.class-workspace .class-chat .chat-bubble p { margin: .25rem 0 0; overflow-wrap: anywhere; }
+.class-workspace .class-chat .inline-form input { height: 44px; padding: 0 1rem; border-radius: 999px; border: 1px solid rgba(198, 197, 213, .6); }
+.class-workspace .class-chat .inline-form input:focus { outline: none; border-color: var(--cw-primary); box-shadow: 0 0 0 3px rgba(79, 70, 229, .15); }
+.class-workspace .class-chat .inline-form .button { border-radius: 999px; }
+
+/* ---------- Responsive & accessibility ---------- */
+@media (max-width: 640px) {
+  .class-workspace .class-hero { padding: 1.25rem 1rem 1.25rem; }
+  .class-workspace .class-tabs { margin-left: -1rem; margin-right: -1rem; padding: 0 1rem; }
+  .class-workspace .class-panel { padding: 1.25rem; }
+  .class-workspace .class-rename-form input { width: 150px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .class-workspace .spin,
+  .class-workspace .class-live-dot { animation: none; }
+  .class-workspace .class-overview-metric,
+  .class-workspace .class-overview-metric:hover { transition: none; transform: none; }
+}

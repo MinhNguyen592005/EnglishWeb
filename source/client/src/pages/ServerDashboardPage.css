@@ -1,0 +1,105 @@
+/* ServerDashboardPage — thay toàn bộ file cũ.
+   Bố cục dùng container query theo bề rộng thật của vùng nội dung (đã trừ sidebar),
+   nên không phụ thuộc kích thước cửa sổ. */
+
+.admin-monitor { container-type: inline-size; container-name: monitor; display: grid; gap: 18px; margin-bottom: 28px; }
+
+/* ---------- Tiêu đề phần ---------- */
+.monitor-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; color: var(--muted); }
+.monitor-title { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.monitor-live { display: inline-flex; align-items: center; gap: 8px; padding: 5px 11px; border-radius: 999px; background: #fff5dd; color: #a36b0a; font-size: 12px; font-weight: 650; }
+.monitor-live i { width: 8px; height: 8px; border-radius: 50%; background: #c28d3b; }
+.monitor-live.online { background: #e8faf6; color: #087f73; }
+.monitor-live.online i { background: #16b8a6; box-shadow: 0 0 0 4px #16b8a626; }
+
+/* ---------- Giới hạn tải (chip) ---------- */
+.monitor-capacity { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.monitor-capacity li { display: inline-flex; align-items: baseline; gap: 8px; padding: 8px 12px; border: 1px solid #dfe3f2; border-radius: 12px; background: #fff; font-size: 12px; color: #4a5365; }
+.monitor-capacity b { font-weight: 650; color: #14213d; }
+.monitor-capacity span { font-variant-numeric: tabular-nums; font-weight: 650; }
+.monitor-capacity small { color: #929db2; font-size: 11px; }
+.monitor-capacity li.warn { border-color: #f2d49a; background: #fffaf0; }
+.monitor-capacity li.warn span { color: #946817; }
+
+/* ---------- 3 thẻ chỉ số ---------- */
+.monitor-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+.monitor-metric { display: flex; flex-direction: column; gap: 8px; min-width: 0; padding: 20px; border: 1px solid #dfe3f2; border-radius: 20px; background: #fff; box-shadow: 0 3px 12px rgb(20 33 61 / 3%); }
+.monitor-metric-top { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.monitor-metric h2 { margin: 0; font-size: 13px; font-weight: 700; color: #586881; }
+.monitor-metric .card-icon { flex: none; display: grid; place-items: center; width: 40px; height: 40px; margin: 0; border-radius: 14px; }
+.monitor-metric strong { display: block; margin-top: 4px; font-size: 34px; line-height: 1.1; color: #14213d; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+.monitor-metric strong small { font-size: 14px; font-weight: 500; color: var(--muted); }
+.monitor-metric p { margin: 0; font-size: 12px; color: var(--muted); }
+.monitor-metric .progress-track { height: 6px; margin-top: 4px; border-radius: 999px; overflow: hidden; background: #eef0f6; }
+.monitor-metric .progress-track div { height: 100%; border-radius: inherit; background: #16b8a6; transition: width .4s ease; }
+.monitor-metric .progress-track.hot div { background: #ba1a1a; }
+
+/* ---------- Lưới các khối chi tiết ---------- */
+.monitor-grid { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; align-items: start; }
+.monitor-grid > .feature-card, .monitor-side > .feature-card { margin: 0; }
+.monitor-side { display: grid; gap: 18px; min-width: 0; }
+.monitor-grid .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; }
+.monitor-grid .panel-heading h2 { margin: 0; font-size: 1.05rem; }
+.monitor-grid .panel-heading p { margin: 4px 0 0; font-size: 12px; }
+.monitor-detail .panel-heading select { min-width: 220px; height: 40px; padding: 0 12px; border: 1px solid #d6dced; border-radius: 10px; background: #fff; }
+
+@container monitor (min-width: 1000px) {
+  .monitor-grid { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); }
+  .monitor-clients, .monitor-detail { grid-column: 1 / -1; }
+}
+@container monitor (max-width: 720px) {
+  .monitor-cards { grid-template-columns: 1fr; }
+  .monitor-metric strong { font-size: 30px; }
+}
+
+/* ---------- Bảng client ---------- */
+.admin-page .admin-monitor .monitor-clients table { min-width: 760px; }
+.monitor-clients td { vertical-align: top; }
+.monitor-clients td small { display: block; max-width: 260px; margin-top: 7px; color: var(--muted); font-size: 11px; overflow-wrap: anywhere; }
+.monitor-resource { color: #4f46e5; font-weight: 600; }
+.presence-pill { display: inline-block; padding: 7px 10px; border-radius: 20px; background: #eaf8f1; color: #267455; font-size: 12px; white-space: nowrap; }
+.presence-pill.idle { background: #fff2d5; color: #946817; }
+.monitor-afk { background: #fffaf0; }
+
+/* ---------- Terminal nhật ký ---------- */
+.monitor-log { display: flex; flex-direction: column; }
+.monitor-log .button { display: inline-flex; align-items: center; gap: 6px; }
+.admin-network-terminal { flex: 1; height: 300px; min-height: 240px; max-height: 420px; overflow: auto; padding: 16px 18px; border-radius: 14px; background: #111a2b; color: #bdcfdf; font: 12px/1.8 ui-monospace, Consolas, monospace; overflow-wrap: anywhere; scrollbar-width: thin; scrollbar-color: #3b4a66 transparent; }
+.admin-network-terminal::-webkit-scrollbar { width: 8px; height: 8px; }
+.admin-network-terminal::-webkit-scrollbar-button { display: none; }
+.admin-network-terminal::-webkit-scrollbar-thumb { border-radius: 8px; background: #3b4a66; }
+.admin-network-terminal::-webkit-scrollbar-track { background: transparent; }
+.network-line { padding: 3px 0; }
+.network-line time { color: #71869e; }
+.network-line.sys { color: #8ac9ff; }
+.network-line.info { color: #a7d9c7; }
+.network-line.warning { color: #f0cf79; }
+.network-line.critical { color: #ff92a5; }
+
+/* ---------- Hàng đợi + cảnh báo ---------- */
+.monitor-side .tag-warn { background: #fff2d5; color: #946817; }
+.monitor-queue-list { display: grid; gap: 8px; margin: 0 0 10px; padding: 0; list-style: none; }
+.monitor-queue-list li { display: flex; align-items: center; gap: 8px 12px; flex-wrap: wrap; padding: 10px 12px; border: 1px solid #e3e7f0; border-radius: 12px; background: #fbfcff; font-size: 12px; color: #4a5365; }
+.monitor-queue-list .button { min-height: 32px; padding: 6px 10px; font-size: 12px; }
+.monitor-empty { display: flex; align-items: center; gap: 8px; margin: 0 0 8px; padding: 12px 14px; border-radius: 12px; background: #f6f7fb; color: #7a8396; font-size: 13px; }
+.monitor-empty.ok { background: #effbf8; color: #087f73; }
+.monitor-side small { display: block; color: #929db2; font-size: 11px; line-height: 1.5; }
+.system-alert { margin: 10px 0; padding: 12px; border-left: 4px solid #f59e0b; border-radius: 8px; background: #fffbeb; color: #78350f; font-size: 13px; overflow-wrap: anywhere; }
+.system-alert.critical { border-color: #ef4444; background: #fef2f2; color: #991b1b; }
+.system-alert .button { margin-left: 6px; min-height: 30px; padding: 5px 10px; font-size: 12px; }
+
+/* ---------- Chi tiết client ---------- */
+.client-detail-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; margin: 4px 0 18px; }
+.client-detail-grid > div { padding: 12px 14px; border: 1px solid #e3e7f0; border-radius: 12px; background: #fbfcff; }
+.client-detail-grid dt { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #7a8396; }
+.client-detail-grid dd { margin: 6px 0 0; font-size: 13px; overflow-wrap: anywhere; }
+.monitor-detail h3 { margin: 0 0 8px; font-size: .95rem; }
+.monitor-feedback { margin: 12px 0 0; padding: 10px 12px; border-radius: 10px; background: #eef0ff; color: #4338ca; font-size: 13px; }
+
+/* ---------- Ghi chú thu gọn ---------- */
+.monitor-rules, .monitor-notes { font-size: 12px; color: var(--muted); }
+.monitor-rules { margin-top: 10px; }
+.monitor-rules summary, .monitor-notes summary { cursor: pointer; font-weight: 650; color: #64748b; }
+.monitor-rules p, .monitor-notes p { margin: 8px 0 0; line-height: 1.6; }
+
+@media (prefers-reduced-motion: reduce) { .monitor-metric .progress-track div { transition: none; } }

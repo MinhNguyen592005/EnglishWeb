@@ -1,0 +1,881 @@
+/* ==========================================================================
+   Support chat — thiết kế lại
+   Nguyên tắc: nền trung tính, MỘT màu nhấn duy nhất (indigo trầm),
+   không gradient, đổ bóng nhẹ, chữ đủ lớn để đọc.
+   Đổi màu cả widget chỉ bằng cách sửa --sc-accent.
+   ========================================================================== */
+
+.support-widget,
+.support-inbox-panel {
+  --sc-accent: #4150c4;
+  --sc-accent-hover: #3542a8;
+  --sc-accent-soft: #eceefb;
+  --sc-ink: #1c2230;
+  --sc-ink-2: #4a5365;
+  --sc-muted: #7a8396;
+  --sc-line: #e5e8ee;
+  --sc-canvas: #f5f6f9;
+  --sc-surface: #ffffff;
+  --sc-online: #22a06b;
+  --sc-away: #d99a1d;
+  --sc-danger: #b4283f;
+  --sc-danger-soft: #fdeff1;
+  --sc-radius: 14px;
+}
+
+/* ---------- Nút bong bóng mở chat ---------- */
+
+.support-widget {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: 1100;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+}
+
+.support-bubble {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  height: 48px;
+  padding: 0 18px 0 14px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sc-accent);
+  color: #fff;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(20, 28, 60, 0.18), 0 6px 16px rgba(20, 28, 60, 0.16);
+  transition: background-color 0.15s, box-shadow 0.15s;
+}
+
+.support-bubble:hover {
+  background: var(--sc-accent-hover);
+  box-shadow: 0 1px 2px rgba(20, 28, 60, 0.2), 0 8px 20px rgba(20, 28, 60, 0.2);
+}
+
+.support-bubble:active {
+  transform: translateY(1px);
+}
+
+.support-bubble b {
+  position: absolute;
+  top: -5px;
+  right: -3px;
+  min-width: 20px;
+  height: 20px;
+  padding: 0 6px;
+  display: grid;
+  place-items: center;
+  border: 2px solid #fff;
+  border-radius: 999px;
+  background: var(--sc-danger);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* ---------- Cửa sổ chat ---------- */
+
+.support-popup {
+  display: flex;
+  flex-direction: column;
+  width: min(380px, calc(100vw - 28px));
+  height: min(560px, calc(100dvh - 110px));
+  overflow: hidden;
+  background: var(--sc-surface);
+  border: 1px solid var(--sc-line);
+  border-radius: 16px;
+  box-shadow: 0 2px 6px rgba(20, 28, 60, 0.06), 0 18px 48px rgba(20, 28, 60, 0.16);
+}
+
+.support-popup > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 14px 14px 18px;
+  background: var(--sc-surface);
+  border-bottom: 1px solid var(--sc-line);
+  color: var(--sc-ink);
+}
+
+.support-popup > header > div {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.support-popup > header strong {
+  font-size: 0.95rem;
+  font-weight: 650;
+}
+
+.support-popup > header small {
+  font-size: 0.78rem;
+  color: var(--sc-muted);
+}
+
+.support-close {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sc-muted);
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.support-close:hover {
+  background: var(--sc-canvas);
+  color: var(--sc-ink);
+}
+
+/* ---------- Khung hội thoại ---------- */
+
+.support-conversation {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.support-connection {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 36px;
+  padding: 0 18px;
+  background: var(--sc-surface);
+  border-bottom: 1px solid var(--sc-line);
+  color: var(--sc-muted);
+  font-size: 0.78rem;
+  overflow-wrap: anywhere;
+}
+
+.support-connection strong {
+  color: var(--sc-ink-2);
+  font-weight: 600;
+}
+
+.support-connection-separator {
+  color: #c3c9d6;
+}
+
+.support-connection-dot,
+.support-inbox-status > span {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--sc-away);
+}
+
+.support-connection-dot.online,
+.support-inbox-status.online > span {
+  background: var(--sc-online);
+}
+
+/* ---------- Danh sách tin nhắn ---------- */
+
+.support-messages {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-height: 0;
+  padding: 16px 16px 12px;
+  overflow-y: auto;
+  background: var(--sc-canvas);
+  scroll-behavior: smooth;
+}
+
+.support-messages .muted {
+  margin: auto;
+  color: var(--sc-muted);
+  font-size: 0.85rem;
+}
+
+.support-message {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  align-self: flex-start;
+  max-width: 88%;
+  overflow-wrap: anywhere;
+}
+
+.support-message.mine {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+/* Avatar: nhỏ, chỉ để phân biệt người gửi; tin của mình không cần avatar */
+.support-message-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #e6e9f0;
+  color: var(--sc-ink-2);
+}
+
+.support-message.admin .support-message-avatar {
+  background: var(--sc-accent-soft);
+  color: var(--sc-accent);
+}
+
+.support-message.mine .support-message-avatar {
+  display: none;
+}
+
+.support-message-body {
+  min-width: 0;
+  padding: 9px 13px 8px;
+  background: var(--sc-surface);
+  border: 1px solid var(--sc-line);
+  border-radius: 16px 16px 16px 4px;
+  color: var(--sc-ink);
+}
+
+.support-message.mine .support-message-body {
+  background: var(--sc-accent);
+  border-color: var(--sc-accent);
+  border-radius: 16px 16px 4px 16px;
+  color: #fff;
+}
+
+.support-message-meta {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.support-message strong {
+  font-size: 0.75rem;
+  font-weight: 650;
+  color: var(--sc-ink-2);
+}
+
+.support-message.admin strong {
+  color: var(--sc-accent);
+}
+
+.support-message time {
+  flex: none;
+  font-size: 0.7rem;
+  color: var(--sc-muted);
+}
+
+/* Tin của mình: ẩn tên (ai cũng biết là mình), giữ giờ */
+.support-message.mine strong {
+  display: none;
+}
+
+.support-message.mine .support-message-meta {
+  justify-content: flex-end;
+  order: 2;
+}
+
+.support-message.mine time {
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.support-message p {
+  margin: 3px 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  color: inherit;
+}
+
+.support-message.mine p {
+  margin: 0 0 3px;
+}
+
+/* ---------- Ô nhập tin ---------- */
+
+.support-compose {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 12px 14px 8px;
+  background: var(--sc-surface);
+  border-top: 1px solid var(--sc-line);
+}
+
+.support-compose textarea {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  max-height: 96px;
+  padding: 11px 14px;
+  resize: none;
+  background: var(--sc-canvas);
+  border: 1px solid transparent;
+  border-radius: 22px;
+  color: var(--sc-ink);
+  font: inherit;
+  font-size: 0.9rem;
+  line-height: 1.35;
+  transition: background-color 0.15s, border-color 0.15s, box-shadow 0.15s;
+}
+
+.support-compose textarea::placeholder {
+  color: var(--sc-muted);
+}
+
+.support-compose textarea:focus {
+  outline: none;
+  background: var(--sc-surface);
+  border-color: var(--sc-accent);
+  box-shadow: 0 0 0 3px rgba(65, 80, 196, 0.14);
+}
+
+.support-compose button.button {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: var(--sc-accent);
+  color: #fff;
+  box-shadow: none;
+  cursor: pointer;
+  transition: background-color 0.15s, opacity 0.15s;
+}
+
+.support-compose button.button:hover:not(:disabled) {
+  background: var(--sc-accent-hover);
+}
+
+.support-compose button.button:disabled {
+  background: #cfd4e6;
+  color: #fff;
+  cursor: not-allowed;
+  opacity: 1;
+}
+
+.support-footnote {
+  display: block;
+  padding: 0 18px 12px;
+  background: var(--sc-surface);
+  color: var(--sc-muted);
+  font-size: 0.72rem;
+  line-height: 1.4;
+}
+
+.support-error {
+  margin: 0;
+  padding: 9px 18px;
+  background: var(--sc-danger-soft);
+  border-top: 1px solid #f6d3d9;
+  color: var(--sc-danger);
+  font-size: 0.8rem;
+}
+
+/* ---------- Hộp thư hỗ trợ (trang admin) ---------- */
+
+.support-inbox-panel {
+  padding: 24px;
+}
+
+.support-inbox-panel .panel-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.support-inbox-panel .panel-heading h2 svg {
+  color: var(--sc-accent);
+}
+
+.support-inbox-header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.support-inbox-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--sc-muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+
+.support-inbox {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 236px;
+  height: 650px;
+  max-height: 75dvh;
+  overflow: hidden;
+  background: var(--sc-surface);
+  border: 1px solid var(--sc-line);
+  border-radius: var(--sc-radius);
+}
+
+.support-desk-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.support-desk-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 5px 0 4px;
+}
+
+.support-desk-heading h2 svg { color: var(--sc-accent); }
+.support-desk-heading p { margin: 0; }
+
+.support-thread-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 4px 9px;
+  padding: 0 10px;
+  height: 38px;
+  border: 1px solid var(--sc-line);
+  border-radius: 9px;
+  color: var(--sc-muted);
+  background: var(--sc-canvas);
+}
+
+.support-thread-search input {
+  min-width: 0;
+  width: 100%;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--sc-ink);
+  font: inherit;
+  font-size: .78rem;
+}
+
+.support-thread-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 6px;
+  margin: 0 4px 10px;
+  padding: 5px;
+  overflow: hidden;
+  background: var(--sc-canvas, #f2f3ff);
+  border: 1px solid var(--sc-line, #c6c5d5);
+  border-radius: 12px;
+}
+
+.support-thread-filters button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-width: 0;
+  width: 100%;
+  margin: 0;
+  padding: 8px 4px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--sc-muted, #767685);
+  font: inherit;
+  font-size: 0.72rem;
+  font-weight: 500;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Hiệu ứng hover chung */
+.support-thread-filters button:hover {
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--sc-ink, #0d1b36);
+}
+
+/* ================= TRẠNG THÁI ACTIVE RIÊNG CHO TỪNG NÚT ================= */
+
+/* 1. Nút "Tất cả" (Màu chủ đạo / Primary) */
+.support-thread-filters button[aria-selected="true"]:nth-child(1) {
+  background: #414fc2; /* Màu primary của bạn */
+  border-color: #2938ac;
+  color: #ffffff;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(65, 79, 194, 0.25);
+}
+
+/* 2. Nút "Chờ xử lý" (Màu vàng cam cảnh báo / Amber) */
+.support-thread-filters button[aria-selected="true"]:nth-child(2) {
+  background: #fffbeb;
+  border-color: #fcd34d;
+  color: #b45309;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(245, 158, 11, 0.15);
+}
+
+/* 3. Nút "Đã trả lời" (Màu xanh ngọc / Emerald thành công) */
+.support-thread-filters button[aria-selected="true"]:nth-child(3) {
+  background: #ecfdf5;
+  border-color: #6ee7b7;
+  color: #047857;
+  font-weight: 700;
+  box-shadow: 0 2px 5px rgba(16, 185, 129, 0.15);
+}
+
+/* ================= HUY HIỆU SỐ LƯỢNG (BADGE) ================= */
+
+.support-thread-filters button b {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 5px;
+  background: #e0e5f5;
+  color: #454653;
+  font-size: 0.65rem;
+  font-weight: 700;
+  line-height: 1;
+  transition: background 0.2s, color 0.2s;
+}
+
+/* Màu Badge khi nút "Tất cả" active */
+.support-thread-filters button[aria-selected="true"]:nth-child(1) b {
+  background: rgba(255, 255, 255, 0.25);
+  color: #ffffff;
+}
+
+/* Màu Badge khi nút "Chờ xử lý" active */
+.support-thread-filters button[aria-selected="true"]:nth-child(2) b {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* Màu Badge khi nút "Đã trả lời" active */
+.support-thread-filters button[aria-selected="true"]:nth-child(3) b {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+/* ================= RESPONSIVE MOBILE ================= */
+@media (max-width: 400px) {
+  .support-thread-filters {
+    gap: 3px;
+    padding: 3px;
+  }
+
+  .support-thread-filters button {
+    gap: 3px;
+    padding: 8px 2px;
+    font-size: 0.66rem;
+  }
+
+  .support-thread-filters button b {
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    font-size: 0.6rem;
+  }
+}
+
+.support-thread-state {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  margin-right: 4px;
+  border-radius: 50%;
+  background: var(--sc-away);
+}
+
+.support-thread-state.answered { background: var(--sc-online); }
+.support-empty-list { padding: 18px 10px; color: var(--sc-muted); font-size: .8rem; }
+
+.support-user-panel {
+  min-width: 0;
+  padding: 24px 18px;
+  border-left: 1px solid var(--sc-line);
+  background: #fbfcff;
+}
+
+.support-user-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  padding-bottom: 22px;
+  text-align: center;
+  border-bottom: 1px solid var(--sc-line);
+}
+
+.support-user-avatar {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  margin-bottom: 5px;
+  border-radius: 18px;
+  color: var(--sc-accent);
+  background: var(--sc-accent-soft);
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.support-user-profile strong { color: var(--sc-ink); font-size: .9rem; }
+.support-user-profile small { color: var(--sc-muted); font-size: .75rem; }
+.support-user-online { display: inline-flex; align-items: center; gap: 5px; color: var(--sc-online); font-size: .7rem; }
+.support-user-online i,.support-detail-status i { width: 6px; height: 6px; border-radius: 50%; background: var(--sc-online); }
+.support-user-section { padding: 20px 0; }
+.support-user-section>small { color: var(--sc-muted); font-size: .64rem; font-weight: 800; letter-spacing: .09em; }
+.support-user-section dl { display: grid; gap: 6px; margin: 14px 0 0; font-size: .75rem; }
+.support-user-section dt { color: var(--sc-muted); }
+.support-user-section dd { margin: 0 0 8px; color: var(--sc-ink); font-weight: 600; }
+.support-detail-status { display: inline-flex; align-items: center; gap: 5px; color: var(--sc-away); }
+.support-status-select { width: 100%; height: 36px; padding: 0 9px; border: 1px solid var(--sc-line); border-radius: 8px; background: #fff; color: var(--sc-ink); font: inherit; font-size: .75rem; }
+.support-profile-button { width: 100%; min-height: 38px; padding: 8px 10px; font-size: .75rem; }
+.support-user-empty { display: grid; place-items: center; gap: 8px; height: 100%; color: var(--sc-muted); text-align: center; font-size: .8rem; }
+.support-user-empty svg { color: #bdc4d2; }
+.support-user-empty small { max-width: 150px; font-size: .72rem; line-height: 1.5; }
+
+.support-thread-list {
+  padding: 8px;
+  overflow-y: auto;
+  background: var(--sc-surface);
+  border-right: 1px solid var(--sc-line);
+}
+
+.support-thread-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 6px 8px 10px;
+  color: var(--sc-ink);
+  font-size: 0.85rem;
+}
+
+.support-thread-heading span {
+  display: grid;
+  place-items: center;
+  min-width: 24px;
+  height: 22px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--sc-canvas);
+  color: var(--sc-ink-2);
+  font-size: 0.75rem;
+  font-weight: 650;
+}
+
+.support-thread-list button {
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  width: 100%;
+  margin-bottom: 2px;
+  padding: 11px 10px;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  border-radius: 10px;
+  color: var(--sc-ink);
+  cursor: pointer;
+  overflow-wrap: anywhere;
+  transition: background-color 0.12s;
+}
+
+.support-thread-list button:hover {
+  background: var(--sc-canvas);
+}
+
+.support-thread-list button.selected {
+  background: var(--sc-accent-soft);
+}
+
+.support-thread-avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: #e6e9f0;
+  color: var(--sc-ink-2);
+  font-size: 0.9rem;
+  font-weight: 650;
+}
+
+.support-thread-list button.selected .support-thread-avatar {
+  background: var(--sc-accent);
+  color: #fff;
+}
+
+.support-thread-copy {
+  display: grid;
+  flex: 1;
+  gap: 2px;
+  min-width: 0;
+}
+
+.support-thread-copy strong {
+  overflow: hidden;
+  font-size: 0.88rem;
+  font-weight: 650;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.support-thread-copy small {
+  display: block;
+  font-size: 0.74rem;
+  color: var(--sc-muted);
+}
+
+.support-thread-copy p {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  margin: 3px 0;
+  overflow: hidden;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  color: var(--sc-ink-2);
+}
+
+.support-inbox-chat {
+  min-width: 0;
+  min-height: 0;
+  background: var(--sc-surface);
+}
+
+/* Trong trang admin, khung chat chiếm toàn bộ cột phải */
+.support-inbox-chat .support-conversation {
+  height: 100%;
+}
+
+.support-empty {
+  display: grid;
+  place-items: center;
+  height: 100%;
+  padding: 24px;
+  background: var(--sc-canvas);
+  color: var(--sc-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+/* ---------- Focus & chuyển động ---------- */
+
+.support-bubble:focus-visible,
+.support-close:focus-visible,
+.support-thread-list button:focus-visible,
+.support-compose button.button:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .support-messages {
+    scroll-behavior: auto;
+  }
+
+  .support-bubble,
+  .support-close,
+  .support-compose textarea,
+  .support-compose button.button,
+  .support-thread-list button {
+    transition: none;
+  }
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 700px) {
+  .support-widget {
+    right: 12px;
+    bottom: 76px;
+  }
+
+  .support-popup {
+    height: min(520px, calc(100dvh - 140px));
+    border-radius: 16px;
+  }
+
+  .support-bubble {
+    height: 44px;
+    padding: 0 16px 0 12px;
+    font-size: 0.82rem;
+  }
+
+  .support-message {
+    max-width: 94%;
+  }
+
+  .support-inbox-panel {
+    padding: 16px;
+  }
+
+  .support-inbox-panel .panel-heading {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .support-inbox {
+    grid-template-columns: 1fr;
+    height: auto;
+    max-height: none;
+  }
+
+  .support-desk-heading {
+    flex-direction: column;
+  }
+
+  .support-user-panel {
+    display: none;
+  }
+
+  .support-thread-list {
+    max-height: 245px;
+    border-right: 0;
+    border-bottom: 1px solid var(--sc-line);
+  }
+
+  .support-inbox-chat {
+    height: 480px;
+    max-height: 68dvh;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .support-inbox {
+    grid-template-columns: 280px minmax(0, 1fr);
+  }
+
+  .support-user-panel {
+    display: none;
+  }
+}

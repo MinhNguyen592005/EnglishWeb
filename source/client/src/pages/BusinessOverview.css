@@ -1,0 +1,33 @@
+/* BusinessOverview — file mới, dùng tiền tố .biz-* nên không xung đột
+   với .business-charts / .business-bars cũ (có thể xóa các rule cũ đó). */
+
+.business-overview { padding: 24px; }
+.business-overview .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-wrap: wrap; margin-bottom: 18px; }
+.business-overview .panel-heading h2 { margin: 6px 0 4px; font-size: 1.15rem; }
+.business-overview .panel-heading p { margin: 0; font-size: 12px; }
+
+.biz-charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 16px; }
+
+.biz-chart { --bar-from: #7a86f0; --bar-to: #4f46e5; margin: 0; padding: 16px 16px 12px; border: 1px solid #e3e7f0; border-radius: 16px; background: #fbfcff; }
+.biz-teal { --bar-from: #4fd8c4; --bar-to: #087f73; }
+.biz-amber { --bar-from: #f6c75f; --bar-to: #d99a1d; }
+
+.biz-chart figcaption { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
+.biz-chart figcaption span { font-size: 13px; font-weight: 700; color: #586881; }
+.biz-chart figcaption strong { font-size: 24px; line-height: 1; color: #14213d; font-variant-numeric: tabular-nums; }
+
+.biz-bars { display: flex; align-items: stretch; gap: 4px; height: 150px; padding-top: 18px; border-bottom: 1px solid #dfe3f2; }
+.biz-col { position: relative; flex: 1; min-width: 0; }
+.biz-col span { position: absolute; left: 12%; right: 12%; bottom: 0; height: var(--v); min-height: 3px; border-radius: 5px 5px 0 0; background: linear-gradient(180deg, var(--bar-from), var(--bar-to)); transition: filter .15s; }
+.biz-col span.zero { height: 3px; background: #dfe3f2; }
+.biz-col:hover span:not(.zero) { filter: brightness(1.08); }
+.biz-col b { position: absolute; left: 0; right: 0; bottom: calc(var(--v) + 3px); text-align: center; font-size: 10px; font-weight: 700; color: #4a5365; font-variant-numeric: tabular-nums; }
+
+.biz-axis { display: flex; justify-content: space-between; margin-top: 6px; color: #929db2; font-size: 11px; }
+
+.biz-details { margin-top: 16px; font-size: 13px; }
+.biz-details summary { cursor: pointer; font-weight: 650; color: #64748b; }
+.biz-details .table-wrap { margin-top: 10px; }
+.admin-page .biz-details .table-wrap table { min-width: 0; width: 100%; }
+
+@media (max-width: 640px) { .business-overview { padding: 17px; } }
