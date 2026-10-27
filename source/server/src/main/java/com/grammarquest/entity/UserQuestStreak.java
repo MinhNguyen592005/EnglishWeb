@@ -7,6 +7,7 @@ import java.time.LocalDate;
 @Entity
 @Table(name = "user_quest_streaks")
 public class UserQuestStreak {
+
     @Id
     @Column(name = "user_id")
     public Long userId;

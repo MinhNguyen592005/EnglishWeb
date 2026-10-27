@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "daily_quests")
 public class DailyQuest {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     public Integer id;
@@ -41,8 +42,17 @@ public class DailyQuest {
 
     protected DailyQuest() {}
 
-    public DailyQuest(String code, String tier, String title, String description, String category,
-                      String targetType, int targetCount, int rewardXp, String icon) {
+    public DailyQuest(
+        String code,
+        String tier,
+        String title,
+        String description,
+        String category,
+        String targetType,
+        int targetCount,
+        int rewardXp,
+        String icon
+    ) {
         this.code = code;
         this.tier = tier;
         this.title = title;

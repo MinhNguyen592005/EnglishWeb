@@ -1,5 +1,9 @@
 package com.grammarquest.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.grammarquest.entity.DailyQuest;
 import com.grammarquest.entity.User;
 import com.grammarquest.entity.UserDailyQuest;
@@ -11,26 +15,31 @@ import com.grammarquest.repository.UserDailyQuestRepository;
 import com.grammarquest.repository.UserQuestStreakRepository;
 import com.grammarquest.repository.UserRepository;
 import com.grammarquest.repository.XpLedgerRepository;
+import java.time.LocalDate;
+import java.util.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.time.LocalDate;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
-
 @ExtendWith(MockitoExtension.class)
 class DailyQuestServiceTest {
-    @Mock DailyQuestRepository dailyQuests;
-    @Mock UserDailyQuestRepository userQuests;
-    @Mock UserQuestStreakRepository streaks;
-    @Mock UserRepository users;
-    @Mock XpLedgerRepository xp;
+
+    @Mock
+    DailyQuestRepository dailyQuests;
+
+    @Mock
+    UserDailyQuestRepository userQuests;
+
+    @Mock
+    UserQuestStreakRepository streaks;
+
+    @Mock
+    UserRepository users;
+
+    @Mock
+    XpLedgerRepository xp;
 
     DailyQuestService service;
     User user;
@@ -45,17 +54,49 @@ class DailyQuestServiceTest {
         user.id = 10L;
         user.totalXp = 500;
 
-        qEasy = new DailyQuest("PRACTICE_1", "EASY", "Luyện tập 1", "Desc", "PRACTICE", "PRACTICE_COUNT", 1, 30, "BookOpen");
+        qEasy = new DailyQuest(
+            "PRACTICE_1",
+            "EASY",
+            "Luyện tập 1",
+            "Desc",
+            "PRACTICE",
+            "PRACTICE_COUNT",
+            1,
+            30,
+            "BookOpen"
+        );
         qEasy.id = 1;
-        qMed = new DailyQuest("CORRECT_15", "MEDIUM", "Đúng 15 câu", "Desc", "PRACTICE", "CORRECT_COUNT", 15, 50, "CheckCircle2");
+        qMed = new DailyQuest(
+            "CORRECT_15",
+            "MEDIUM",
+            "Đúng 15 câu",
+            "Desc",
+            "PRACTICE",
+            "CORRECT_COUNT",
+            15,
+            50,
+            "CheckCircle2"
+        );
         qMed.id = 2;
-        qHard = new DailyQuest("ARENA_WIN_1", "HARD", "Thắng 1 PvP", "Desc", "ARENA", "ARENA_WIN", 1, 70, "Trophy");
+        qHard = new DailyQuest(
+            "ARENA_WIN_1",
+            "HARD",
+            "Thắng 1 PvP",
+            "Desc",
+            "ARENA",
+            "ARENA_WIN",
+            1,
+            70,
+            "Trophy"
+        );
         qHard.id = 3;
     }
 
     @Test
     void ensuresThreeQuestsAllocatedDaily() {
-        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(Collections.emptyList());
+        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(
+            Collections.emptyList()
+        );
         when(dailyQuests.findByTierAndActiveTrue("EASY")).thenReturn(List.of(qEasy));
         when(dailyQuests.findByTierAndActiveTrue("MEDIUM")).thenReturn(List.of(qMed));
         when(dailyQuests.findByTierAndActiveTrue("HARD")).thenReturn(List.of(qHard));
@@ -72,7 +113,9 @@ class DailyQuestServiceTest {
         udq.id = 101L;
         udq.currentProgress = 14;
 
-        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(List.of(udq));
+        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(
+            List.of(udq)
+        );
         when(dailyQuests.findAll()).thenReturn(List.of(qMed));
         when(userQuests.save(any(UserDailyQuest.class))).thenAnswer(inv -> inv.getArgument(0));
 
@@ -105,19 +148,27 @@ class DailyQuestServiceTest {
 
     @Test
     void claimDailyMilestoneUpdatesStreakAndBonusXp() {
-        UserDailyQuest u1 = new UserDailyQuest(10L, 1, LocalDate.now()); u1.completed = true;
-        UserDailyQuest u2 = new UserDailyQuest(10L, 2, LocalDate.now()); u2.completed = true;
-        UserDailyQuest u3 = new UserDailyQuest(10L, 3, LocalDate.now()); u3.completed = true;
+        UserDailyQuest u1 = new UserDailyQuest(10L, 1, LocalDate.now());
+        u1.completed = true;
+        UserDailyQuest u2 = new UserDailyQuest(10L, 2, LocalDate.now());
+        u2.completed = true;
+        UserDailyQuest u3 = new UserDailyQuest(10L, 3, LocalDate.now());
+        u3.completed = true;
 
         UserQuestStreak streak = new UserQuestStreak(10L);
         streak.currentStreak = 2;
         streak.lastCompletedDate = LocalDate.now().minusDays(1);
 
         when(users.findByUsernameIgnoreCase("nam")).thenReturn(Optional.of(user));
-        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(List.of(u1, u2, u3));
+        when(dailyQuests.findAll()).thenReturn(List.of(qEasy, qMed, qHard));
+        when(userQuests.findByUserIdAndQuestDate(eq(10L), any(LocalDate.class))).thenReturn(
+            List.of(u1, u2, u3)
+        );
         when(streaks.findById(10L)).thenReturn(Optional.of(streak));
         when(users.findWithLockById(10L)).thenReturn(Optional.of(user));
-        when(xp.existsByUserIdAndRewardKey(eq(10L), startsWith("DAILY_MILESTONE:"))).thenReturn(false);
+        when(xp.existsByUserIdAndRewardKey(eq(10L), startsWith("DAILY_MILESTONE:"))).thenReturn(
+            false
+        );
 
         var result = service.claimDailyMilestone("nam");
         assertEquals(3, streak.currentStreak);
@@ -126,5 +177,106 @@ class DailyQuestServiceTest {
         assertEquals(600, user.totalXp);
         assertEquals(600, result.profile().totalXp());
         verify(streaks).save(streak);
+    }
+
+    @Test
+    void classroomQuestsAreNeverAllocatedEvenIfStillActive() {
+        DailyQuest classroom = new DailyQuest(
+            "CLASS_ASSIGNMENT_1",
+            "MEDIUM",
+            "Class",
+            "Desc",
+            "CLASSROOM",
+            "CLASS_ASSIGNMENT",
+            1,
+            50,
+            "School"
+        );
+        classroom.id = 4;
+        when(dailyQuests.findByTierAndActiveTrue("EASY")).thenReturn(List.of(qEasy));
+        when(dailyQuests.findByTierAndActiveTrue("MEDIUM")).thenReturn(List.of(classroom, qMed));
+        when(dailyQuests.findByTierAndActiveTrue("HARD")).thenReturn(List.of(qHard));
+        when(userQuests.save(any(UserDailyQuest.class))).thenAnswer(inv -> inv.getArgument(0));
+        var allocated = service.ensureTodayQuests(10L, LocalDate.now());
+        assertEquals(
+            Set.of(1, 2, 3),
+            new HashSet<>(
+                allocated
+                    .stream()
+                    .map(q -> q.questId)
+                    .toList()
+            )
+        );
+    }
+
+    @Test
+    void replacesExistingClassroomQuestAndPreservesOtherProgress() {
+        DailyQuest classroom = new DailyQuest(
+            "CLASS_ASSIGNMENT_1",
+            "MEDIUM",
+            "Class",
+            "Desc",
+            "CLASSROOM",
+            "CLASS_ASSIGNMENT",
+            1,
+            50,
+            "School"
+        );
+        classroom.id = 4;
+        classroom.active = false;
+        var easy = new UserDailyQuest(10L, 1, LocalDate.now());
+        easy.completed = true;
+        easy.claimed = true;
+        var hard = new UserDailyQuest(10L, 3, LocalDate.now());
+        hard.currentProgress = 1;
+        hard.completed = true;
+        var oldClass = new UserDailyQuest(10L, 4, LocalDate.now());
+        when(userQuests.findByUserIdAndQuestDate(10L, LocalDate.now())).thenReturn(
+            List.of(easy, oldClass, hard)
+        );
+        when(dailyQuests.findAll()).thenReturn(List.of(qEasy, qMed, qHard, classroom));
+        when(dailyQuests.findByTierAndActiveTrue("EASY")).thenReturn(List.of(qEasy));
+        when(dailyQuests.findByTierAndActiveTrue("MEDIUM")).thenReturn(List.of(qMed));
+        when(dailyQuests.findByTierAndActiveTrue("HARD")).thenReturn(List.of(qHard));
+        when(userQuests.save(any(UserDailyQuest.class))).thenAnswer(inv -> inv.getArgument(0));
+        var allocated = service.ensureTodayQuests(10L, LocalDate.now());
+        assertEquals(3, allocated.size());
+        assertTrue(allocated.contains(easy));
+        assertTrue(easy.claimed);
+        assertTrue(allocated.contains(hard));
+        assertEquals(1, hard.currentProgress);
+        assertFalse(allocated.contains(oldClass));
+        assertTrue(allocated.stream().anyMatch(q -> q.questId.equals(2)));
+        verify(userQuests, times(1)).save(any(UserDailyQuest.class));
+    }
+
+    @Test
+    void retiredClassroomQuestDoesNotBlockMilestone() {
+        DailyQuest classroom = new DailyQuest(
+            "CLASS_ASSIGNMENT_1",
+            "MEDIUM",
+            "Class",
+            "Desc",
+            "CLASSROOM",
+            "CLASS_ASSIGNMENT",
+            1,
+            50,
+            "School"
+        );
+        classroom.id = 4;
+        classroom.active = false;
+        var quests = new ArrayList<UserDailyQuest>();
+        for (int id : List.of(1, 2, 3)) {
+            var quest = new UserDailyQuest(10L, id, LocalDate.now());
+            quest.completed = true;
+            quests.add(quest);
+        }
+        quests.add(new UserDailyQuest(10L, 4, LocalDate.now()));
+        when(users.findByUsernameIgnoreCase("nam")).thenReturn(Optional.of(user));
+        when(dailyQuests.findAll()).thenReturn(List.of(qEasy, qMed, qHard, classroom));
+        when(userQuests.findByUserIdAndQuestDate(10L, LocalDate.now())).thenReturn(quests);
+        when(streaks.findById(10L)).thenReturn(Optional.of(new UserQuestStreak(10L)));
+        when(users.findWithLockById(10L)).thenReturn(Optional.of(user));
+        assertTrue(service.claimDailyMilestone("nam").milestone().claimed());
     }
 }

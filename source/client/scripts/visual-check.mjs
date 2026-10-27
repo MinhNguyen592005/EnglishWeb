@@ -6,7 +6,10 @@ const output = fileURLToPath(new URL('../artifacts/legacy/', import.meta.url))
 await mkdir(output, { recursive: true })
 const browser = await chromium.launch({ channel: 'msedge', headless: true })
 try {
-  for (const [name, width, height] of [['desktop', 1440, 900], ['mobile', 390, 844]]) {
+  for (const [name, width, height] of [
+    ['desktop', 1440, 900],
+    ['mobile', 390, 844],
+  ]) {
     const page = await browser.newPage({ viewport: { width, height } })
     await page.goto('http://127.0.0.1:5173/login', { waitUntil: 'domcontentloaded' })
     await page.getByRole('heading', { name: 'Đăng nhập' }).waitFor()

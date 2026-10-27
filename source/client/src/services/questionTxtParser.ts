@@ -14,7 +14,10 @@ export interface ParsedQuestionDraft {
   errors: string[]
 }
 
-export const SAMPLE_TXT_BY_TYPE: Record<'MCQ' | 'FILL_BLANK' | 'ERROR_CORRECTION' | 'REWRITE' | 'ALL', string> = {
+export const SAMPLE_TXT_BY_TYPE: Record<
+  'MCQ' | 'FILL_BLANK' | 'ERROR_CORRECTION' | 'REWRITE' | 'ALL',
+  string
+> = {
   FILL_BLANK: `[ĐIỀN TỪ]
 Câu 1: She _____ (go) to school by bus every day.
 Đáp án: goes
@@ -98,7 +101,7 @@ Giải thích: Cấu trúc: too + adj + to V = not + adj (trái nghĩa) + enough
 Câu 6: What time ___ the train leave tomorrow?
 A. do    *B. does    C. is    D. has
 Giải thích: Thì hiện tại đơn diễn tả lịch trình tàu xe, chủ ngữ số ít dùng "does".
-`
+`,
 }
 
 export const SAMPLE_QUESTION_TXT = SAMPLE_TXT_BY_TYPE.ALL
@@ -126,16 +129,41 @@ function expandInlineOptions(lines: string[]): string[] {
 
 function detectSectionHeader(line: string): TeacherQuestion['questionType'] | null {
   const norm = line.toLowerCase().trim()
-  if (norm.includes('[điền từ]') || norm.includes('[dien tu]') || norm.includes('[fill_blank]') || norm.includes('dạng: điền từ') || norm.includes('type: fill_blank')) {
+  if (
+    norm.includes('[điền từ]') ||
+    norm.includes('[dien tu]') ||
+    norm.includes('[fill_blank]') ||
+    norm.includes('dạng: điền từ') ||
+    norm.includes('type: fill_blank')
+  ) {
     return 'FILL_BLANK'
   }
-  if (norm.includes('[sửa lỗi]') || norm.includes('[sua loi]') || norm.includes('[error_correction]') || norm.includes('dạng: sửa lỗi') || norm.includes('type: error_correction') || norm.includes('tìm lỗi sai')) {
+  if (
+    norm.includes('[sửa lỗi]') ||
+    norm.includes('[sua loi]') ||
+    norm.includes('[error_correction]') ||
+    norm.includes('dạng: sửa lỗi') ||
+    norm.includes('type: error_correction') ||
+    norm.includes('tìm lỗi sai')
+  ) {
     return 'ERROR_CORRECTION'
   }
-  if (norm.includes('[viết lại câu]') || norm.includes('[viet lai cau]') || norm.includes('[rewrite]') || norm.includes('dạng: viết lại') || norm.includes('type: rewrite')) {
+  if (
+    norm.includes('[viết lại câu]') ||
+    norm.includes('[viet lai cau]') ||
+    norm.includes('[rewrite]') ||
+    norm.includes('dạng: viết lại') ||
+    norm.includes('type: rewrite')
+  ) {
     return 'REWRITE'
   }
-  if (norm.includes('[trắc nghiệm]') || norm.includes('[trac nghiem]') || norm.includes('[mcq]') || norm.includes('dạng: trắc nghiệm') || norm.includes('type: mcq')) {
+  if (
+    norm.includes('[trắc nghiệm]') ||
+    norm.includes('[trac nghiem]') ||
+    norm.includes('[mcq]') ||
+    norm.includes('dạng: trắc nghiệm') ||
+    norm.includes('type: mcq')
+  ) {
     return 'MCQ'
   }
   return null
@@ -144,7 +172,10 @@ function detectSectionHeader(line: string): TeacherQuestion['questionType'] | nu
 function cleanAnswerText(val: string): string {
   let cleaned = val.trim()
   // Strip outer quotes if any
-  if ((cleaned.startsWith('"') && cleaned.endsWith('"')) || (cleaned.startsWith("'") && cleaned.endsWith("'"))) {
+  if (
+    (cleaned.startsWith('"') && cleaned.endsWith('"')) ||
+    (cleaned.startsWith("'") && cleaned.endsWith("'"))
+  ) {
     cleaned = cleaned.slice(1, -1).trim()
   }
   // Strip trailing punctuation like . or ; for short answers, but keep for full sentences if not redundant
@@ -174,7 +205,9 @@ export function validateParsedQuestion(q: ParsedQuestionDraft): string[] {
   } else {
     const trimmedAns = q.acceptedAnswer.trim()
     if (!trimmedAns) {
-      errors.push(`Thiếu đáp án mẫu cho dạng ${q.questionType === 'FILL_BLANK' ? 'Điền từ' : q.questionType === 'ERROR_CORRECTION' ? 'Sửa lỗi' : 'Viết lại câu'}`)
+      errors.push(
+        `Thiếu đáp án mẫu cho dạng ${q.questionType === 'FILL_BLANK' ? 'Điền từ' : q.questionType === 'ERROR_CORRECTION' ? 'Sửa lỗi' : 'Viết lại câu'}`,
+      )
     } else if (trimmedAns.length > 255) {
       errors.push(`Đáp án mẫu vượt quá 255 ký tự (hiện có ${trimmedAns.length} ký tự)`)
     }
@@ -193,8 +226,15 @@ interface BlockParseInput {
   defaultQuestionType: TeacherQuestion['questionType']
 }
 
-function parseBlock({ blockText, currentSectionType, defaultQuestionType }: BlockParseInput): ParsedQuestionDraft {
-  const rawLines = blockText.split('\n').map(l => l.trim()).filter(Boolean)
+function parseBlock({
+  blockText,
+  currentSectionType,
+  defaultQuestionType,
+}: BlockParseInput): ParsedQuestionDraft {
+  const rawLines = blockText
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean)
   const lines = expandInlineOptions(rawLines)
 
   let prompt = ''
@@ -212,17 +252,20 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
   let inExplanation = false
   let hintLine = ''
 
-  const isOptionLine = (line: string) =>
-    /^\s*\*?\(?[A-Da-d]\)?\*?\s*[.):\]]\s+/i.test(line)
+  const isOptionLine = (line: string) => /^\s*\*?\(?[A-Da-d]\)?\*?\s*[.):\]]\s+/i.test(line)
 
   const isAnswerLine = (line: string) =>
-    /^(?:đáp án mẫu|đáp án đúng|đáp án|dap an mau|dap an|đa|da|answer|ans|key|sửa thành|sua thanh|viết lại câu|viết lại|rewrite)\s*[:.]?\s*/i.test(line)
+    /^(?:đáp án mẫu|đáp án đúng|đáp án|dap an mau|dap an|đa|da|answer|ans|key|sửa thành|sua thanh|viết lại câu|viết lại|rewrite)\s*[:.]?\s*/i.test(
+      line,
+    )
 
   const isExplanationLine = (line: string) =>
     /^(?:giải thích|giai thich|lời giải|loi giai|gt|explanation|explain)\s*[:.]?\s*/i.test(line)
 
   const isHintLine = (line: string) =>
-    /^(?:gợi ý|goi y|hint|bắt đầu bằng|bat dau bang|start with|dùng từ|dung tu)\s*[:.]?\s*/i.test(line)
+    /^(?:gợi ý|goi y|hint|bắt đầu bằng|bat dau bang|start with|dùng từ|dung tu)\s*[:.]?\s*/i.test(
+      line,
+    )
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i]
@@ -232,7 +275,10 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
     if (inlineType) {
       detectedType = inlineType
       // If the line only contains the header, skip it
-      if (/^(=+\s*)?\[?[a-zA-ZÀ-ỹ\s_]+\]?(\s*=+)?$/i.test(line) || /^dạng:\s*[a-zA-ZÀ-ỹ\s_]+$/i.test(line)) {
+      if (
+        /^(=+\s*)?\[?[a-zA-ZÀ-ỹ\s_]+\]?(\s*=+)?$/i.test(line) ||
+        /^dạng:\s*[a-zA-ZÀ-ỹ\s_]+$/i.test(line)
+      ) {
         continue
       }
     }
@@ -244,7 +290,12 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
 
     if (isExplanationLine(line)) {
       inExplanation = true
-      explanation = line.replace(/^(?:giải thích|giai thich|lời giải|loi giai|gt|explanation|explain)\s*[:.]?\s*/i, '').trim()
+      explanation = line
+        .replace(
+          /^(?:giải thích|giai thich|lời giải|loi giai|gt|explanation|explain)\s*[:.]?\s*/i,
+          '',
+        )
+        .trim()
       continue
     }
 
@@ -256,7 +307,12 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
     }
 
     if (isHintLine(line)) {
-      const hintContent = line.replace(/^(?:gợi ý|goi y|hint|bắt đầu bằng|bat dau bang|start with|dùng từ|dung tu)\s*[:.]?\s*/i, '').trim()
+      const hintContent = line
+        .replace(
+          /^(?:gợi ý|goi y|hint|bắt đầu bằng|bat dau bang|start with|dùng từ|dung tu)\s*[:.]?\s*/i,
+          '',
+        )
+        .trim()
       if (hintContent) {
         hintLine = hintContent
       }
@@ -264,14 +320,19 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
     }
 
     if (isAnswerLine(line)) {
-      const ansVal = line.replace(/^(?:đáp án mẫu|đáp án đúng|đáp án|dap an mau|dap an|đa|da|answer|ans|key|sửa thành|sua thanh|viết lại câu|viết lại|rewrite)\s*[:.]?\s*/i, '').trim()
+      const ansVal = line
+        .replace(
+          /^(?:đáp án mẫu|đáp án đúng|đáp án|dap an mau|dap an|đa|da|answer|ans|key|sửa thành|sua thanh|viết lại câu|viết lại|rewrite)\s*[:.]?\s*/i,
+          '',
+        )
+        .trim()
       const letterMatch = ansVal.match(/^[*(\[]?([A-Da-d])[*\])]?$/)
       if (letterMatch) {
         correctOption = letterMatch[1].toUpperCase() as 'A' | 'B' | 'C' | 'D'
       } else {
         // Check if answer line has "wrong -> right" or "wrong => right"
         if (ansVal.includes('->') || ansVal.includes('=>') || ansVal.includes('→')) {
-          const parts = ansVal.split(/(?:->|=>|→)/).map(s => s.trim())
+          const parts = ansVal.split(/(?:->|=>|→)/).map((s) => s.trim())
           if (parts.length >= 2) {
             const wrongWord = cleanAnswerText(parts[0])
             const rightWord = cleanAnswerText(parts[1])
@@ -305,8 +366,9 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
     }
 
     if (isOptionLine(line)) {
-      const optMatch = line.match(/^\s*(\*?)\(?([A-Da-d])\)?(\*?)\s*[.):\]]\s*(.*)$/i) ||
-                       line.match(/^\s*(\*?)\[([A-Da-d])\](\*?)\s*[.):]?\s*(.*)$/i)
+      const optMatch =
+        line.match(/^\s*(\*?)\(?([A-Da-d])\)?(\*?)\s*[.):\]]\s*(.*)$/i) ||
+        line.match(/^\s*(\*?)\[([A-Da-d])\](\*?)\s*[.):]?\s*(.*)$/i)
       if (optMatch) {
         const hasStar = optMatch[1] === '*' || optMatch[3] === '*' || /\*\s*$/.test(optMatch[4])
         const letter = optMatch[2].toUpperCase()
@@ -335,7 +397,7 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
       if (beforePipe) promptLines.push(beforePipe)
       if (afterPipe) {
         if (afterPipe.includes('->') || afterPipe.includes('=>') || afterPipe.includes('→')) {
-          const parts = afterPipe.split(/(?:->|=>|→)/).map(s => s.trim())
+          const parts = afterPipe.split(/(?:->|=>|→)/).map((s) => s.trim())
           if (parts.length >= 2) {
             const wrongWord = cleanAnswerText(parts[0])
             const rightWord = cleanAnswerText(parts[1])
@@ -370,7 +432,10 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
 
   // Strip leading section/type header tags from prompt if still present
   rawPrompt = rawPrompt
-    .replace(/^\[(điền từ|dien tu|fill_blank|sửa lỗi|sua loi|error_correction|viết lại câu|viet lai cau|rewrite|trắc nghiệm|trac nghiem|mcq)\]\s*[:.-]?\s*/i, '')
+    .replace(
+      /^\[(điền từ|dien tu|fill_blank|sửa lỗi|sua loi|error_correction|viết lại câu|viet lai cau|rewrite|trắc nghiệm|trac nghiem|mcq)\]\s*[:.-]?\s*/i,
+      '',
+    )
     .replace(/^dạng:\s*[a-zA-ZÀ-ỹ\s_]+[:.-]?\s*/i, '')
     .trim()
 
@@ -398,7 +463,11 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
   }
 
   // Check for inline rewrite indicator in prompt: e.g. "The weather was bad => Because..."
-  if ((rawPrompt.includes('=>') || rawPrompt.includes('->') || rawPrompt.includes('→')) && !optionA && !optionB) {
+  if (
+    (rawPrompt.includes('=>') || rawPrompt.includes('->') || rawPrompt.includes('→')) &&
+    !optionA &&
+    !optionB
+  ) {
     if (!detectedType) detectedType = 'REWRITE'
   }
 
@@ -432,10 +501,23 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
   } else {
     // Smart Heuristics
     const lowerPrompt = prompt.toLowerCase()
-    const hasArrow = prompt.includes('=>') || prompt.includes('->') || prompt.includes('→') || prompt.includes('⟹')
-    const hasRewriteKeywords = lowerPrompt.includes('viết lại') || lowerPrompt.includes('rewrite') || lowerPrompt.includes('start with') || lowerPrompt.includes('dùng từ')
-    const hasErrorKeywords = lowerPrompt.includes('tìm lỗi') || lowerPrompt.includes('sửa lỗi') || lowerPrompt.includes('mistake') || lowerPrompt.includes('error')
-    const hasBlank = prompt.includes('___') || prompt.includes('...') || prompt.includes('(   )') || /\([a-zA-Z\s]{1,15}\)/.test(prompt)
+    const hasArrow =
+      prompt.includes('=>') || prompt.includes('->') || prompt.includes('→') || prompt.includes('⟹')
+    const hasRewriteKeywords =
+      lowerPrompt.includes('viết lại') ||
+      lowerPrompt.includes('rewrite') ||
+      lowerPrompt.includes('start with') ||
+      lowerPrompt.includes('dùng từ')
+    const hasErrorKeywords =
+      lowerPrompt.includes('tìm lỗi') ||
+      lowerPrompt.includes('sửa lỗi') ||
+      lowerPrompt.includes('mistake') ||
+      lowerPrompt.includes('error')
+    const hasBlank =
+      prompt.includes('___') ||
+      prompt.includes('...') ||
+      prompt.includes('(   )') ||
+      /\([a-zA-Z\s]{1,15}\)/.test(prompt)
 
     if (hasArrow || hasRewriteKeywords || (acceptedAnswer.split(/\s+/).length >= 5 && !hasBlank)) {
       finalType = 'REWRITE'
@@ -455,7 +537,14 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
   // Auto-complete explanation if missing
   if (!explanation.trim()) {
     if (finalType === 'MCQ' && correctOption) {
-      const optText = correctOption === 'A' ? optionA : correctOption === 'B' ? optionB : correctOption === 'C' ? optionC : optionD
+      const optText =
+        correctOption === 'A'
+          ? optionA
+          : correctOption === 'B'
+            ? optionB
+            : correctOption === 'C'
+              ? optionC
+              : optionD
       explanation = `Đáp án đúng là ${correctOption}${optText ? ` (${optText})` : ''}.`
       autoCompletedFields.push('explanation')
     } else if (finalType === 'FILL_BLANK' && acceptedAnswer) {
@@ -481,7 +570,7 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
     questionType: finalType,
     acceptedAnswer,
     autoCompletedFields,
-    errors: []
+    errors: [],
   }
 
   draft.errors = validateParsedQuestion(draft)
@@ -490,7 +579,7 @@ function parseBlock({ blockText, currentSectionType, defaultQuestionType }: Bloc
 
 export function parseQuestionsFromTxt(
   rawText: string,
-  defaultQuestionType: TeacherQuestion['questionType'] = 'FILL_BLANK'
+  defaultQuestionType: TeacherQuestion['questionType'] = 'FILL_BLANK',
 ): ParsedQuestionDraft[] {
   if (!rawText || !rawText.trim()) return []
 
@@ -512,14 +601,14 @@ export function parseQuestionsFromTxt(
 
     // Check if line is a section header like === [ĐIỀN TỪ] ===
     const sectionHeaderType = detectSectionHeader(trimmed)
-    const isDedicatedHeaderLine = sectionHeaderType && (
-      /^(=+\s*)?\[?[a-zA-ZÀ-ỹ\s_]+\]?(\s*=+)?$/i.test(trimmed) ||
-      /^dạng:\s*[a-zA-ZÀ-ỹ\s_]+$/i.test(trimmed) ||
-      /^#+\s*[a-zA-ZÀ-ỹ\s_]+$/i.test(trimmed)
-    )
+    const isDedicatedHeaderLine =
+      sectionHeaderType &&
+      (/^(=+\s*)?\[?[a-zA-ZÀ-ỹ\s_]+\]?(\s*=+)?$/i.test(trimmed) ||
+        /^dạng:\s*[a-zA-ZÀ-ỹ\s_]+$/i.test(trimmed) ||
+        /^#+\s*[a-zA-ZÀ-ỹ\s_]+$/i.test(trimmed))
 
     if (isDedicatedHeaderLine) {
-      if (currentBlockLines.some(l => l.trim())) {
+      if (currentBlockLines.some((l) => l.trim())) {
         blocks.push({ text: currentBlockLines.join('\n').trim(), sectionType: currentSectionType })
         currentBlockLines = []
       }
@@ -532,7 +621,7 @@ export function parseQuestionsFromTxt(
       /^(?:câu|question|q|bài)\s*\d+[\s:.)]/i.test(trimmed) ||
       (/^\d+[\s:.)]\s+/i.test(trimmed) && !/^[A-Da-d][.)]/i.test(trimmed))
 
-    if (isNewQuestionHeader && currentBlockLines.some(l => l.trim())) {
+    if (isNewQuestionHeader && currentBlockLines.some((l) => l.trim())) {
       blocks.push({ text: currentBlockLines.join('\n').trim(), sectionType: currentSectionType })
       currentBlockLines = [line]
     } else {
@@ -540,24 +629,27 @@ export function parseQuestionsFromTxt(
     }
   }
 
-  if (currentBlockLines.some(l => l.trim())) {
+  if (currentBlockLines.some((l) => l.trim())) {
     blocks.push({ text: currentBlockLines.join('\n').trim(), sectionType: currentSectionType })
   }
 
   // If no explicit question headers found, fallback to splitting by double newlines
   if (blocks.length <= 1 && normalized.includes('\n\n')) {
-    const rawBlocks = normalized.split(/\n\s*\n+/).map(p => p.trim()).filter(Boolean)
-    return rawBlocks.map(b => {
+    const rawBlocks = normalized
+      .split(/\n\s*\n+/)
+      .map((p) => p.trim())
+      .filter(Boolean)
+    return rawBlocks.map((b) => {
       const sectionType = detectSectionHeader(b)
       return parseBlock({ blockText: b, currentSectionType: sectionType, defaultQuestionType })
     })
   }
 
-  return blocks.map(b =>
+  return blocks.map((b) =>
     parseBlock({
       blockText: b.text,
       currentSectionType: b.sectionType,
-      defaultQuestionType
-    })
+      defaultQuestionType,
+    }),
   )
 }

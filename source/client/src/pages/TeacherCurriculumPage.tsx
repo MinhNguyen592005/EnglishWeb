@@ -11,15 +11,50 @@ import type { AdminLesson, AdminQuestion, CurriculumTopic, TeacherCurriculum } f
 type TopicDraft = Omit<CurriculumTopic, 'published'>
 type LessonDraft = Omit<AdminLesson, 'id' | 'published'>
 type QuestionDraft = Omit<AdminQuestion, 'id' | 'published'>
-const blankTopic: TopicDraft = { slug: '', title: '', description: '', outcome: '', sortOrder: 1, planetStyle: 'aqua' }
-const blankLesson: LessonDraft = { topicSlug: '', ordinalNo: 0, title: '', summary: '', theory: '', difficulty: 'BEGINNER' }
-const blankQuestion: QuestionDraft = { lessonId: 0, prompt: '', optionA: '', optionB: '', optionC: '', optionD: '', correctOption: 'A', explanation: '', questionType: 'MCQ', acceptedAnswer: '' }
-const styles = [['aqua', 'Đại dương'], ['violet', 'Tím thiên hà'], ['coral', 'San hô'], ['gold', 'Vàng sao'], ['mint', 'Xanh ngọc']]
+const blankTopic: TopicDraft = {
+  slug: '',
+  title: '',
+  description: '',
+  outcome: '',
+  sortOrder: 1,
+  planetStyle: 'aqua',
+}
+const blankLesson: LessonDraft = {
+  topicSlug: '',
+  ordinalNo: 0,
+  title: '',
+  summary: '',
+  theory: '',
+  difficulty: 'BEGINNER',
+}
+const blankQuestion: QuestionDraft = {
+  lessonId: 0,
+  prompt: '',
+  optionA: '',
+  optionB: '',
+  optionC: '',
+  optionD: '',
+  correctOption: 'A',
+  explanation: '',
+  questionType: 'MCQ',
+  acceptedAnswer: '',
+}
+const styles = [
+  ['aqua', 'Đại dương'],
+  ['violet', 'Tím thiên hà'],
+  ['coral', 'San hô'],
+  ['gold', 'Vàng sao'],
+  ['mint', 'Xanh ngọc'],
+]
 
 export function TeacherCurriculumPage() {
   const [data, setData] = useState<TeacherCurriculum | null>(null)
   const [search, setSearch] = useSearchParams()
-  const tab = (['topics', 'lessons', 'questions'].includes(search.get('tab') || '') ? search.get('tab') : 'topics') as 'topics' | 'lessons' | 'questions'
+  const tab = (
+    ['topics', 'lessons', 'questions'].includes(search.get('tab') || '')
+      ? search.get('tab')
+      : 'topics'
+  ) as 'topics' | 'lessons' | 'questions'
   const setTab = (value: string) => setSearch({ tab: value })
   const [topic, setTopic] = useState<TopicDraft>(blankTopic)
   const [topicEdit, setTopicEdit] = useState<string | null>(null)
@@ -33,11 +68,20 @@ export function TeacherCurriculumPage() {
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
 
-  const reload = () => api.teacherCurriculum().then(setData).catch(e => setError(e.message))
-  useEffect(() => { void reload() }, [])
+  const reload = () =>
+    api
+      .teacherCurriculum()
+      .then(setData)
+      .catch((e) => setError(e.message))
+  useEffect(() => {
+    void reload()
+  }, [])
   useEffect(() => {
     if (data && !topicEdit && !topic.slug) {
-      setTopic(current => ({ ...current, sortOrder: Math.max(0, ...data.topics.map(t => t.sortOrder)) + 1 }))
+      setTopic((current) => ({
+        ...current,
+        sortOrder: Math.max(0, ...data.topics.map((t) => t.sortOrder)) + 1,
+      }))
     }
   }, [data, topicEdit, topic.slug])
 
@@ -81,7 +125,7 @@ export function TeacherCurriculumPage() {
     const payload: QuestionDraft = {
       ...question,
       questionType: 'MCQ',
-      acceptedAnswer: ''
+      acceptedAnswer: '',
     }
     void act(async () => {
       if (questionEdit) await api.teacherEditCommonQuestion(questionEdit, payload)
@@ -92,7 +136,7 @@ export function TeacherCurriculumPage() {
   }
 
   async function handleSaveCommonBatch(targetLessonId: number, drafts: ParsedQuestionDraft[]) {
-    const items: Omit<AdminQuestion, 'id' | 'published' | 'lessonId'>[] = drafts.map(d => ({
+    const items: Omit<AdminQuestion, 'id' | 'published' | 'lessonId'>[] = drafts.map((d) => ({
       prompt: d.prompt,
       optionA: d.optionA,
       optionB: d.optionB,
@@ -101,15 +145,20 @@ export function TeacherCurriculumPage() {
       correctOption: d.correctOption || 'A',
       explanation: d.explanation,
       questionType: 'MCQ',
-      acceptedAnswer: null
+      acceptedAnswer: null,
     }))
     await act(async () => {
-      const res = await api.teacherCreateCommonQuestionsBatch({ lessonId: targetLessonId, questions: items })
+      const res = await api.teacherCreateCommonQuestionsBatch({
+        lessonId: targetLessonId,
+        questions: items,
+      })
       return res
     }, `Đã thêm thành công ${items.length} câu hỏi trắc nghiệm chung vào bài học.`)
   }
 
-  const lessonQuestions = (data?.questions || []).filter(q => questionLesson === 0 || q.lessonId === questionLesson)
+  const lessonQuestions = (data?.questions || []).filter(
+    (q) => questionLesson === 0 || q.lessonId === questionLesson,
+  )
 
   return (
     <Layout title="Biên tập lộ trình">
@@ -124,11 +173,23 @@ export function TeacherCurriculumPage() {
         </div>
       </div>
 
-      {error && <div className="error-banner" role="alert">{error}</div>}
-      {notice && <div className="success-banner" role="status">{notice}</div>}
+      {error && (
+        <div className="error-banner" role="alert">
+          {error}
+        </div>
+      )}
+      {notice && (
+        <div className="success-banner" role="status">
+          {notice}
+        </div>
+      )}
 
       {!data ? (
-        error ? <ErrorState message={error} retry={reload} /> : <Loading />
+        error ? (
+          <ErrorState message={error} retry={reload} />
+        ) : (
+          <Loading />
+        )
       ) : (
         <>
           <div className="tab-bar" role="tablist">
@@ -161,17 +222,20 @@ export function TeacherCurriculumPage() {
           {tab === 'topics' && (
             <div className="curriculum-grid">
               <section className="card feature-card">
-                <h2><Globe2 /> Các hành tinh</h2>
+                <h2>
+                  <Globe2 /> Các hành tinh
+                </h2>
                 <p className="muted">
-                  Thứ tự hành tinh quyết định thứ tự mở khóa. Học viên cần vượt boss cuối hành tinh trước.
+                  Thứ tự hành tinh quyết định thứ tự mở khóa. Học viên cần vượt boss cuối hành tinh
+                  trước.
                 </p>
-                {data.topics.map(t => (
+                {data.topics.map((t) => (
                   <div className="assignment-row" key={t.slug}>
                     <div>
                       <strong>{t.title}</strong>
                       <small>
                         #{t.sortOrder} · {t.slug} · {t.published ? 'Đang xuất bản' : 'Bản nháp'} ·{' '}
-                        {data.lessons.filter(l => l.topicSlug === t.slug).length} bài
+                        {data.lessons.filter((l) => l.topicSlug === t.slug).length} bài
                       </small>
                     </div>
                     <div className="stack-actions">
@@ -185,7 +249,7 @@ export function TeacherCurriculumPage() {
                             description: t.description,
                             outcome: t.outcome,
                             sortOrder: t.sortOrder,
-                            planetStyle: t.planetStyle
+                            planetStyle: t.planetStyle,
                           })
                         }}
                       >
@@ -194,7 +258,12 @@ export function TeacherCurriculumPage() {
                       <button
                         className="button secondary"
                         disabled={busy}
-                        onClick={() => void act(() => api.teacherPublishTopic(t.slug, !t.published), 'Đã cập nhật hành tinh.')}
+                        onClick={() =>
+                          void act(
+                            () => api.teacherPublishTopic(t.slug, !t.published),
+                            'Đã cập nhật hành tinh.',
+                          )
+                        }
                       >
                         {t.published ? 'Ẩn' : 'Xuất bản'}
                       </button>
@@ -204,7 +273,9 @@ export function TeacherCurriculumPage() {
               </section>
 
               <section className="card feature-card">
-                <h2><Plus /> {topicEdit ? 'Sửa hành tinh' : 'Thêm hành tinh'}</h2>
+                <h2>
+                  <Plus /> {topicEdit ? 'Sửa hành tinh' : 'Thêm hành tinh'}
+                </h2>
                 <form className="form-grid" onSubmit={saveTopic}>
                   <label>
                     Mã chủ đề
@@ -214,7 +285,7 @@ export function TeacherCurriculumPage() {
                       maxLength={80}
                       disabled={!!topicEdit}
                       value={topic.slug}
-                      onChange={e => setTopic({ ...topic, slug: e.target.value })}
+                      onChange={(e) => setTopic({ ...topic, slug: e.target.value })}
                       placeholder="vi-du-menh-de"
                     />
                   </label>
@@ -225,7 +296,7 @@ export function TeacherCurriculumPage() {
                       type="number"
                       min={1}
                       value={topic.sortOrder}
-                      onChange={e => setTopic({ ...topic, sortOrder: Number(e.target.value) })}
+                      onChange={(e) => setTopic({ ...topic, sortOrder: Number(e.target.value) })}
                     />
                   </label>
                   <label className="full-span">
@@ -234,7 +305,7 @@ export function TeacherCurriculumPage() {
                       required
                       maxLength={160}
                       value={topic.title}
-                      onChange={e => setTopic({ ...topic, title: e.target.value })}
+                      onChange={(e) => setTopic({ ...topic, title: e.target.value })}
                     />
                   </label>
                   <label className="full-span">
@@ -243,7 +314,7 @@ export function TeacherCurriculumPage() {
                       required
                       maxLength={255}
                       value={topic.description}
-                      onChange={e => setTopic({ ...topic, description: e.target.value })}
+                      onChange={(e) => setTopic({ ...topic, description: e.target.value })}
                     />
                   </label>
                   <label className="full-span">
@@ -252,14 +323,14 @@ export function TeacherCurriculumPage() {
                       required
                       maxLength={255}
                       value={topic.outcome}
-                      onChange={e => setTopic({ ...topic, outcome: e.target.value })}
+                      onChange={(e) => setTopic({ ...topic, outcome: e.target.value })}
                     />
                   </label>
                   <label>
                     Màu hành tinh
                     <select
                       value={topic.planetStyle}
-                      onChange={e => setTopic({ ...topic, planetStyle: e.target.value })}
+                      onChange={(e) => setTopic({ ...topic, planetStyle: e.target.value })}
                     >
                       {styles.map(([value, label]) => (
                         <option key={value} value={value}>
@@ -293,21 +364,29 @@ export function TeacherCurriculumPage() {
           {tab === 'lessons' && (
             <div className="curriculum-grid">
               <section className="card feature-card">
-                <h2><BookOpen /> Bài học</h2>
-                <p className="muted">Mỗi bài cần 10 câu hỏi chung đã xuất bản trước khi mở cho học viên.</p>
-                {data.topics.map(t => (
+                <h2>
+                  <BookOpen /> Bài học
+                </h2>
+                <p className="muted">
+                  Mỗi bài cần 10 câu hỏi chung đã xuất bản trước khi mở cho học viên.
+                </p>
+                {data.topics.map((t) => (
                   <div key={t.slug}>
                     <h3 className="section-heading">{t.title}</h3>
                     {data.lessons
-                      .filter(l => l.topicSlug === t.slug)
-                      .map(l => (
+                      .filter((l) => l.topicSlug === t.slug)
+                      .map((l) => (
                         <div className="assignment-row" key={l.id}>
                           <div>
                             <strong>{l.title}</strong>
                             <small>
                               Bài {l.ordinalNo + 1} · {l.difficulty} ·{' '}
                               {l.published ? 'Đang xuất bản' : 'Bản nháp'} ·{' '}
-                              {data.questions.filter(q => q.lessonId === l.id && q.published).length}/10 câu đã mở
+                              {
+                                data.questions.filter((q) => q.lessonId === l.id && q.published)
+                                  .length
+                              }
+                              /10 câu đã mở
                             </small>
                           </div>
                           <div className="stack-actions">
@@ -321,7 +400,7 @@ export function TeacherCurriculumPage() {
                                   title: l.title,
                                   summary: l.summary,
                                   theory: l.theory,
-                                  difficulty: l.difficulty
+                                  difficulty: l.difficulty,
                                 })
                               }}
                             >
@@ -330,7 +409,12 @@ export function TeacherCurriculumPage() {
                             <button
                               className="button secondary"
                               disabled={busy}
-                              onClick={() => void act(() => api.teacherPublishLesson(l.id, !l.published), 'Đã cập nhật bài học.')}
+                              onClick={() =>
+                                void act(
+                                  () => api.teacherPublishLesson(l.id, !l.published),
+                                  'Đã cập nhật bài học.',
+                                )
+                              }
                             >
                               {l.published ? 'Ẩn' : 'Xuất bản'}
                             </button>
@@ -342,17 +426,19 @@ export function TeacherCurriculumPage() {
               </section>
 
               <section className="card feature-card">
-                <h2><Plus /> {lessonEdit ? 'Sửa bài học' : 'Thêm bài học'}</h2>
+                <h2>
+                  <Plus /> {lessonEdit ? 'Sửa bài học' : 'Thêm bài học'}
+                </h2>
                 <form className="form-grid" onSubmit={saveLesson}>
                   <label>
                     Hành tinh
                     <select
                       required
                       value={lesson.topicSlug}
-                      onChange={e => setLesson({ ...lesson, topicSlug: e.target.value })}
+                      onChange={(e) => setLesson({ ...lesson, topicSlug: e.target.value })}
                     >
                       <option value="">Chọn hành tinh</option>
-                      {data.topics.map(t => (
+                      {data.topics.map((t) => (
                         <option key={t.slug} value={t.slug}>
                           {t.title}
                         </option>
@@ -366,14 +452,19 @@ export function TeacherCurriculumPage() {
                       type="number"
                       min={0}
                       value={lesson.ordinalNo}
-                      onChange={e => setLesson({ ...lesson, ordinalNo: Number(e.target.value) })}
+                      onChange={(e) => setLesson({ ...lesson, ordinalNo: Number(e.target.value) })}
                     />
                   </label>
                   <label>
                     Mức độ
                     <select
                       value={lesson.difficulty}
-                      onChange={e => setLesson({ ...lesson, difficulty: e.target.value as LessonDraft['difficulty'] })}
+                      onChange={(e) =>
+                        setLesson({
+                          ...lesson,
+                          difficulty: e.target.value as LessonDraft['difficulty'],
+                        })
+                      }
                     >
                       <option value="BEGINNER">Cơ bản</option>
                       <option value="INTERMEDIATE">Trung cấp</option>
@@ -386,7 +477,7 @@ export function TeacherCurriculumPage() {
                       required
                       maxLength={160}
                       value={lesson.title}
-                      onChange={e => setLesson({ ...lesson, title: e.target.value })}
+                      onChange={(e) => setLesson({ ...lesson, title: e.target.value })}
                     />
                   </label>
                   <label className="full-span">
@@ -395,7 +486,7 @@ export function TeacherCurriculumPage() {
                       required
                       maxLength={255}
                       value={lesson.summary}
-                      onChange={e => setLesson({ ...lesson, summary: e.target.value })}
+                      onChange={(e) => setLesson({ ...lesson, summary: e.target.value })}
                     />
                   </label>
                   <label className="full-span">
@@ -404,7 +495,7 @@ export function TeacherCurriculumPage() {
                       required
                       rows={9}
                       value={lesson.theory}
-                      onChange={e => setLesson({ ...lesson, theory: e.target.value })}
+                      onChange={(e) => setLesson({ ...lesson, theory: e.target.value })}
                     />
                   </label>
                   <div className="button-row full-span">
@@ -440,7 +531,10 @@ export function TeacherCurriculumPage() {
                     setQuestionEdit(null)
                   }}
                 >
-                  <Sparkles size={16} style={{ display: 'inline', marginRight: 6, verticalAlign: 'text-bottom' }} />
+                  <Sparkles
+                    size={16}
+                    style={{ display: 'inline', marginRight: 6, verticalAlign: 'text-bottom' }}
+                  />
                   Thêm tự động câu hỏi từ file .txt
                 </button>
                 <button
@@ -448,7 +542,10 @@ export function TeacherCurriculumPage() {
                   className={questionMode === 'manual' ? 'active' : ''}
                   onClick={() => setQuestionMode('manual')}
                 >
-                  <BookOpen size={16} style={{ display: 'inline', marginRight: 6, verticalAlign: 'text-bottom' }} />
+                  <BookOpen
+                    size={16}
+                    style={{ display: 'inline', marginRight: 6, verticalAlign: 'text-bottom' }}
+                  />
                   {questionEdit ? 'Đang sửa câu hỏi' : 'Danh sách & Soạn thủ công'}
                 </button>
               </div>
@@ -459,10 +556,13 @@ export function TeacherCurriculumPage() {
                     <Sparkles /> Tự động thêm bộ câu hỏi chung từ file .txt
                   </h2>
                   <p className="muted">
-                    Hỗ trợ kéo-thả file .txt, chọn file từ máy, dán trực tiếp file .txt bằng <strong>Ctrl+V</strong>, hoặc dán nội dung chữ. Ngân hàng câu hỏi chung phục vụ cho Hành tinh chính và Đấu trường PvP nên yêu cầu chuẩn hóa dạng Trắc nghiệm 4 phương án A/B/C/D.
+                    Hỗ trợ kéo-thả file .txt, chọn file từ máy, dán trực tiếp file .txt bằng{' '}
+                    <strong>Ctrl+V</strong>, hoặc dán nội dung chữ. Ngân hàng câu hỏi chung phục vụ
+                    cho Hành tinh chính và Đấu trường PvP nên yêu cầu chuẩn hóa dạng Trắc nghiệm 4
+                    phương án A/B/C/D.
                   </p>
                   <TxtQuestionImporter
-                    lessons={data.lessons.map(l => ({ id: l.id, title: l.title }))}
+                    lessons={data.lessons.map((l) => ({ id: l.id, title: l.title }))}
                     defaultLessonId={questionLesson || undefined}
                     busy={busy}
                     commonCurriculumMode={true}
@@ -479,25 +579,26 @@ export function TeacherCurriculumPage() {
                       <select
                         aria-label="Lọc theo bài học"
                         value={questionLesson}
-                        onChange={e => setQuestionLesson(Number(e.target.value))}
+                        onChange={(e) => setQuestionLesson(Number(e.target.value))}
                       >
                         <option value={0}>Tất cả bài học</option>
-                        {data.lessons.map(l => (
+                        {data.lessons.map((l) => (
                           <option key={l.id} value={l.id}>
                             {l.title}
                           </option>
                         ))}
                       </select>
                     </div>
-                    {lessonQuestions.map(q => (
+                    {lessonQuestions.map((q) => (
                       <div className="assignment-row" key={q.id}>
                         <div>
                           <strong>
                             #{q.id} · {q.prompt}
                           </strong>
                           <small>
-                            {data.lessons.find(l => l.id === q.lessonId)?.title} ·{' '}
-                            {q.published ? 'Đang xuất bản' : 'Bản nháp'} · Đáp án đúng: <strong>{q.correctOption}</strong>
+                            {data.lessons.find((l) => l.id === q.lessonId)?.title} ·{' '}
+                            {q.published ? 'Đang xuất bản' : 'Bản nháp'} · Đáp án đúng:{' '}
+                            <strong>{q.correctOption}</strong>
                           </small>
                         </div>
                         <div className="stack-actions">
@@ -516,7 +617,7 @@ export function TeacherCurriculumPage() {
                                 correctOption: q.correctOption || 'A',
                                 explanation: q.explanation || '',
                                 questionType: 'MCQ',
-                                acceptedAnswer: ''
+                                acceptedAnswer: '',
                               })
                             }}
                           >
@@ -528,7 +629,7 @@ export function TeacherCurriculumPage() {
                             onClick={() =>
                               void act(
                                 () => api.teacherPublishCommonQuestion(q.id, !q.published),
-                                'Đã cập nhật câu hỏi.'
+                                'Đã cập nhật câu hỏi.',
                               )
                             }
                           >
@@ -541,7 +642,8 @@ export function TeacherCurriculumPage() {
 
                   <section className="card feature-card">
                     <h2>
-                      <Plus /> {questionEdit ? 'Sửa câu hỏi trắc nghiệm' : 'Thêm câu hỏi trắc nghiệm'}
+                      <Plus />{' '}
+                      {questionEdit ? 'Sửa câu hỏi trắc nghiệm' : 'Thêm câu hỏi trắc nghiệm'}
                     </h2>
                     <form className="form-grid" onSubmit={saveQuestion}>
                       <label className="full-span">
@@ -549,10 +651,12 @@ export function TeacherCurriculumPage() {
                         <select
                           required
                           value={question.lessonId}
-                          onChange={e => setQuestion({ ...question, lessonId: Number(e.target.value) })}
+                          onChange={(e) =>
+                            setQuestion({ ...question, lessonId: Number(e.target.value) })
+                          }
                         >
                           <option value={0}>Chọn bài học</option>
-                          {data.lessons.map(l => (
+                          {data.lessons.map((l) => (
                             <option key={l.id} value={l.id}>
                               {l.title}
                             </option>
@@ -565,7 +669,7 @@ export function TeacherCurriculumPage() {
                           required
                           maxLength={500}
                           value={question.prompt}
-                          onChange={e => setQuestion({ ...question, prompt: e.target.value })}
+                          onChange={(e) => setQuestion({ ...question, prompt: e.target.value })}
                           placeholder="Nhập câu hỏi trắc nghiệm..."
                         />
                       </label>
@@ -576,7 +680,7 @@ export function TeacherCurriculumPage() {
                             required
                             maxLength={255}
                             value={question[key]}
-                            onChange={e => setQuestion({ ...question, [key]: e.target.value })}
+                            onChange={(e) => setQuestion({ ...question, [key]: e.target.value })}
                           />
                         </label>
                       ))}
@@ -584,9 +688,11 @@ export function TeacherCurriculumPage() {
                         Đáp án đúng
                         <select
                           value={question.correctOption}
-                          onChange={e => setQuestion({ ...question, correctOption: e.target.value })}
+                          onChange={(e) =>
+                            setQuestion({ ...question, correctOption: e.target.value })
+                          }
                         >
-                          {['A', 'B', 'C', 'D'].map(letter => (
+                          {['A', 'B', 'C', 'D'].map((letter) => (
                             <option key={letter}>{letter}</option>
                           ))}
                         </select>
@@ -596,7 +702,9 @@ export function TeacherCurriculumPage() {
                         <textarea
                           required
                           value={question.explanation}
-                          onChange={e => setQuestion({ ...question, explanation: e.target.value })}
+                          onChange={(e) =>
+                            setQuestion({ ...question, explanation: e.target.value })
+                          }
                         />
                       </label>
                       <div className="button-row full-span">

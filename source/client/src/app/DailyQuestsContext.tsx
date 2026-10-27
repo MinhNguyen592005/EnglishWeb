@@ -1,4 +1,12 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { api } from '../services/api'
@@ -22,7 +30,9 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
   const currentUser = useRef(userId)
   currentUser.current = userId
   const { pathname } = useLocation()
-  const [snapshot, setSnapshot] = useState<{ userId: number; data: DailyQuestOverview } | null>(null)
+  const [snapshot, setSnapshot] = useState<{ userId: number; data: DailyQuestOverview } | null>(
+    null,
+  )
   const [refreshing, setRefreshing] = useState(false)
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
@@ -46,7 +56,8 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
         setError((e as Error).message || 'Không thể tải nhiệm vụ hôm nay.')
       }
     } finally {
-      if (currentUser.current === userId && revision.current === requestRevision) setRefreshing(false)
+      if (currentUser.current === userId && revision.current === requestRevision)
+        setRefreshing(false)
     }
   }, [userId])
 
@@ -57,14 +68,20 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
     setPending(null)
     setRefreshing(false)
     operation.current = false
-    return () => { revision.current++ }
+    return () => {
+      revision.current++
+    }
   }, [userId])
 
-  useEffect(() => { void refresh() }, [refresh, pathname])
+  useEffect(() => {
+    void refresh()
+  }, [refresh, pathname])
 
   useEffect(() => {
     if (userId === null) return
-    const focus = () => { if (document.visibilityState === 'visible') void refresh() }
+    const focus = () => {
+      if (document.visibilityState === 'visible') void refresh()
+    }
     const storage = (event: StorageEvent) => {
       if (event.key === `grammarquest:quests:${userId}`) {
         void refresh()
@@ -85,7 +102,7 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
     if (userId === null || operation.current || !data) return false
     if (id === 'milestone') {
       if (!data.milestone.allCompleted || data.milestone.claimed) return false
-    } else if (!data.quests.some(q => q.id === id && q.completed && !q.claimed)) return false
+    } else if (!data.quests.some((q) => q.id === id && q.completed && !q.claimed)) return false
     operation.current = true
     const claimRevision = ++revision.current
     setPending(id)
@@ -97,19 +114,36 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
         const result = await api.claimDailyMilestone()
         if (currentUser.current !== userId || revision.current !== claimRevision) return false
         setUser(result.profile)
-        setSnapshot(previous => previous?.userId === userId ? {
-          userId, data: { ...previous.data, milestone: result.milestone, streak: result.streak }
-        } : previous)
+        setSnapshot((previous) =>
+          previous?.userId === userId
+            ? {
+                userId,
+                data: { ...previous.data, milestone: result.milestone, streak: result.streak },
+              }
+            : previous,
+        )
       } else {
         const result = await api.claimDailyQuest(id)
         if (currentUser.current !== userId || revision.current !== claimRevision) return false
         setUser(result.profile)
-        setSnapshot(previous => previous?.userId === userId ? {
-          userId, data: { ...previous.data, quests: previous.data.quests.map(q => q.id === id ? result.quest : q) }
-        } : previous)
+        setSnapshot((previous) =>
+          previous?.userId === userId
+            ? {
+                userId,
+                data: {
+                  ...previous.data,
+                  quests: previous.data.quests.map((q) => (q.id === id ? result.quest : q)),
+                },
+              }
+            : previous,
+        )
       }
       success = true
-      try { localStorage.setItem(`grammarquest:quests:${userId}`, crypto.randomUUID()) } catch { /* Storage may be unavailable. */ }
+      try {
+        localStorage.setItem(`grammarquest:quests:${userId}`, crypto.randomUUID())
+      } catch {
+        /* Storage may be unavailable. */
+      }
     } catch (e) {
       if (currentUser.current === userId && revision.current === claimRevision) {
         setActionError((e as Error).message || 'Chưa nhận được thưởng. Vui lòng thử lại.')
@@ -124,7 +158,22 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
     return success
   }
 
-  return <DailyQuestsContext.Provider value={{ data, loading: userId !== null && !data && !error, refreshing, error, actionError, pending, refresh, claim }}>{children}</DailyQuestsContext.Provider>
+  return (
+    <DailyQuestsContext.Provider
+      value={{
+        data,
+        loading: userId !== null && !data && !error,
+        refreshing,
+        error,
+        actionError,
+        pending,
+        refresh,
+        claim,
+      }}
+    >
+      {children}
+    </DailyQuestsContext.Provider>
+  )
 }
 
 export function useDailyQuests() {

@@ -1,4 +1,36 @@
-import { AlertCircle, ArrowRight, BookOpen, Building2, CalendarDays, CheckCircle2, ClipboardList, Copy, Eye, Hash, Hourglass, KeyRound, LayoutDashboard, ListChecks, Lock, MessageCircle, Pencil, PieChart, Plus, Radio, RefreshCw, Rocket, School, Search, Send, ShieldCheck, Star, Target, UserRound, UsersRound, type LucideIcon } from 'lucide-react'
+import {
+  AlertCircle,
+  ArrowRight,
+  BookOpen,
+  Building2,
+  CalendarDays,
+  CheckCircle2,
+  ClipboardList,
+  Copy,
+  Eye,
+  Hash,
+  Hourglass,
+  KeyRound,
+  LayoutDashboard,
+  ListChecks,
+  Lock,
+  MessageCircle,
+  Pencil,
+  PieChart,
+  Plus,
+  Radio,
+  RefreshCw,
+  Rocket,
+  School,
+  Search,
+  Send,
+  ShieldCheck,
+  Star,
+  Target,
+  UserRound,
+  UsersRound,
+  type LucideIcon,
+} from 'lucide-react'
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
@@ -10,375 +42,1432 @@ import { LiveClassExam } from '../components/LiveClassExam'
 import { MaterialDeliveryForm } from '../components/MaterialDeliveryForm'
 import { api } from '../services/api'
 import { teacherMaterialChanged } from '../services/teacherMaterialEvents'
-import type { Assignment, AssignmentResult, ClassMessage, Classroom, ClassOverview, TeacherMaterialSummary } from '../types'
+import type {
+  Assignment,
+  AssignmentResult,
+  ClassMessage,
+  Classroom,
+  ClassOverview,
+  TeacherMaterialSummary,
+} from '../types'
 import './classroom.css'
 
-type View='overview'|'assignments'|'members'|'grades'|'exams'|'chat'
-type DueTone='open'|'urgent'|'overdue'|'closed'
-const localDate=(value:string)=>{const date=new Date(value);return Number.isNaN(date.getTime())?'':new Date(date.getTime()-date.getTimezoneOffset()*60000).toISOString().slice(0,16)}
+type View = 'overview' | 'assignments' | 'members' | 'grades' | 'exams' | 'chat'
+type DueTone = 'open' | 'urgent' | 'overdue' | 'closed'
+const localDate = (value: string) => {
+  const date = new Date(value)
+  return Number.isNaN(date.getTime())
+    ? ''
+    : new Date(date.getTime() - date.getTimezoneOffset() * 60000).toISOString().slice(0, 16)
+}
 // Thêm `tone` để tô màu thẻ; `label`/`overdue` giữ nguyên ý nghĩa cũ.
-const dueState=(a:Assignment):{label:string;tone:DueTone;overdue:boolean}=>{
-  if(a.status==='CLOSED')return{label:'Đã đóng',tone:'closed',overdue:false}
-  const diff=new Date(a.dueAt).getTime()-Date.now()
-  if(diff<0)return{label:'Quá hạn',tone:'overdue',overdue:true}
-  const hours=Math.ceil(diff/3600000)
-  return hours<=24?{label:`Sắp hết hạn · còn ${hours} giờ`,tone:'urgent',overdue:false}:{label:'Đang mở',tone:'open',overdue:false}
+const dueState = (a: Assignment): { label: string; tone: DueTone; overdue: boolean } => {
+  if (a.status === 'CLOSED') return { label: 'Đã đóng', tone: 'closed', overdue: false }
+  const diff = new Date(a.dueAt).getTime() - Date.now()
+  if (diff < 0) return { label: 'Quá hạn', tone: 'overdue', overdue: true }
+  const hours = Math.ceil(diff / 3600000)
+  return hours <= 24
+    ? { label: `Sắp hết hạn · còn ${hours} giờ`, tone: 'urgent', overdue: false }
+    : { label: 'Đang mở', tone: 'open', overdue: false }
 }
-const stateIcons:Record<DueTone,LucideIcon>={overdue:AlertCircle,urgent:Hourglass,open:CheckCircle2,closed:Lock}
-const TABS:{key:View;label:string;icon:LucideIcon}[]=[{key:'overview',label:'Tổng quan',icon:LayoutDashboard},{key:'assignments',label:'Bài tập',icon:ClipboardList},{key:'members',label:'Thành viên',icon:UsersRound},{key:'grades',label:'Bảng điểm',icon:Star},{key:'exams',label:'Kiểm tra trực tiếp',icon:Radio},{key:'chat',label:'Chat lớp',icon:MessageCircle}]
-function StatePill({state}:{state:{label:string;tone:DueTone}}){const Icon=stateIcons[state.tone];return <span className={`class-state-pill state-${state.tone}`}><Icon size={13}/> {state.label}</span>}
-
-export function ClassesPage(){
-  const {user}=useAuth(),navigate=useNavigate(),[classes,setClasses]=useState<Classroom[]|null>(null),[name,setName]=useState(''),[code,setCode]=useState(''),[filter,setFilter]=useState(''),[page,setPage]=useState(1),[error,setError]=useState(''),[busy,setBusy]=useState(false)
-  const teacher=user?.role==='TEACHER'
-  async function reload(){try{setError('');setClasses(await api.classrooms())}catch(e){setError((e as Error).message)}}
-  useEffect(()=>{void reload()},[])
-  async function create(e:FormEvent){e.preventDefault();setBusy(true);try{const created=await api.createClass(name);navigate(`/classes/${created.id}`)}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
-  async function join(e:FormEvent){e.preventDefault();setBusy(true);try{const joined=await api.joinClass(code.trim().toUpperCase());navigate(`/classes/${joined.id}`)}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
-  const filtered=classes?.filter(item=>`${item.name} ${item.teacherName} ${item.joinCode}`.toLocaleLowerCase().includes(filter.toLocaleLowerCase()))||[]
-  const pageCount=Math.max(1,Math.ceil(filtered.length/PAGE_SIZE))
-  const currentPage=Math.min(page,pageCount)
-  const visible=filtered.slice((currentPage-1)*PAGE_SIZE,currentPage*PAGE_SIZE)
-  useEffect(()=>{setPage(1)},[filter])
-  return <Layout title="Lớp học"><div className="class-page"><div className="page-heading"><div><span className="section-label class-eyebrow"><School size={15}/> {teacher?'TRẠM LỚP HỌC':'KHOANG HỌC VIÊN'}</span><h1>{teacher?'Lớp học của tôi':'Lớp học của bạn'}</h1><p>{teacher?'Chọn lớp để xem thống kê, giao bài và theo dõi học viên.':'Theo dõi các lớp học và bài tập của bạn.'}</p></div></div>
-    {error&&<div className="error-banner" role="alert">{error}<button className="button secondary" onClick={()=>void reload()}><RefreshCw size={15}/>Tải lại</button></div>}
-    {teacher?<section className="class-create-banner"><div><h2>Tạo lớp học mới</h2><p>Mã tham gia sẽ được tạo tự động.</p></div><form className="class-create-form" onSubmit={create}><input required maxLength={120} value={name} onChange={e=>setName(e.target.value)} placeholder="Tên lớp học"/><button className="button primary" disabled={busy}><Plus size={18}/>Tạo lớp</button></form></section>:<section className="class-join-banner"><div className="class-join-copy"><div className="class-join-icon"><KeyRound size={23}/></div><div><h2>Nhập mã mời vào lớp</h2><p>Kết nối vào lớp học bằng mã tham gia.</p></div></div><form className="class-join-form" onSubmit={join}><div className="class-input-icon"><Hash size={18}/><input required maxLength={12} value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder="Nhập mã lớp"/></div><button className="button primary" disabled={busy}>Gia nhập lớp <ArrowRight size={16}/></button></form></section>}
-    <section className="class-list-section"><div className="class-list-heading"><div><h2><BookOpen size={22}/> Danh sách lớp học {classes&&<span className="class-list-count">({filtered.length})</span>}</h2><p>{teacher?'Các lớp bạn đang quản lý.':'Các lớp bạn đang tham gia.'}</p></div><div className="class-search"><Search size={17}/><input aria-label="Tìm kiếm lớp học" value={filter} onChange={e=>setFilter(e.target.value)} placeholder="Tìm kiếm lớp học..."/></div></div>{!classes?<Loading/>:visible.length?<><div className="class-card-grid">{visible.map(item=><Link to={`/classes/${item.id}`} className="class-card" key={item.id}><div className="class-card-top"><span className="class-sector">LỚP HỌC</span><span className="class-status"><span/>Đang hoạt động</span></div><h3>{item.name}</h3><p className="class-teacher"><School size={16}/> {teacher?'Lớp bạn quản lý':item.teacherName}</p><div className="class-card-metrics"><span><UsersRound size={15}/> {item.memberCount??0} học viên</span><span><ClipboardList size={15}/> Mã {item.joinCode}</span></div><div className="class-card-footer"><span>{item.memberCount===0?'Chưa có học viên':'Đang theo dõi lớp'}</span><span className="class-view-link">Mở lớp <ArrowRight size={15}/></span></div></Link>)}</div><Pagination total={filtered.length} page={currentPage} onPageChange={setPage}/></>:<div className="card empty-state">{filter?'Không tìm thấy lớp phù hợp.':'Bạn chưa có lớp nào.'}</div>}</section>
-  </div></Layout>
+const stateIcons: Record<DueTone, LucideIcon> = {
+  overdue: AlertCircle,
+  urgent: Hourglass,
+  open: CheckCircle2,
+  closed: Lock,
+}
+const TABS: { key: View; label: string; icon: LucideIcon }[] = [
+  { key: 'overview', label: 'Tổng quan', icon: LayoutDashboard },
+  { key: 'assignments', label: 'Bài tập', icon: ClipboardList },
+  { key: 'members', label: 'Thành viên', icon: UsersRound },
+  { key: 'grades', label: 'Bảng điểm', icon: Star },
+  { key: 'exams', label: 'Kiểm tra trực tiếp', icon: Radio },
+  { key: 'chat', label: 'Chat lớp', icon: MessageCircle },
+]
+function StatePill({ state }: { state: { label: string; tone: DueTone } }) {
+  const Icon = stateIcons[state.tone]
+  return (
+    <span className={`class-state-pill state-${state.tone}`}>
+      <Icon size={13} /> {state.label}
+    </span>
+  )
 }
 
-export function ClassDetailPage(){
-  const {id}=useParams(),classId=Number(id),{user}=useAuth(),{subscribe,connected}=useSystemSocket(),[params,setParams]=useSearchParams()
-  const raw=params.get('view')||'overview',view=(raw==='all'?'overview':raw) as View
-  const [detail,setDetail]=useState<Classroom|null>(null),[overview,setOverview]=useState<ClassOverview|null>(null),[materials,setMaterials]=useState<TeacherMaterialSummary[]>([]),[messages,setMessages]=useState<ClassMessage[]>([]),[resultsByAssignment,setResultsByAssignment]=useState<Record<number,AssignmentResult[]>>({})
-  const [error,setError]=useState(''),[notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[filter,setFilter]=useState(''),[selected,setSelected]=useState(Number(params.get('assignmentId'))||0),[className,setClassName]=useState(''),[editing,setEditing]=useState<Assignment|null>(null)
-  const isOwner=detail?.teacherId===user?.id
-  const [examRevision,setExamRevision]=useState(0)
-  const [examComposer,setExamComposer]=useState(false)
-  const [materialsError,setMaterialsError]=useState('')
-  const [loadingMaterials,setLoadingMaterials]=useState(false)
-  const [refreshing,setRefreshing]=useState(false)
-  async function reload(){try{setError('');const [next,stats]=await Promise.all([api.classroom(classId),api.classroomOverview(classId)]);setDetail(next);setClassName(next.name);setOverview(stats);if(view==='chat')setMessages(await api.classMessages(classId))}catch(e){setError((e as Error).message)}}
-  const materialRequest = useRef(0)
-  const loadMaterials=useCallback(async()=>{
-    const request=++materialRequest.current
-    setLoadingMaterials(true);setMaterialsError('')
-    try{const rows=await api.teacherMaterials();if(request===materialRequest.current)setMaterials(rows)}
-    catch(e){if(request===materialRequest.current)setMaterialsError((e as Error).message)}
-    finally{if(request===materialRequest.current)setLoadingMaterials(false)}
-  },[user?.id])
-  useEffect(()=>{
-    if(user?.role!=='TEACHER'||(view!=='assignments'&&view!=='exams'))return
-    const refresh=()=>{if(document.visibilityState==='visible')void loadMaterials()}
-    const storage=(event:StorageEvent)=>{if(event.key===teacherMaterialChanged)refresh()}
-    void loadMaterials()
-    window.addEventListener('focus',refresh)
-    document.addEventListener('visibilitychange',refresh)
-    window.addEventListener(teacherMaterialChanged,refresh)
-    window.addEventListener('storage',storage)
-    return()=>{
-      materialRequest.current++
-      window.removeEventListener('focus',refresh)
-      document.removeEventListener('visibilitychange',refresh)
-      window.removeEventListener(teacherMaterialChanged,refresh)
-      window.removeEventListener('storage',storage)
+export function ClassesPage() {
+  const { user } = useAuth(),
+    navigate = useNavigate(),
+    [classes, setClasses] = useState<Classroom[] | null>(null),
+    [name, setName] = useState(''),
+    [code, setCode] = useState(''),
+    [filter, setFilter] = useState(''),
+    [page, setPage] = useState(1),
+    [error, setError] = useState(''),
+    [busy, setBusy] = useState(false)
+  const teacher = user?.role === 'TEACHER'
+  async function reload() {
+    try {
+      setError('')
+      setClasses(await api.classrooms())
+    } catch (e) {
+      setError((e as Error).message)
     }
-  },[classId,view,user?.role,loadMaterials])
-  useEffect(()=>{void reload()},[classId,view])
-  useEffect(()=>subscribe(message=>{
-    if(message.action.startsWith('CLASS_')&&message.action!=='CLASS_OPEN'&&message.action!=='CLASS_LIST')void reload()
-  }),[classId,view,subscribe])
-  useEffect(()=>{
-    if(view!=='grades'||!detail?.assignments?.length)return
-    let active=true
-    Promise.all(detail.assignments.map(async assignment=>[assignment.id,await api.assignmentResults(classId,assignment.id)] as const))
-      .then(entries=>{if(active)setResultsByAssignment(Object.fromEntries(entries))})
-      .catch(e=>{if(active)setError((e as Error).message)})
-    return()=>{active=false}
-  },[classId,view,detail?.assignments])
-  const assignments=detail?.assignments||[],attention=useMemo(()=>assignments.filter(a=>a.status!=='CLOSED').sort((a,b)=>new Date(a.dueAt).getTime()-new Date(b.dueAt).getTime()).slice(0,5),[assignments])
-  const go=(next:View)=>setParams(next==='overview'?{}:{view:next})
-  async function refresh(){setRefreshing(true);try{await Promise.all([reload(),...(user?.role==='TEACHER'&&(view==='assignments'||view==='exams')?[loadMaterials()]:[])])}finally{setRefreshing(false)}}
-  async function rename(e:FormEvent){e.preventDefault();setBusy(true);try{await api.renameClass(classId,className);setNotice('Đã đổi tên lớp.');await reload()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
-  async function copyCode(){if(!detail)return;try{await navigator.clipboard.writeText(detail.joinCode);setNotice('Đã sao chép mã tham gia.')}catch{setError('Không thể sao chép mã tham gia.')}}
-  async function remove(memberId:number,name:string){if(!window.confirm(`Xóa ${name} khỏi lớp?`))return;setBusy(true);try{await api.removeClassMember(classId,memberId);setNotice('Đã xóa học viên khỏi lớp.');await reload()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
-  async function updateAssignment(e:FormEvent){e.preventDefault();if(!editing)return;setBusy(true);try{await api.updateAssignment(classId,editing.id,{title:editing.title,instructions:editing.instructions,passPercent:editing.passPercent,dueAt:new Date(editing.dueAt).toISOString(),status:editing.status});setEditing(null);setNotice('Đã cập nhật bài tập.');await reload()}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
-  async function send(e:FormEvent){e.preventDefault();if(!message.trim())return;setBusy(true);try{const sent=await api.sendClassMessage(classId,message.trim());setMessages(current=>[...current,sent]);setMessage('')}catch(e){setError((e as Error).message)}finally{setBusy(false)}}
-  async function report(messageId:number){const reason=window.prompt('Lý do báo cáo tin nhắn (tối đa 500 ký tự):');if(reason?.trim())try{await api.reportClassMessage(classId,messageId,reason.trim());setNotice('Đã gửi báo cáo cho quản trị viên.')}catch(e){setError((e as Error).message)}}
-  function exportResults(){const rows=[['Bài tập','Học viên','Số câu đúng','Tổng câu','Trạng thái','Đạt','Nộp lúc'],...assignments.flatMap(assignment=>(resultsByAssignment[assignment.id]||[]).map(item=>[assignment.title,item.displayName,item.correctCount,item.totalQuestions,item.status,item.passed?'Có':'Không',item.completedAt?new Date(item.completedAt).toLocaleString('vi-VN'):'']))];const csv=(value:unknown)=>`"${String(value??'').replaceAll('"','""')}"`;const blob=new Blob(['\ufeff',rows.map(row=>row.map(csv).join(',')).join('\r\n')],{type:'text/csv;charset=utf-8'});const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download=`bang-diem-${detail?.name||classId}.csv`;link.click()}
-  if(!detail)return <Layout title="Lớp học"><div className="class-workspace">{error?<div className="error-banner">{error}<button className="button secondary" onClick={()=>void reload()}>Tải lại</button></div>:<Loading/>}</div></Layout>
-  const memberTotal=detail.members?.length||0
-  const tabCount:Partial<Record<View,number>>={assignments:assignments.length,members:memberTotal}
-  const resultsOf=(id:number)=>{setSelected(id);setParams({view:'grades',assignmentId:String(id)})}
+  }
+  useEffect(() => {
+    void reload()
+  }, [])
+  async function create(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    try {
+      const created = await api.createClass(name)
+      navigate(`/classes/${created.id}`)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function join(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    try {
+      const joined = await api.joinClass(code.trim().toUpperCase())
+      navigate(`/classes/${joined.id}`)
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  const filtered =
+    classes?.filter((item) =>
+      `${item.name} ${item.teacherName} ${item.joinCode}`
+        .toLocaleLowerCase()
+        .includes(filter.toLocaleLowerCase()),
+    ) || []
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const currentPage = Math.min(page, pageCount)
+  const visible = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
+  useEffect(() => {
+    setPage(1)
+  }, [filter])
+  return (
+    <Layout title="Lớp học">
+      <div className="class-page">
+        <div className="page-heading">
+          <div>
+            <span className="section-label class-eyebrow">
+              <School size={15} /> {teacher ? 'TRẠM LỚP HỌC' : 'KHOANG HỌC VIÊN'}
+            </span>
+            <h1>{teacher ? 'Lớp học của tôi' : 'Lớp học của bạn'}</h1>
+            <p>
+              {teacher
+                ? 'Chọn lớp để xem thống kê, giao bài và theo dõi học viên.'
+                : 'Theo dõi các lớp học và bài tập của bạn.'}
+            </p>
+          </div>
+        </div>
+        {error && (
+          <div className="error-banner" role="alert">
+            {error}
+            <button className="button secondary" onClick={() => void reload()}>
+              <RefreshCw size={15} />
+              Tải lại
+            </button>
+          </div>
+        )}
+        {teacher ? (
+          <section className="class-create-banner">
+            <div>
+              <h2>Tạo lớp học mới</h2>
+              <p>Mã tham gia sẽ được tạo tự động.</p>
+            </div>
+            <form className="class-create-form" onSubmit={create}>
+              <input
+                required
+                maxLength={120}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Tên lớp học"
+              />
+              <button className="button primary" disabled={busy}>
+                <Plus size={18} />
+                Tạo lớp
+              </button>
+            </form>
+          </section>
+        ) : (
+          <section className="class-join-banner">
+            <div className="class-join-copy">
+              <div className="class-join-icon">
+                <KeyRound size={23} />
+              </div>
+              <div>
+                <h2>Nhập mã mời vào lớp</h2>
+                <p>Kết nối vào lớp học bằng mã tham gia.</p>
+              </div>
+            </div>
+            <form className="class-join-form" onSubmit={join}>
+              <div className="class-input-icon">
+                <Hash size={18} />
+                <input
+                  required
+                  maxLength={12}
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  placeholder="Nhập mã lớp"
+                />
+              </div>
+              <button className="button primary" disabled={busy}>
+                Gia nhập lớp <ArrowRight size={16} />
+              </button>
+            </form>
+          </section>
+        )}
+        <section className="class-list-section">
+          <div className="class-list-heading">
+            <div>
+              <h2>
+                <BookOpen size={22} /> Danh sách lớp học{' '}
+                {classes && <span className="class-list-count">({filtered.length})</span>}
+              </h2>
+              <p>{teacher ? 'Các lớp bạn đang quản lý.' : 'Các lớp bạn đang tham gia.'}</p>
+            </div>
+            <div className="class-search">
+              <Search size={17} />
+              <input
+                aria-label="Tìm kiếm lớp học"
+                value={filter}
+                onChange={(e) => setFilter(e.target.value)}
+                placeholder="Tìm kiếm lớp học..."
+              />
+            </div>
+          </div>
+          {!classes ? (
+            <Loading />
+          ) : visible.length ? (
+            <>
+              <div className="class-card-grid">
+                {visible.map((item) => (
+                  <Link to={`/classes/${item.id}`} className="class-card" key={item.id}>
+                    <div className="class-card-top">
+                      <span className="class-sector">LỚP HỌC</span>
+                      <span className="class-status">
+                        <span />
+                        Đang hoạt động
+                      </span>
+                    </div>
+                    <h3>{item.name}</h3>
+                    <p className="class-teacher">
+                      <School size={16} /> {teacher ? 'Lớp bạn quản lý' : item.teacherName}
+                    </p>
+                    <div className="class-card-metrics">
+                      <span>
+                        <UsersRound size={15} /> {item.memberCount ?? 0} học viên
+                      </span>
+                      <span>
+                        <ClipboardList size={15} /> Mã {item.joinCode}
+                      </span>
+                    </div>
+                    <div className="class-card-footer">
+                      <span>
+                        {item.memberCount === 0 ? 'Chưa có học viên' : 'Đang theo dõi lớp'}
+                      </span>
+                      <span className="class-view-link">
+                        Mở lớp <ArrowRight size={15} />
+                      </span>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+              <Pagination total={filtered.length} page={currentPage} onPageChange={setPage} />
+            </>
+          ) : (
+            <div className="card empty-state">
+              {filter ? 'Không tìm thấy lớp phù hợp.' : 'Bạn chưa có lớp nào.'}
+            </div>
+          )}
+        </section>
+      </div>
+    </Layout>
+  )
+}
+
+export function ClassDetailPage() {
+  const { id } = useParams(),
+    classId = Number(id),
+    { user } = useAuth(),
+    { subscribe, connected } = useSystemSocket(),
+    [params, setParams] = useSearchParams()
+  const raw = params.get('view') || 'overview',
+    view = (raw === 'all' ? 'overview' : raw) as View
+  const [detail, setDetail] = useState<Classroom | null>(null),
+    [overview, setOverview] = useState<ClassOverview | null>(null),
+    [materials, setMaterials] = useState<TeacherMaterialSummary[]>([]),
+    [messages, setMessages] = useState<ClassMessage[]>([]),
+    [resultsByAssignment, setResultsByAssignment] = useState<Record<number, AssignmentResult[]>>({})
+  const [error, setError] = useState(''),
+    [notice, setNotice] = useState(''),
+    [busy, setBusy] = useState(false),
+    [message, setMessage] = useState(''),
+    [filter, setFilter] = useState(''),
+    [selected, setSelected] = useState(Number(params.get('assignmentId')) || 0),
+    [className, setClassName] = useState(''),
+    [editing, setEditing] = useState<Assignment | null>(null)
+  const isOwner = detail?.teacherId === user?.id
+  const [examRevision, setExamRevision] = useState(0)
+  const [examComposer, setExamComposer] = useState(false)
+  const [materialsError, setMaterialsError] = useState('')
+  const [loadingMaterials, setLoadingMaterials] = useState(false)
+  const [refreshing, setRefreshing] = useState(false)
+  async function reload() {
+    try {
+      setError('')
+      const [next, stats] = await Promise.all([
+        api.classroom(classId),
+        api.classroomOverview(classId),
+      ])
+      setDetail(next)
+      setClassName(next.name)
+      setOverview(stats)
+      if (view === 'chat') setMessages(await api.classMessages(classId))
+    } catch (e) {
+      setError((e as Error).message)
+    }
+  }
+  const materialRequest = useRef(0)
+  const loadMaterials = useCallback(async () => {
+    const request = ++materialRequest.current
+    setLoadingMaterials(true)
+    setMaterialsError('')
+    try {
+      const rows = await api.teacherMaterials()
+      if (request === materialRequest.current) setMaterials(rows)
+    } catch (e) {
+      if (request === materialRequest.current) setMaterialsError((e as Error).message)
+    } finally {
+      if (request === materialRequest.current) setLoadingMaterials(false)
+    }
+  }, [user?.id])
+  useEffect(() => {
+    if (user?.role !== 'TEACHER' || (view !== 'assignments' && view !== 'exams')) return
+    const refresh = () => {
+      if (document.visibilityState === 'visible') void loadMaterials()
+    }
+    const storage = (event: StorageEvent) => {
+      if (event.key === teacherMaterialChanged) refresh()
+    }
+    void loadMaterials()
+    window.addEventListener('focus', refresh)
+    document.addEventListener('visibilitychange', refresh)
+    window.addEventListener(teacherMaterialChanged, refresh)
+    window.addEventListener('storage', storage)
+    return () => {
+      materialRequest.current++
+      window.removeEventListener('focus', refresh)
+      document.removeEventListener('visibilitychange', refresh)
+      window.removeEventListener(teacherMaterialChanged, refresh)
+      window.removeEventListener('storage', storage)
+    }
+  }, [classId, view, user?.role, loadMaterials])
+  useEffect(() => {
+    void reload()
+  }, [classId, view])
+  useEffect(
+    () =>
+      subscribe((message) => {
+        if (
+          message.action.startsWith('CLASS_') &&
+          message.action !== 'CLASS_OPEN' &&
+          message.action !== 'CLASS_LIST'
+        )
+          void reload()
+      }),
+    [classId, view, subscribe],
+  )
+  useEffect(() => {
+    if (view !== 'grades' || !detail?.assignments?.length) return
+    let active = true
+    Promise.all(
+      detail.assignments.map(
+        async (assignment) =>
+          [assignment.id, await api.assignmentResults(classId, assignment.id)] as const,
+      ),
+    )
+      .then((entries) => {
+        if (active) setResultsByAssignment(Object.fromEntries(entries))
+      })
+      .catch((e) => {
+        if (active) setError((e as Error).message)
+      })
+    return () => {
+      active = false
+    }
+  }, [classId, view, detail?.assignments])
+  const assignments = detail?.assignments || [],
+    attention = useMemo(
+      () =>
+        assignments
+          .filter((a) => a.status !== 'CLOSED')
+          .sort((a, b) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
+          .slice(0, 5),
+      [assignments],
+    )
+  const go = (next: View) => setParams(next === 'overview' ? {} : { view: next })
+  async function refresh() {
+    setRefreshing(true)
+    try {
+      await Promise.all([
+        reload(),
+        ...(user?.role === 'TEACHER' && (view === 'assignments' || view === 'exams')
+          ? [loadMaterials()]
+          : []),
+      ])
+    } finally {
+      setRefreshing(false)
+    }
+  }
+  async function rename(e: FormEvent) {
+    e.preventDefault()
+    setBusy(true)
+    try {
+      await api.renameClass(classId, className)
+      setNotice('Đã đổi tên lớp.')
+      await reload()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function copyCode() {
+    if (!detail) return
+    try {
+      await navigator.clipboard.writeText(detail.joinCode)
+      setNotice('Đã sao chép mã tham gia.')
+    } catch {
+      setError('Không thể sao chép mã tham gia.')
+    }
+  }
+  async function remove(memberId: number, name: string) {
+    if (!window.confirm(`Xóa ${name} khỏi lớp?`)) return
+    setBusy(true)
+    try {
+      await api.removeClassMember(classId, memberId)
+      setNotice('Đã xóa học viên khỏi lớp.')
+      await reload()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function updateAssignment(e: FormEvent) {
+    e.preventDefault()
+    if (!editing) return
+    setBusy(true)
+    try {
+      await api.updateAssignment(classId, editing.id, {
+        title: editing.title,
+        instructions: editing.instructions,
+        passPercent: editing.passPercent,
+        dueAt: new Date(editing.dueAt).toISOString(),
+        status: editing.status,
+      })
+      setEditing(null)
+      setNotice('Đã cập nhật bài tập.')
+      await reload()
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function send(e: FormEvent) {
+    e.preventDefault()
+    if (!message.trim()) return
+    setBusy(true)
+    try {
+      const sent = await api.sendClassMessage(classId, message.trim())
+      setMessages((current) => [...current, sent])
+      setMessage('')
+    } catch (e) {
+      setError((e as Error).message)
+    } finally {
+      setBusy(false)
+    }
+  }
+  async function report(messageId: number) {
+    const reason = window.prompt('Lý do báo cáo tin nhắn (tối đa 500 ký tự):')
+    if (reason?.trim())
+      try {
+        await api.reportClassMessage(classId, messageId, reason.trim())
+        setNotice('Đã gửi báo cáo cho quản trị viên.')
+      } catch (e) {
+        setError((e as Error).message)
+      }
+  }
+  function exportResults() {
+    const rows = [
+      ['Bài tập', 'Học viên', 'Số câu đúng', 'Tổng câu', 'Trạng thái', 'Đạt', 'Nộp lúc'],
+      ...assignments.flatMap((assignment) =>
+        (resultsByAssignment[assignment.id] || []).map((item) => [
+          assignment.title,
+          item.displayName,
+          item.correctCount,
+          item.totalQuestions,
+          item.status,
+          item.passed ? 'Có' : 'Không',
+          item.completedAt ? new Date(item.completedAt).toLocaleString('vi-VN') : '',
+        ]),
+      ),
+    ]
+    const csv = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`
+    const blob = new Blob(['\ufeff', rows.map((row) => row.map(csv).join(',')).join('\r\n')], {
+      type: 'text/csv;charset=utf-8',
+    })
+    const link = document.createElement('a')
+    link.href = URL.createObjectURL(blob)
+    link.download = `bang-diem-${detail?.name || classId}.csv`
+    link.click()
+  }
+  if (!detail)
+    return (
+      <Layout title="Lớp học">
+        <div className="class-workspace">
+          {error ? (
+            <div className="error-banner">
+              {error}
+              <button className="button secondary" onClick={() => void reload()}>
+                Tải lại
+              </button>
+            </div>
+          ) : (
+            <Loading />
+          )}
+        </div>
+      </Layout>
+    )
+  const memberTotal = detail.members?.length || 0
+  const tabCount: Partial<Record<View, number>> = {
+    assignments: assignments.length,
+    members: memberTotal,
+  }
+  const resultsOf = (id: number) => {
+    setSelected(id)
+    setParams({ view: 'grades', assignmentId: String(id) })
+  }
   return (
     <Layout title={detail.name}>
       <div className="class-workspace">
         {/* Hero: breadcrumb, tên lớp, metadata, thao tác, tab */}
-        <section className={`class-hero ${isOwner?'with-tabs':''}`}>
+        <section className={`class-hero ${isOwner ? 'with-tabs' : ''}`}>
           <div className="breadcrumb">
-            <Link to="/classes"><Building2 size={15}/> Lớp học</Link>
+            <Link to="/classes">
+              <Building2 size={15} /> Lớp học
+            </Link>
             <span>/</span>
-            <span className="current"><Rocket size={15}/> {detail.name}</span>
+            <span className="current">
+              <Rocket size={15} /> {detail.name}
+            </span>
           </div>
           <div className="class-detail-header">
             <div>
               <div className="class-title-row">
                 <h1>{detail.name}</h1>
-                {isOwner&&<span className="class-role-badge"><ShieldCheck size={14}/> Chỉ huy quản lý</span>}
-                <span className={`class-live-pill ${connected?'online':'offline'}`} role="status"><span className="class-live-dot"/> {connected?'Đang cập nhật realtime':'Đang offline'}</span>
+                {isOwner && (
+                  <span className="class-role-badge">
+                    <ShieldCheck size={14} /> Chỉ huy quản lý
+                  </span>
+                )}
+                <span
+                  className={`class-live-pill ${connected ? 'online' : 'offline'}`}
+                  role="status"
+                >
+                  <span className="class-live-dot" />{' '}
+                  {connected ? 'Đang cập nhật realtime' : 'Đang offline'}
+                </span>
               </div>
               <div className="class-meta-ribbon">
-                <span><UserRound size={16}/> Giảng viên: <strong>{detail.teacherName}</strong></span>
+                <span>
+                  <UserRound size={16} /> Giảng viên: <strong>{detail.teacherName}</strong>
+                </span>
                 <span className="sep">•</span>
-                <span><UsersRound size={16}/> <strong>{memberTotal} học viên</strong></span>
+                <span>
+                  <UsersRound size={16} /> <strong>{memberTotal} học viên</strong>
+                </span>
                 <span className="sep">•</span>
-                <span className="class-code-chip"><Hash size={16}/> Mã lớp: <code>{detail.joinCode}</code></span>
+                <span className="class-code-chip">
+                  <Hash size={16} /> Mã lớp: <code>{detail.joinCode}</code>
+                </span>
               </div>
             </div>
             <div className="class-header-actions">
-              <button type="button" className="button secondary" onClick={()=>void copyCode()}><Copy size={16}/> Sao chép mã</button>
-              {isOwner&&<form onSubmit={rename} className="class-rename-form"><input aria-label="Tên lớp" value={className} maxLength={120} onChange={e=>setClassName(e.target.value)}/><button className="button secondary" disabled={busy||className.trim()===detail.name}><Pencil size={15}/> Đổi tên</button></form>}
-              <button type="button" className="button primary" disabled={refreshing} onClick={()=>void refresh()}><RefreshCw size={16} className={refreshing?'spin':''}/> Tải lại dữ liệu</button>
+              <button type="button" className="button secondary" onClick={() => void copyCode()}>
+                <Copy size={16} /> Sao chép mã
+              </button>
+              {isOwner && (
+                <form onSubmit={rename} className="class-rename-form">
+                  <input
+                    aria-label="Tên lớp"
+                    value={className}
+                    maxLength={120}
+                    onChange={(e) => setClassName(e.target.value)}
+                  />
+                  <button
+                    className="button secondary"
+                    disabled={busy || className.trim() === detail.name}
+                  >
+                    <Pencil size={15} /> Đổi tên
+                  </button>
+                </form>
+              )}
+              <button
+                type="button"
+                className="button primary"
+                disabled={refreshing}
+                onClick={() => void refresh()}
+              >
+                <RefreshCw size={16} className={refreshing ? 'spin' : ''} /> Tải lại dữ liệu
+              </button>
             </div>
           </div>
-          {isOwner&&(
+          {isOwner && (
             <nav className="tab-bar class-tabs" aria-label="Công cụ lớp học">
-              {TABS.map(tab=>{
-                const Icon=tab.icon,count=tabCount[tab.key]
+              {TABS.map((tab) => {
+                const Icon = tab.icon,
+                  count = tabCount[tab.key]
                 return (
-                  <button type="button" className={view===tab.key?'active':''} key={tab.key} onClick={()=>go(tab.key)}>
-                    <Icon size={18}/><span>{tab.label}</span>{count!==undefined&&<span className="class-tab-count">{count}</span>}
+                  <button
+                    type="button"
+                    className={view === tab.key ? 'active' : ''}
+                    key={tab.key}
+                    onClick={() => go(tab.key)}
+                  >
+                    <Icon size={18} />
+                    <span>{tab.label}</span>
+                    {count !== undefined && <span className="class-tab-count">{count}</span>}
                   </button>
                 )
               })}
             </nav>
           )}
         </section>
-        {error&&<div className="error-banner" role="alert">{error}<button className="button secondary" onClick={()=>void reload()}><RefreshCw size={15}/>Tải lại</button></div>}{notice&&<div className="success-banner" role="status">{notice}</div>}
-        {view==='overview'&&<Overview overview={overview} attention={attention} go={go} results={resultsOf}/>}
-        {view==='assignments'&&<Assignments assignments={assignments} materials={materials} materialsError={materialsError} loadingMaterials={loadingMaterials} retryMaterials={()=>void loadMaterials()} classId={classId} onAssigned={()=>{void reload()}} editing={editing} setEditing={setEditing} update={updateAssignment} isOwner={!!isOwner} busy={busy} results={resultsOf} filter={filter} setFilter={setFilter}/>}
-        {view==='members'&&<Members detail={detail} isOwner={!!isOwner} userId={user?.id} remove={remove}/>}
-        {view==='grades'&&<Grades assignments={assignments} resultsByAssignment={resultsByAssignment} selected={selected} setSelected={resultsOf} exportResults={exportResults}/>}
-        {view==='exams'&&<div className="class-tab-content">
-          {isOwner&&<div className="class-exam-heading"><div><h2>Không gian kiểm tra</h2><p>Tạo đề từ kho câu hỏi và theo dõi kết quả của lớp.</p></div><button type="button" className="button primary" aria-expanded={examComposer} aria-controls="new-class-exam" onClick={()=>setExamComposer(value=>!value)}><Plus size={17}/>{examComposer?'Đóng tạo kiểm tra':'Tạo kiểm tra mới'}</button></div>}
-          {isOwner&&examComposer&&<section id="new-class-exam" className="card feature-card class-panel class-material-composer"><MaterialDeliveryForm materials={materials} materialsError={materialsError} loadingMaterials={loadingMaterials} onRetryMaterials={()=>void loadMaterials()} fixedClassId={classId} kind="exam" onCreated={()=>{setExamRevision(value=>value+1);void reload()}}/></section>}
-          <LiveClassExam key={`${classId}:${examRevision}`} classId={classId} isOwner={!!isOwner} allowCreate={false}/>
-        </div>}
-        {view==='chat'&&<Chat messages={messages} message={message} setMessage={setMessage} send={send} report={report} busy={busy} userId={user?.id}/>}
+        {error && (
+          <div className="error-banner" role="alert">
+            {error}
+            <button className="button secondary" onClick={() => void reload()}>
+              <RefreshCw size={15} />
+              Tải lại
+            </button>
+          </div>
+        )}
+        {notice && (
+          <div className="success-banner" role="status">
+            {notice}
+          </div>
+        )}
+        {view === 'overview' && (
+          <Overview overview={overview} attention={attention} go={go} results={resultsOf} />
+        )}
+        {view === 'assignments' && (
+          <Assignments
+            assignments={assignments}
+            materials={materials}
+            materialsError={materialsError}
+            loadingMaterials={loadingMaterials}
+            retryMaterials={() => void loadMaterials()}
+            classId={classId}
+            onAssigned={() => {
+              void reload()
+            }}
+            editing={editing}
+            setEditing={setEditing}
+            update={updateAssignment}
+            isOwner={!!isOwner}
+            busy={busy}
+            results={resultsOf}
+            filter={filter}
+            setFilter={setFilter}
+          />
+        )}
+        {view === 'members' && (
+          <Members detail={detail} isOwner={!!isOwner} userId={user?.id} remove={remove} />
+        )}
+        {view === 'grades' && (
+          <Grades
+            assignments={assignments}
+            resultsByAssignment={resultsByAssignment}
+            selected={selected}
+            setSelected={resultsOf}
+            exportResults={exportResults}
+          />
+        )}
+        {view === 'exams' && (
+          <div className="class-tab-content">
+            {isOwner && (
+              <div className="class-exam-heading">
+                <div>
+                  <h2>Không gian kiểm tra</h2>
+                  <p>Tạo đề từ kho câu hỏi và theo dõi kết quả của lớp.</p>
+                </div>
+                <button
+                  type="button"
+                  className="button primary"
+                  aria-expanded={examComposer}
+                  aria-controls="new-class-exam"
+                  onClick={() => setExamComposer((value) => !value)}
+                >
+                  <Plus size={17} />
+                  {examComposer ? 'Đóng tạo kiểm tra' : 'Tạo kiểm tra mới'}
+                </button>
+              </div>
+            )}
+            {isOwner && examComposer && (
+              <section
+                id="new-class-exam"
+                className="card feature-card class-panel class-material-composer"
+              >
+                <MaterialDeliveryForm
+                  materials={materials}
+                  materialsError={materialsError}
+                  loadingMaterials={loadingMaterials}
+                  onRetryMaterials={() => void loadMaterials()}
+                  fixedClassId={classId}
+                  kind="exam"
+                  onCreated={() => {
+                    setExamRevision((value) => value + 1)
+                    void reload()
+                  }}
+                />
+              </section>
+            )}
+            <LiveClassExam
+              key={`${classId}:${examRevision}`}
+              classId={classId}
+              isOwner={!!isOwner}
+              allowCreate={false}
+            />
+          </div>
+        )}
+        {view === 'chat' && (
+          <Chat
+            messages={messages}
+            message={message}
+            setMessage={setMessage}
+            send={send}
+            report={report}
+            busy={busy}
+            userId={user?.id}
+          />
+        )}
       </div>
     </Layout>
   )
 }
 
-function Overview({overview,attention,go,results}:{overview:ClassOverview|null;attention:Assignment[];go:(view:View)=>void;results:(id:number)=>void}){
-  const metric=(label:string,value:string|number|null,target:View,hint:string,Icon:LucideIcon,tone:'indigo'|'teal'|'danger',unit?:string)=>(
-    <button type="button" className={`class-overview-metric metric-${tone}`} onClick={()=>go(target)}>
-      <span className="metric-top"><span className="metric-label">{label}</span><span className="metric-icon"><Icon size={20}/></span></span>
-      <span className="metric-value"><strong>{value===null?'—':value}</strong>{unit&&<em>{unit}</em>}</span>
+function Overview({
+  overview,
+  attention,
+  go,
+  results,
+}: {
+  overview: ClassOverview | null
+  attention: Assignment[]
+  go: (view: View) => void
+  results: (id: number) => void
+}) {
+  const metric = (
+    label: string,
+    value: string | number | null,
+    target: View,
+    hint: string,
+    Icon: LucideIcon,
+    tone: 'indigo' | 'teal' | 'danger',
+    unit?: string,
+  ) => (
+    <button
+      type="button"
+      className={`class-overview-metric metric-${tone}`}
+      onClick={() => go(target)}
+    >
+      <span className="metric-top">
+        <span className="metric-label">{label}</span>
+        <span className="metric-icon">
+          <Icon size={20} />
+        </span>
+      </span>
+      <span className="metric-value">
+        <strong>{value === null ? '—' : value}</strong>
+        {unit && <em>{unit}</em>}
+      </span>
       <small>{hint}</small>
     </button>
   )
   return (
     <div className="class-overview">
       <div className="class-overview-metrics">
-        {metric('Học viên',overview?.totalStudents??null,'members',overview?.totalStudents?'Số học viên trong lớp':'Chưa có học viên',UsersRound,'indigo')}
-        {metric('Bài tập đang mở',overview?.activeAssignments??null,'assignments',overview?.activeAssignments?'Đang trong thời hạn làm bài':'Chưa có bài đang mở',ClipboardList,'indigo')}
-        {metric('Bài chờ chấm',null,'grades','Chưa có dữ liệu chấm thủ công',Pencil,'danger')}
-        {metric('Tỷ lệ hoàn thành',overview?.submissionRate==null?null:`${overview.submissionRate.toFixed(1)}%`,'grades','Lượt nộp / lượt được giao',PieChart,'teal')}
+        {metric(
+          'Học viên',
+          overview?.totalStudents ?? null,
+          'members',
+          overview?.totalStudents ? 'Số học viên trong lớp' : 'Chưa có học viên',
+          UsersRound,
+          'indigo',
+        )}
+        {metric(
+          'Bài tập đang mở',
+          overview?.activeAssignments ?? null,
+          'assignments',
+          overview?.activeAssignments ? 'Đang trong thời hạn làm bài' : 'Chưa có bài đang mở',
+          ClipboardList,
+          'indigo',
+        )}
+        {metric('Bài chờ chấm', null, 'grades', 'Chưa có dữ liệu chấm thủ công', Pencil, 'danger')}
+        {metric(
+          'Tỷ lệ hoàn thành',
+          overview?.submissionRate == null ? null : `${overview.submissionRate.toFixed(1)}%`,
+          'grades',
+          'Lượt nộp / lượt được giao',
+          PieChart,
+          'teal',
+        )}
       </div>
       <section className="card feature-card class-panel">
         <div className="class-panel-head">
           <div className="class-panel-title">
-            <span className="class-panel-icon"><ListChecks size={18}/></span>
-            <div><span className="section-label">ƯU TIÊN</span><h2>Cần xử lý</h2></div>
+            <span className="class-panel-icon">
+              <ListChecks size={18} />
+            </span>
+            <div>
+              <span className="section-label">ƯU TIÊN</span>
+              <h2>Cần xử lý</h2>
+            </div>
           </div>
-          <button className="text-link" onClick={()=>go('assignments')}>Xem tất cả <ArrowRight size={15}/></button>
+          <button className="text-link" onClick={() => go('assignments')}>
+            Xem tất cả <ArrowRight size={15} />
+          </button>
         </div>
-        {attention.length?(
+        {attention.length ? (
           <div className="class-priority-list">
-            {attention.map(item=>{
-              const state=dueState(item)
+            {attention.map((item) => {
+              const state = dueState(item)
               return (
                 <article className={`class-priority-item tone-${state.tone}`} key={item.id}>
                   <div className="class-priority-body">
-                    <div className="class-priority-tags"><StatePill state={state}/><code>#{item.id}</code></div>
+                    <div className="class-priority-tags">
+                      <StatePill state={state} />
+                      <code>#{item.id}</code>
+                    </div>
                     <h3>{item.title}</h3>
                     <p className="class-priority-meta">
-                      <span><CalendarDays size={15}/> Hạn {new Date(item.dueAt).toLocaleString('vi-VN')}</span>
-                      <span><Target size={15}/> Cần {item.passPercent}%</span>
-                      {item.lessonTitle&&<span className="class-chip">{item.lessonTitle}</span>}
+                      <span>
+                        <CalendarDays size={15} /> Hạn{' '}
+                        {new Date(item.dueAt).toLocaleString('vi-VN')}
+                      </span>
+                      <span>
+                        <Target size={15} /> Cần {item.passPercent}%
+                      </span>
+                      {item.lessonTitle && <span className="class-chip">{item.lessonTitle}</span>}
                     </p>
                   </div>
-                  <button className="button secondary" onClick={()=>results(item.id)}><Eye size={15}/> Xem kết quả</button>
+                  <button className="button secondary" onClick={() => results(item.id)}>
+                    <Eye size={15} /> Xem kết quả
+                  </button>
                 </article>
               )
             })}
           </div>
-        ):<div className="class-empty-state"><CheckCircle2 size={22}/><p>Hiện không có việc nào cần xử lý.</p></div>}
+        ) : (
+          <div className="class-empty-state">
+            <CheckCircle2 size={22} />
+            <p>Hiện không có việc nào cần xử lý.</p>
+          </div>
+        )}
       </section>
     </div>
   )
 }
 
-function Assignments({assignments,materials,materialsError,loadingMaterials,retryMaterials,classId,onAssigned,editing,setEditing,update,isOwner,busy,results,filter,setFilter}:{
-  assignments:Assignment[];materials:TeacherMaterialSummary[];materialsError:string;loadingMaterials:boolean;retryMaterials:()=>void;classId:number;onAssigned:()=>void;
-  editing:Assignment|null;setEditing:(value:Assignment|null)=>void;update:(event:FormEvent)=>void;
-  isOwner:boolean;busy:boolean;results:(id:number)=>void;filter:string;setFilter:(value:string)=>void
-}){
-  const [composerOpen,setComposerOpen]=useState(false)
-  const composer=useRef<HTMLElement>(null)
-  useEffect(()=>{if(composerOpen){composer.current?.scrollIntoView({behavior:'smooth',block:'start'});composer.current?.querySelector<HTMLInputElement>('input')?.focus({preventScroll:true})}},[composerOpen])
-  const filtered=assignments.filter(item=>item.title.toLocaleLowerCase().includes(filter.toLocaleLowerCase()))
+function Assignments({
+  assignments,
+  materials,
+  materialsError,
+  loadingMaterials,
+  retryMaterials,
+  classId,
+  onAssigned,
+  editing,
+  setEditing,
+  update,
+  isOwner,
+  busy,
+  results,
+  filter,
+  setFilter,
+}: {
+  assignments: Assignment[]
+  materials: TeacherMaterialSummary[]
+  materialsError: string
+  loadingMaterials: boolean
+  retryMaterials: () => void
+  classId: number
+  onAssigned: () => void
+  editing: Assignment | null
+  setEditing: (value: Assignment | null) => void
+  update: (event: FormEvent) => void
+  isOwner: boolean
+  busy: boolean
+  results: (id: number) => void
+  filter: string
+  setFilter: (value: string) => void
+}) {
+  const [composerOpen, setComposerOpen] = useState(false)
+  const composer = useRef<HTMLElement>(null)
+  useEffect(() => {
+    if (composerOpen) {
+      composer.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      composer.current?.querySelector<HTMLInputElement>('input')?.focus({ preventScroll: true })
+    }
+  }, [composerOpen])
+  const filtered = assignments.filter((item) =>
+    item.title.toLocaleLowerCase().includes(filter.toLocaleLowerCase()),
+  )
   return (
     <div className="class-tab-content">
       <section className="card feature-card class-panel">
         <div className="class-panel-head">
           <div>
-            <h2><ClipboardList size={24}/> Danh sách bài tập</h2>
+            <h2>
+              <ClipboardList size={24} /> Danh sách bài tập
+            </h2>
             <p className="muted">{assignments.length} bài tập trong lớp</p>
           </div>
-          {isOwner&&<button type="button" className="button primary" aria-expanded={composerOpen} aria-controls="new-assignment" onClick={()=>setComposerOpen(value=>!value)}><Plus size={18}/> {composerOpen?'Đóng giao bài':'Giao bài tập mới'}</button>}
+          {isOwner && (
+            <button
+              type="button"
+              className="button primary"
+              aria-expanded={composerOpen}
+              aria-controls="new-assignment"
+              onClick={() => setComposerOpen((value) => !value)}
+            >
+              <Plus size={18} /> {composerOpen ? 'Đóng giao bài' : 'Giao bài tập mới'}
+            </button>
+          )}
         </div>
-        <div className="class-tab-toolbar"><input className="search-input" value={filter} onChange={event=>setFilter(event.target.value)} placeholder="Tìm bài tập..."/></div>
-        {filtered.length?(
+        <div className="class-tab-toolbar">
+          <input
+            className="search-input"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+            placeholder="Tìm bài tập..."
+          />
+        </div>
+        {filtered.length ? (
           <div className="class-assignment-grid">
-            {filtered.map(item=>{
-              const state=dueState(item)
+            {filtered.map((item) => {
+              const state = dueState(item)
               return (
                 <article className={`class-assignment-card tone-${state.tone}`} key={item.id}>
-                  <div className="class-assignment-top"><StatePill state={state}/><code>#{item.id}</code></div>
-                  <h3>{item.title}</h3>
-                  {item.lessonTitle&&<span className="class-chip">{item.lessonTitle}</span>}
-                  {item.instructions&&<p className="class-assignment-desc">{item.instructions}</p>}
-                  <div className="class-assignment-meta">
-                    <span><CalendarDays size={15}/> Hạn {new Date(item.dueAt).toLocaleString('vi-VN')}</span>
-                    <span><Target size={15}/> Cần {item.passPercent}%</span>
+                  <div className="class-assignment-top">
+                    <StatePill state={state} />
+                    <code>#{item.id}</code>
                   </div>
-                  {isOwner&&(
+                  <h3>{item.title}</h3>
+                  {item.lessonTitle && <span className="class-chip">{item.lessonTitle}</span>}
+                  {item.instructions && (
+                    <p className="class-assignment-desc">{item.instructions}</p>
+                  )}
+                  <div className="class-assignment-meta">
+                    <span>
+                      <CalendarDays size={15} /> Hạn {new Date(item.dueAt).toLocaleString('vi-VN')}
+                    </span>
+                    <span>
+                      <Target size={15} /> Cần {item.passPercent}%
+                    </span>
+                  </div>
+                  {isOwner && (
                     <div className="class-assignment-actions">
-                      <button className="button secondary" onClick={()=>setEditing({...item,dueAt:localDate(item.dueAt)})}><Pencil size={15}/> Sửa</button>
-                      <button className="button secondary" onClick={()=>results(item.id)}><Eye size={15}/> Xem kết quả</button>
+                      <button
+                        className="button secondary"
+                        onClick={() => setEditing({ ...item, dueAt: localDate(item.dueAt) })}
+                      >
+                        <Pencil size={15} /> Sửa
+                      </button>
+                      <button className="button secondary" onClick={() => results(item.id)}>
+                        <Eye size={15} /> Xem kết quả
+                      </button>
                     </div>
                   )}
                 </article>
               )
             })}
           </div>
-        ):<p className="muted">Chưa có bài tập phù hợp.</p>}
+        ) : (
+          <p className="muted">Chưa có bài tập phù hợp.</p>
+        )}
       </section>
-      {isOwner&&composerOpen&&<section ref={composer} className="card feature-card class-panel class-material-composer" id="new-assignment">
-        <MaterialDeliveryForm materials={materials} materialsError={materialsError} loadingMaterials={loadingMaterials} onRetryMaterials={retryMaterials} fixedClassId={classId} onCreated={onAssigned}/>
-      </section>}
-      {editing&&<div className="modal-backdrop"><section className="card modal-card" role="dialog" aria-modal="true"><h2>Sửa bài tập</h2><form className="form-grid" onSubmit={update}><label className="full-span">Tên bài tập<input required value={editing.title} onChange={event=>setEditing({...editing,title:event.target.value})}/></label><label>Hạn nộp<input required type="datetime-local" value={localDate(editing.dueAt)} onChange={event=>setEditing({...editing,dueAt:event.target.value})}/></label><label>Ngưỡng đạt (%)<input type="number" min={1} max={100} value={editing.passPercent} onChange={event=>setEditing({...editing,passPercent:Number(event.target.value)})}/></label><label>Trạng thái<select value={editing.status} onChange={event=>setEditing({...editing,status:event.target.value})}><option value="PUBLISHED">Đang mở</option><option value="CLOSED">Đã đóng</option></select></label><label className="full-span">Hướng dẫn<textarea value={editing.instructions} onChange={event=>setEditing({...editing,instructions:event.target.value})}/></label><div className="button-row"><button type="button" className="button secondary" onClick={()=>setEditing(null)}>Hủy</button><button className="button primary" disabled={busy}>Lưu</button></div></form></section></div>}
+      {isOwner && composerOpen && (
+        <section
+          ref={composer}
+          className="card feature-card class-panel class-material-composer"
+          id="new-assignment"
+        >
+          <MaterialDeliveryForm
+            materials={materials}
+            materialsError={materialsError}
+            loadingMaterials={loadingMaterials}
+            onRetryMaterials={retryMaterials}
+            fixedClassId={classId}
+            onCreated={onAssigned}
+          />
+        </section>
+      )}
+      {editing && (
+        <div className="modal-backdrop">
+          <section className="card modal-card" role="dialog" aria-modal="true">
+            <h2>Sửa bài tập</h2>
+            <form className="form-grid" onSubmit={update}>
+              <label className="full-span">
+                Tên bài tập
+                <input
+                  required
+                  value={editing.title}
+                  onChange={(event) => setEditing({ ...editing, title: event.target.value })}
+                />
+              </label>
+              <label>
+                Hạn nộp
+                <input
+                  required
+                  type="datetime-local"
+                  value={localDate(editing.dueAt)}
+                  onChange={(event) => setEditing({ ...editing, dueAt: event.target.value })}
+                />
+              </label>
+              <label>
+                Ngưỡng đạt (%)
+                <input
+                  type="number"
+                  min={1}
+                  max={100}
+                  value={editing.passPercent}
+                  onChange={(event) =>
+                    setEditing({ ...editing, passPercent: Number(event.target.value) })
+                  }
+                />
+              </label>
+              <label>
+                Trạng thái
+                <select
+                  value={editing.status}
+                  onChange={(event) => setEditing({ ...editing, status: event.target.value })}
+                >
+                  <option value="PUBLISHED">Đang mở</option>
+                  <option value="CLOSED">Đã đóng</option>
+                </select>
+              </label>
+              <label className="full-span">
+                Hướng dẫn
+                <textarea
+                  value={editing.instructions}
+                  onChange={(event) => setEditing({ ...editing, instructions: event.target.value })}
+                />
+              </label>
+              <div className="button-row">
+                <button type="button" className="button secondary" onClick={() => setEditing(null)}>
+                  Hủy
+                </button>
+                <button className="button primary" disabled={busy}>
+                  Lưu
+                </button>
+              </div>
+            </form>
+          </section>
+        </div>
+      )}
     </div>
   )
 }
 
-function Members({detail,userId,isOwner,remove}:{detail:Classroom;userId?:number;isOwner:boolean;remove:(id:number,name:string)=>void}){
-  const [query,setQuery]=useState('')
-  const [page,setPage]=useState(1)
-  const members=detail.members||[]
-  const filtered=members.filter(member=>`${member.displayName} ${member.username}`.toLocaleLowerCase('vi-VN').includes(query.toLocaleLowerCase('vi-VN')))
-  const current=Math.min(page,Math.max(1,Math.ceil(filtered.length/PAGE_SIZE)))
-  const rows=filtered.slice((current-1)*PAGE_SIZE,current*PAGE_SIZE)
-  useEffect(()=>setPage(1),[query])
+function Members({
+  detail,
+  userId,
+  isOwner,
+  remove,
+}: {
+  detail: Classroom
+  userId?: number
+  isOwner: boolean
+  remove: (id: number, name: string) => void
+}) {
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
+  const members = detail.members || []
+  const filtered = members.filter((member) =>
+    `${member.displayName} ${member.username}`
+      .toLocaleLowerCase('vi-VN')
+      .includes(query.toLocaleLowerCase('vi-VN')),
+  )
+  const current = Math.min(page, Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)))
+  const rows = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE)
+  useEffect(() => setPage(1), [query])
   return (
     <section className="card feature-card class-panel class-members-panel">
       <div className="class-panel-head">
         <div>
-          <h2><UsersRound size={24}/> Danh sách thành viên</h2>
+          <h2>
+            <UsersRound size={24} /> Danh sách thành viên
+          </h2>
           <p className="muted">Quản lý học viên và tài khoản tham gia lớp.</p>
         </div>
-        <span className="class-member-total"><UsersRound size={16}/>{members.length} học viên</span>
+        <span className="class-member-total">
+          <UsersRound size={16} />
+          {members.length} học viên
+        </span>
       </div>
-      <div className="class-teacher-strip"><span className="avatar">{detail.teacherName.slice(0,1).toUpperCase()}</span><div><small>GIÁO VIÊN PHỤ TRÁCH</small><strong>{detail.teacherName}</strong></div><ShieldCheck size={21}/></div>
-      <div className="class-members-toolbar"><h3>Học viên <span>{filtered.length}</span></h3><label className="class-member-search"><Search size={17}/><input aria-label="Tìm thành viên" placeholder="Tìm tên hoặc tài khoản…" value={query} onChange={event=>setQuery(event.target.value)}/></label></div>
+      <div className="class-teacher-strip">
+        <span className="avatar">{detail.teacherName.slice(0, 1).toUpperCase()}</span>
+        <div>
+          <small>GIÁO VIÊN PHỤ TRÁCH</small>
+          <strong>{detail.teacherName}</strong>
+        </div>
+        <ShieldCheck size={21} />
+      </div>
+      <div className="class-members-toolbar">
+        <h3>
+          Học viên <span>{filtered.length}</span>
+        </h3>
+        <label className="class-member-search">
+          <Search size={17} />
+          <input
+            aria-label="Tìm thành viên"
+            placeholder="Tìm tên hoặc tài khoản…"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+      </div>
       <div className="class-table-wrap">
         <table className="class-table">
-          <thead><tr><th>Thành viên</th><th>Tài khoản</th><th>Vai trò</th>{isOwner&&<th className="right">Thao tác</th>}</tr></thead>
+          <thead>
+            <tr>
+              <th>Thành viên</th>
+              <th>Tài khoản</th>
+              <th>Vai trò</th>
+              {isOwner && <th className="right">Thao tác</th>}
+            </tr>
+          </thead>
           <tbody>
-            {rows.map(member=>(
+            {rows.map((member) => (
               <tr key={member.id}>
-                <td><span className="class-member-cell"><span className="avatar">{member.displayName.slice(0,1).toUpperCase()}</span><strong>{member.displayName}{member.id===userId&&<small className="class-self-label">Bạn</small>}</strong></span></td>
+                <td>
+                  <span className="class-member-cell">
+                    <span className="avatar">{member.displayName.slice(0, 1).toUpperCase()}</span>
+                    <strong>
+                      {member.displayName}
+                      {member.id === userId && <small className="class-self-label">Bạn</small>}
+                    </strong>
+                  </span>
+                </td>
                 <td className="mono">{member.username}</td>
-                <td><span className="class-role-chip">Học viên</span></td>
-                {isOwner&&<td className="right">{member.id!==userId&&<button className="text-button" onClick={()=>remove(member.id,member.displayName)}>Xóa khỏi lớp</button>}</td>}
+                <td>
+                  <span className="class-role-chip">Học viên</span>
+                </td>
+                {isOwner && (
+                  <td className="right">
+                    {member.id !== userId && (
+                      <button
+                        className="text-button"
+                        onClick={() => remove(member.id, member.displayName)}
+                      >
+                        Xóa khỏi lớp
+                      </button>
+                    )}
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>
         </table>
       </div>
-      {!rows.length&&<div className="class-members-empty"><UsersRound size={32}/><h3>{query?'Không tìm thấy học viên':'Chưa có học viên tham gia'}</h3><p>{query?'Thử tìm bằng tên hoặc tài khoản khác.':'Chia sẻ mã lớp ở đầu trang để học viên tham gia lớp của bạn.'}</p></div>}
-      <Pagination total={filtered.length} page={current} onPageChange={setPage}/>
+      {!rows.length && (
+        <div className="class-members-empty">
+          <UsersRound size={32} />
+          <h3>{query ? 'Không tìm thấy học viên' : 'Chưa có học viên tham gia'}</h3>
+          <p>
+            {query
+              ? 'Thử tìm bằng tên hoặc tài khoản khác.'
+              : 'Chia sẻ mã lớp ở đầu trang để học viên tham gia lớp của bạn.'}
+          </p>
+        </div>
+      )}
+      <Pagination total={filtered.length} page={current} onPageChange={setPage} />
     </section>
   )
 }
 
-function Grades({assignments,resultsByAssignment,selected,setSelected,exportResults}:{assignments:Assignment[];resultsByAssignment:Record<number,AssignmentResult[]>;selected:number;setSelected:(id:number)=>void;exportResults:()=>void}){
-  const [statusFilter,setStatusFilter]=useState<'all'|'pending'|'graded'>('all')
-  const assignmentStatus=(assignment:Assignment)=>{
-    const results=resultsByAssignment[assignment.id]||[]
-    return results.length>0&&results.every(item=>item.status!=='IN_PROGRESS')?'graded':'pending'
+function Grades({
+  assignments,
+  resultsByAssignment,
+  selected,
+  setSelected,
+  exportResults,
+}: {
+  assignments: Assignment[]
+  resultsByAssignment: Record<number, AssignmentResult[]>
+  selected: number
+  setSelected: (id: number) => void
+  exportResults: () => void
+}) {
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'graded'>('all')
+  const assignmentStatus = (assignment: Assignment) => {
+    const results = resultsByAssignment[assignment.id] || []
+    return results.length > 0 && results.every((item) => item.status !== 'IN_PROGRESS')
+      ? 'graded'
+      : 'pending'
   }
-  const pendingAssignments=assignments.filter(item=>assignmentStatus(item)==='pending')
-  const gradedAssignments=assignments.filter(item=>assignmentStatus(item)==='graded')
-  const visibleAssignments=statusFilter==='pending'?pendingAssignments:statusFilter==='graded'?gradedAssignments:assignments
-  const selectedResults=selected?resultsByAssignment[selected]||[]:[]
-  const completed=selectedResults.filter(item=>item.status!=='IN_PROGRESS'),average=completed.length?completed.reduce((sum,item)=>sum+(item.totalQuestions?item.correctCount/item.totalQuestions*100:0),0)/completed.length:null
+  const pendingAssignments = assignments.filter((item) => assignmentStatus(item) === 'pending')
+  const gradedAssignments = assignments.filter((item) => assignmentStatus(item) === 'graded')
+  const visibleAssignments =
+    statusFilter === 'pending'
+      ? pendingAssignments
+      : statusFilter === 'graded'
+        ? gradedAssignments
+        : assignments
+  const selectedResults = selected ? resultsByAssignment[selected] || [] : []
+  const completed = selectedResults.filter((item) => item.status !== 'IN_PROGRESS'),
+    average = completed.length
+      ? completed.reduce(
+          (sum, item) =>
+            sum + (item.totalQuestions ? (item.correctCount / item.totalQuestions) * 100 : 0),
+          0,
+        ) / completed.length
+      : null
   return (
     <section className="card feature-card class-panel">
       <div className="class-panel-head">
-        <div><h2><Star size={24}/> Bảng điểm</h2><p className="muted">Theo dõi kết quả từng học viên theo bài tập.</p></div>
-        <button className="button secondary" disabled={!Object.keys(resultsByAssignment).length} onClick={exportResults}>Xuất CSV</button>
+        <div>
+          <h2>
+            <Star size={24} /> Bảng điểm
+          </h2>
+          <p className="muted">Theo dõi kết quả từng học viên theo bài tập.</p>
+        </div>
+        <button
+          className="button secondary"
+          disabled={!Object.keys(resultsByAssignment).length}
+          onClick={exportResults}
+        >
+          Xuất CSV
+        </button>
       </div>
       <div className="grades-status-tabs" role="tablist" aria-label="Lọc bài tập theo trạng thái">
-          {([['all','Tất cả',assignments.length],['graded','Đã có điểm',gradedAssignments.length],['pending','Chưa chấm',pendingAssignments.length]] as const).map(([key,label,count])=><button type="button" role="tab" aria-selected={statusFilter===key} className={statusFilter===key?'active':''} onClick={()=>setStatusFilter(key)} key={key}>{label}<span>{count}</span></button>)}
+        {(
+          [
+            ['all', 'Tất cả', assignments.length],
+            ['graded', 'Đã có điểm', gradedAssignments.length],
+            ['pending', 'Chưa chấm', pendingAssignments.length],
+          ] as const
+        ).map(([key, label, count]) => (
+          <button
+            type="button"
+            role="tab"
+            aria-selected={statusFilter === key}
+            className={statusFilter === key ? 'active' : ''}
+            onClick={() => setStatusFilter(key)}
+            key={key}
+          >
+            {label}
+            <span>{count}</span>
+          </button>
+        ))}
       </div>
-      {visibleAssignments.length?<div className="grades-assignment-list">{visibleAssignments.map(assignment=>{
-        const assignmentResults=resultsByAssignment[assignment.id]||[],state=assignmentStatus(assignment)
-        return <button type="button" className={`grades-assignment-card ${selected===assignment.id?'selected':''}`} key={assignment.id} onClick={()=>setSelected(assignment.id)}>
-          <span className={`grades-assignment-icon ${state}`}><ClipboardList size={18}/></span>
-          <span className="grades-assignment-copy"><strong>{assignment.title}</strong><small>{assignment.lessonTitle||'Bài tập lớp'} · {assignmentResults.length?`${assignmentResults.length} lượt nộp`:'Chưa có bài nộp'}</small></span>
-          <span className={`class-status-chip ${state==='pending'?'doing':''}`}>{state==='pending'?'Chưa chấm':'Đã có điểm'}</span>
-          <ArrowRight size={16}/>
-        </button>
-      })}</div>:<div className="class-empty-state"><CheckCircle2 size={22}/><p>Không có bài tập thuộc trạng thái này.</p></div>}
-      {selected?<>
-        <div className="class-grade-detail-heading"><div><h3>{assignments.find(item=>item.id===selected)?.title||'Chi tiết bài tập'}</h3><p className="muted">Kết quả từng học viên</p></div></div>
-        <div className="class-grade-summary">
-          <div className="grade-avg"><span>Điểm trung bình</span><strong>{average===null?'—':`${average.toFixed(1)}%`}</strong></div>
-          <span className="grade-stat">{selectedResults.length} lượt</span>
-          <span className="grade-stat">{completed.length} đã có điểm</span>
+      {visibleAssignments.length ? (
+        <div className="grades-assignment-list">
+          {visibleAssignments.map((assignment) => {
+            const assignmentResults = resultsByAssignment[assignment.id] || [],
+              state = assignmentStatus(assignment)
+            return (
+              <button
+                type="button"
+                className={`grades-assignment-card ${selected === assignment.id ? 'selected' : ''}`}
+                key={assignment.id}
+                onClick={() => setSelected(assignment.id)}
+              >
+                <span className={`grades-assignment-icon ${state}`}>
+                  <ClipboardList size={18} />
+                </span>
+                <span className="grades-assignment-copy">
+                  <strong>{assignment.title}</strong>
+                  <small>
+                    {assignment.lessonTitle || 'Bài tập lớp'} ·{' '}
+                    {assignmentResults.length
+                      ? `${assignmentResults.length} lượt nộp`
+                      : 'Chưa có bài nộp'}
+                  </small>
+                </span>
+                <span className={`class-status-chip ${state === 'pending' ? 'doing' : ''}`}>
+                  {state === 'pending' ? 'Chưa chấm' : 'Đã có điểm'}
+                </span>
+                <ArrowRight size={16} />
+              </button>
+            )
+          })}
         </div>
-        <div className="class-table-wrap table-wrap">
-          <table className="class-table">
-            <thead><tr><th>Học viên</th><th>Trạng thái</th><th>Điểm</th><th>Đạt</th><th>Nộp lúc</th></tr></thead>
-            <tbody>{selectedResults.map(item=><tr key={item.userId}><td><strong>{item.displayName}</strong></td><td><span className={`class-status-chip ${item.status==='IN_PROGRESS'?'doing':''}`}>{item.status==='IN_PROGRESS'?'Chưa chấm':item.status==='WON'?'Đã có điểm':item.status}</span></td><td className="mono">{item.status==='IN_PROGRESS'?'—':item.totalQuestions?`${item.correctCount}/${item.totalQuestions}`:'—'}</td><td>{item.status==='IN_PROGRESS'?<span className="muted">Chờ chấm</span>:<span className={`class-pass-chip ${item.passed?'yes':'no'}`}>{item.passed?'Có':'Không'}</span>}</td><td>{item.completedAt?new Date(item.completedAt).toLocaleString('vi-VN'):'—'}</td></tr>)}</tbody>
-          </table>
+      ) : (
+        <div className="class-empty-state">
+          <CheckCircle2 size={22} />
+          <p>Không có bài tập thuộc trạng thái này.</p>
         </div>
-        {!selectedResults.length&&<div className="class-empty-state"><CheckCircle2 size={22}/><p>Bài tập này chưa có bài nộp.</p></div>}
-      </>:<p className="muted">Chọn một bài tập bên trên để xem bảng điểm học viên.</p>}
+      )}
+      {selected ? (
+        <>
+          <div className="class-grade-detail-heading">
+            <div>
+              <h3>
+                {assignments.find((item) => item.id === selected)?.title || 'Chi tiết bài tập'}
+              </h3>
+              <p className="muted">Kết quả từng học viên</p>
+            </div>
+          </div>
+          <div className="class-grade-summary">
+            <div className="grade-avg">
+              <span>Điểm trung bình</span>
+              <strong>{average === null ? '—' : `${average.toFixed(1)}%`}</strong>
+            </div>
+            <span className="grade-stat">{selectedResults.length} lượt</span>
+            <span className="grade-stat">{completed.length} đã có điểm</span>
+          </div>
+          <div className="class-table-wrap table-wrap">
+            <table className="class-table">
+              <thead>
+                <tr>
+                  <th>Học viên</th>
+                  <th>Trạng thái</th>
+                  <th>Điểm</th>
+                  <th>Đạt</th>
+                  <th>Nộp lúc</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedResults.map((item) => (
+                  <tr key={item.userId}>
+                    <td>
+                      <strong>{item.displayName}</strong>
+                    </td>
+                    <td>
+                      <span
+                        className={`class-status-chip ${item.status === 'IN_PROGRESS' ? 'doing' : ''}`}
+                      >
+                        {item.status === 'IN_PROGRESS'
+                          ? 'Chưa chấm'
+                          : item.status === 'WON'
+                            ? 'Đã có điểm'
+                            : item.status}
+                      </span>
+                    </td>
+                    <td className="mono">
+                      {item.status === 'IN_PROGRESS'
+                        ? '—'
+                        : item.totalQuestions
+                          ? `${item.correctCount}/${item.totalQuestions}`
+                          : '—'}
+                    </td>
+                    <td>
+                      {item.status === 'IN_PROGRESS' ? (
+                        <span className="muted">Chờ chấm</span>
+                      ) : (
+                        <span className={`class-pass-chip ${item.passed ? 'yes' : 'no'}`}>
+                          {item.passed ? 'Có' : 'Không'}
+                        </span>
+                      )}
+                    </td>
+                    <td>
+                      {item.completedAt ? new Date(item.completedAt).toLocaleString('vi-VN') : '—'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {!selectedResults.length && (
+            <div className="class-empty-state">
+              <CheckCircle2 size={22} />
+              <p>Bài tập này chưa có bài nộp.</p>
+            </div>
+          )}
+        </>
+      ) : (
+        <p className="muted">Chọn một bài tập bên trên để xem bảng điểm học viên.</p>
+      )}
     </section>
   )
 }
 
-function Chat({messages,message,setMessage,send,report,busy,userId}:{messages:ClassMessage[];message:string;setMessage:(value:string)=>void;send:(event:FormEvent)=>void;report:(id:number)=>void;busy:boolean;userId?:number}){
+function Chat({
+  messages,
+  message,
+  setMessage,
+  send,
+  report,
+  busy,
+  userId,
+}: {
+  messages: ClassMessage[]
+  message: string
+  setMessage: (value: string) => void
+  send: (event: FormEvent) => void
+  report: (id: number) => void
+  busy: boolean
+  userId?: number
+}) {
   return (
     <section className="card feature-card chat-panel class-panel class-chat">
-      <div className="class-panel-head"><div><h2><MessageCircle size={24}/> Chat lớp</h2><p className="muted">Trao đổi với giáo viên và học viên trong lớp.</p></div></div>
-      <div className="chat-list" aria-live="polite">
-        {messages.length?messages.map(item=>(
-          <div className={`chat-message ${item.userId===userId?'mine':''}`} key={item.id}>
-            <span className="avatar">{item.displayName.slice(0,1)}</span>
-            <div className="chat-bubble">
-              <div><strong>{item.displayName}</strong><time>{new Date(item.createdAt).toLocaleString('vi-VN')}</time></div>
-              <p>{item.body}</p>
-              {item.userId!==userId&&<button className="text-button" onClick={()=>report(item.id)}>Báo cáo</button>}
-            </div>
-          </div>
-        )):<p className="muted">Chưa có tin nhắn.</p>}
+      <div className="class-panel-head">
+        <div>
+          <h2>
+            <MessageCircle size={24} /> Chat lớp
+          </h2>
+          <p className="muted">Trao đổi với giáo viên và học viên trong lớp.</p>
+        </div>
       </div>
-      <form className="inline-form" onSubmit={send}><input aria-label="Tin nhắn lớp" required maxLength={1000} value={message} onChange={event=>setMessage(event.target.value)} placeholder="Nhắn cho lớp..."/><button className="button primary" disabled={busy}><Send size={17}/>Gửi</button></form>
+      <div className="chat-list" aria-live="polite">
+        {messages.length ? (
+          messages.map((item) => (
+            <div className={`chat-message ${item.userId === userId ? 'mine' : ''}`} key={item.id}>
+              <span className="avatar">{item.displayName.slice(0, 1)}</span>
+              <div className="chat-bubble">
+                <div>
+                  <strong>{item.displayName}</strong>
+                  <time>{new Date(item.createdAt).toLocaleString('vi-VN')}</time>
+                </div>
+                <p>{item.body}</p>
+                {item.userId !== userId && (
+                  <button className="text-button" onClick={() => report(item.id)}>
+                    Báo cáo
+                  </button>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <p className="muted">Chưa có tin nhắn.</p>
+        )}
+      </div>
+      <form className="inline-form" onSubmit={send}>
+        <input
+          aria-label="Tin nhắn lớp"
+          required
+          maxLength={1000}
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          placeholder="Nhắn cho lớp..."
+        />
+        <button className="button primary" disabled={busy}>
+          <Send size={17} />
+          Gửi
+        </button>
+      </form>
     </section>
   )
 }

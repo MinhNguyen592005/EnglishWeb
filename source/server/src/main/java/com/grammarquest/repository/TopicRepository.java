@@ -1,7 +1,9 @@
 package com.grammarquest.repository;
+
 import com.grammarquest.entity.Topic;
-import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
-public interface TopicRepository extends JpaRepository<Topic,String> {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface TopicRepository extends JpaRepository<Topic, String> {
     List<Topic> findByPublishedTrueOrderBySortOrderAscSlugAsc();
 }

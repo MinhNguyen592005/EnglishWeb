@@ -1,9 +1,60 @@
-.account-report-notices { position: fixed; top: 82px; right: 20px; z-index: 1000; width: min(390px, calc(100vw - 32px)); display: grid; gap: 10px; max-height: 70vh; overflow-y: auto; }
-.account-report-notices .card { padding: 20px; border: 1px solid #f0d28a; box-shadow: 0 10px 35px #30254a26; }
-.account-report-notices p { margin: 10px 0; line-height: 1.6; }
-.system-notice { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; padding: 16px 20px; margin: 12px 16px; border: 1px solid #cbd1ff; border-radius: 12px; background: #f0f2ff; color: #313c86; }
-.system-notice > div { min-width: 0; }
-.system-notice p { margin: 6px 0 0; line-height: 1.6; overflow-wrap: anywhere; white-space: pre-wrap; }
-.system-notice-close { flex: 0 0 auto; display: grid; place-items: center; width: 36px; height: 36px; border: 0; border-radius: 8px; background: transparent; color: inherit; font-size: 24px; }
-.system-notice-close:hover { background: #dfe3ff; }
-.system-notice-close:focus-visible { outline: 2px solid #4856b8; outline-offset: 2px; }
+.account-report-notices {
+  position: fixed;
+  top: 82px;
+  right: 20px;
+  z-index: 1000;
+  width: min(390px, calc(100vw - 32px));
+  display: grid;
+  gap: 10px;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.account-report-notices .card {
+  padding: 20px;
+  border: 1px solid #f0d28a;
+  box-shadow: 0 10px 35px #30254a26;
+}
+.account-report-notices p {
+  margin: 10px 0;
+  line-height: 1.6;
+}
+.system-notice {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px 20px;
+  margin: 12px 16px;
+  border: 1px solid #cbd1ff;
+  border-radius: 12px;
+  background: #f0f2ff;
+  color: #313c86;
+}
+.system-notice > div {
+  min-width: 0;
+}
+.system-notice p {
+  margin: 6px 0 0;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+.system-notice-close {
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: inherit;
+  font-size: 24px;
+}
+.system-notice-close:hover {
+  background: #dfe3ff;
+}
+.system-notice-close:focus-visible {
+  outline: 2px solid #4856b8;
+  outline-offset: 2px;
+}

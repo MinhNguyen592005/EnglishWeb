@@ -3,6 +3,7 @@ package com.grammarquest.util;
 import java.util.List;
 
 public final class PvpRankRules {
+
     public static final int DEFAULT_ELO = 1000;
     public static final int MIN_ELO = 100;
     public static final int K_FACTOR = 32;
@@ -14,7 +15,13 @@ public final class PvpRankRules {
     public static final int ROUND_TIME_LIMIT_SECONDS = 20; // 20 giây mỗi câu hỏi
     public static final int MATCH_TIME_LIMIT_SECONDS = 180; // 180 giây (3 phút) giới hạn toàn trận
 
-    public record RankTier(String code, String title, int minElo, Integer nextElo, String colorClass) {}
+    public record RankTier(
+        String code,
+        String title,
+        int minElo,
+        Integer nextElo,
+        String colorClass
+    ) {}
 
     public static final List<RankTier> TIERS = List.of(
         new RankTier("BRONZE", "Đồng", 0, 1100, "rank-bronze"),

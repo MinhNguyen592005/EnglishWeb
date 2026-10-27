@@ -14,5 +14,8 @@ source/client/artifacts/
 *.class
 /.local-backups/
 
+# Temporary files used to recover classroom UI from compiled output.
+/source/client/classroom*-recovery.*
+
 source/server/downloads/
 source/server/statics/

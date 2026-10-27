@@ -1,0 +1,17 @@
+{
+  "printWidth": 100,
+  "tabWidth": 2,
+  "useTabs": false,
+  "semi": false,
+  "singleQuote": true,
+  "trailingComma": "all",
+  "endOfLine": "lf",
+  "overrides": [
+    {
+      "files": "*.java",
+      "options": {
+        "tabWidth": 4
+      }
+    }
+  ]
+}

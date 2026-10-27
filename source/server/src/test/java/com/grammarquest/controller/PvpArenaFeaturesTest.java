@@ -1,5 +1,8 @@
 package com.grammarquest.controller;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+
 import com.grammarquest.entity.User;
 import com.grammarquest.exception.ApiException;
 import com.grammarquest.repository.UserRepository;
@@ -7,16 +10,12 @@ import com.grammarquest.service.ArenaMatchFactory;
 import com.grammarquest.service.ArenaMatchmaker;
 import com.grammarquest.service.RealtimeNotifier;
 import com.grammarquest.util.PvpRankRules;
-import org.junit.jupiter.api.Test;
-import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.*;
+import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 
 class PvpArenaFeaturesTest {
 
@@ -40,7 +39,10 @@ class PvpArenaFeaturesTest {
         int underdogWin = PvpRankRules.calculateEloChange(1000, 1400, 1.0);
         int favoriteWin = PvpRankRules.calculateEloChange(1400, 1000, 1.0);
         assertTrue(underdogWin > 25, "Underdog win delta should be > 25, got " + underdogWin);
-        assertTrue(favoriteWin < 10 && favoriteWin >= 1, "Favorite win delta should be small positive, got " + favoriteWin);
+        assertTrue(
+            favoriteWin < 10 && favoriteWin >= 1,
+            "Favorite win delta should be small positive, got " + favoriteWin
+        );
     }
 
     @Test
@@ -66,9 +68,15 @@ class PvpArenaFeaturesTest {
         confirmingRoom.put("question_limit", 10);
         confirmingRoom.put("host_score", 0);
         confirmingRoom.put("guest_score", 0);
-        when(db.queryForList("select * from arena_rooms where id=? for update", 10L)).thenReturn(List.of(confirmingRoom));
-        when(db.queryForObject("select display_name from users where id=?", String.class, 1L)).thenReturn("Alice");
-        when(db.queryForObject("select display_name from users where id=?", String.class, 2L)).thenReturn("Bob");
+        when(db.queryForList("select * from arena_rooms where id=? for update", 10L)).thenReturn(
+            List.of(confirmingRoom)
+        );
+        when(
+            db.queryForObject("select display_name from users where id=?", String.class, 1L)
+        ).thenReturn("Alice");
+        when(
+            db.queryForObject("select display_name from users where id=?", String.class, 2L)
+        ).thenReturn("Bob");
 
         var auth = new UsernamePasswordAuthenticationToken("alice", null, List.of());
 
@@ -128,18 +136,29 @@ class PvpArenaFeaturesTest {
         room.put("host_score", 7);
         room.put("guest_score", 6);
         room.put("round_deadline_at", Timestamp.from(Instant.now().minusSeconds(1)));
-        when(db.queryForList("select * from arena_rooms where id=? for update", 99L)).thenReturn(List.of(room));
+        when(db.queryForList("select * from arena_rooms where id=? for update", 99L)).thenReturn(
+            List.of(room)
+        );
 
         Map<String, Object> round = new HashMap<>();
         round.put("correct_option", "A");
         round.put("host_answer", "A");
         round.put("guest_answer", "B");
-        when(db.queryForMap("select correct_option,host_answer,guest_answer from arena_rounds where room_id=? and round_no=?", 99L, 10)).thenReturn(round);
+        when(
+            db.queryForMap(
+                "select correct_option,host_answer,guest_answer from arena_rounds where room_id=? and round_no=?",
+                99L,
+                10
+            )
+        ).thenReturn(round);
 
         controller.advance(99L);
 
         // Host (1000 ELO) thắng Guest (1200 ELO) với điểm trận 8 - 6
-        assertTrue(host.pvpElo > 1020, "Host ELO should increase significantly after beating higher ELO opponent");
+        assertTrue(
+            host.pvpElo > 1020,
+            "Host ELO should increase significantly after beating higher ELO opponent"
+        );
         assertTrue(guest.pvpElo < 1180, "Guest ELO should decrease");
         assertEquals(1, host.pvpWins);
         assertEquals(1, host.pvpWinStreak);

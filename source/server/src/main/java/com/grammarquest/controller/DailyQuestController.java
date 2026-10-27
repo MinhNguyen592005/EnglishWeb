@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/api/v1/daily-quests")
 public class DailyQuestController {
+
     private final DailyQuestService dailyQuestService;
 
     public DailyQuestController(DailyQuestService dailyQuestService) {

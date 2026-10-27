@@ -1,0 +1,9 @@
+**/node_modules/
+**/dist/
+**/target/
+**/artifacts/
+**/package-lock.json
+**/*.sql
+**/.env*
+**/*.log
+.local-backups/

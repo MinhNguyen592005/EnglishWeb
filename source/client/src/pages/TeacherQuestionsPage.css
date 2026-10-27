@@ -12,63 +12,290 @@
 }
 
 /* Teacher workspace: keep the existing editor and selection tools. */
-.teacher-question-workspace { min-width: 0; max-width: 100%; }
-.teacher-question-workspace .page-heading { margin-bottom: 20px; }
-.teacher-question-workspace .page-heading p { max-width: 690px; line-height: 1.7; }
-.teacher-library-steps { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 17px 20px; margin-bottom: 24px; background: linear-gradient(110deg, #f0f2ff, #f8faff); border: 1px solid #e1e6fb; border-radius: 16px; }
-.teacher-library-steps > span { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 650; color: #637093; }
-.teacher-library-steps i { display: grid; place-items: center; width: 25px; height: 25px; flex-shrink: 0; border-radius: 50%; background: white; color: #5966cc; font-size: 11px; font-style: normal; box-shadow: 0 2px 7px #5966cc0b; }
-.teacher-question-workspace .tab-bar { display: flex; gap: 8px; overflow-x: auto; padding-bottom: 0; margin-bottom: 20px; }
-.teacher-question-workspace .tab-bar > button { display: inline-flex; align-items: center; gap: 7px; white-space: nowrap; min-height: 45px; }
-.teacher-tab-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 20px; padding: 0 6px; background: #e8ecff; border-radius: 6px; font-size: 10px; color: #5664bf; }
-.teacher-question-workspace .feature-card { border-radius: 18px; box-shadow: 0 3px 16px #33467b05; }
-.teacher-question-workspace .panel-heading { gap: 18px; flex-wrap: wrap; }
-.teacher-question-workspace .panel-heading p { margin-bottom: 0; line-height: 1.7; font-size: 13px; }
-.teacher-question-bank .bank-filter-bar { background: #f8faff; border-color: #e4e9f5; }
-.teacher-question-bank .range-picker-box { background: #f5f6ff; border-color: #e0e5fa; }
-.teacher-question-bank .selection-action-bar { position: sticky; top: 78px; z-index: 5; padding: 18px; background: #eef1ff; border-color: #c9d1f7; box-shadow: 0 5px 20px #3949830b; }
-.teacher-question-bank .selection-actions .button { min-height: 39px; font-size: 12px; }
-.teacher-question-bank .question-item-row { padding: 22px 0; gap: 16px; }
-.teacher-question-bank .question-item-content > div:first-child > strong { margin-top: 8px; font-size: 14px; line-height: 1.7; }
-.teacher-question-bank .question-item-meta { font-size: 11px; }
-.teacher-question-bank .question-options-preview { gap: 8px 15px; padding: 14px; margin-top: 12px; border-radius: 10px; background: #fafbff; font-size: 12px; line-height: 1.7; }
-.teacher-question-bank .question-option-item strong { display: inline; font-size: inherit; }
-.teacher-question-bank .stack-actions { flex-shrink: 0; }
-.teacher-question-bank .stack-actions .button { padding: 7px 10px; min-height: 34px; font-size: 11px; }
-.teacher-assignment-dialog { width: min(620px, calc(100vw - 28px)); max-height: calc(100dvh - 40px); margin: auto; padding: 28px; overflow-y: auto; border: 1px solid #e1e6f3; border-radius: 20px; color: #14213d; background: white; box-shadow: 0 30px 90px #14213d33; }
-.teacher-assignment-dialog::backdrop { background: #17244475; backdrop-filter: blur(3px); }
-.teacher-assignment-dialog .panel-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; margin-bottom: 10px; }
-.teacher-assignment-dialog h2 { display: flex; gap: 10px; align-items: center; font-size: 21px; margin: 0; }
-.teacher-assignment-dialog > p { font-size: 13px; line-height: 1.7; margin-bottom: 23px; }
-.teacher-assignment-dialog .form-grid { gap: 17px; }
-.teacher-assignment-dialog label { font-size: 12px; line-height: 1.6; }
-.teacher-assignment-dialog input, .teacher-assignment-dialog select, .teacher-assignment-dialog textarea { width: 100%; min-width: 0; }
-.teacher-assignment-preview { padding: 14px; border-radius: 11px; border: 1px solid #e3e8f4; background: #f8faff; }
-.teacher-assignment-preview summary { font-size: 12px; font-weight: 700; cursor: pointer; color: #5868ae; }
-.teacher-assignment-preview ol { max-height: 180px; overflow-y: auto; padding-left: 23px; margin: 12px 0 0; }
-.teacher-assignment-preview li { padding: 5px 0; font-size: 12px; line-height: 1.6; }
-.teacher-assignment-note { font-size: 11px; line-height: 1.7; margin: 0; }
-.teacher-assignment-dialog .button-row { justify-content: flex-end; margin-top: 5px; }
-.teacher-assignment-dialog button:focus-visible { outline: 3px solid #a0acf4; outline-offset: 3px; }
-.teacher-question-spin { animation: teacher-question-spin 1s linear infinite; }
-@keyframes teacher-question-spin { to { transform: rotate(360deg); } }
-@media (max-width: 700px) {
-  .teacher-library-steps { grid-template-columns: 1fr; padding: 15px; gap: 10px; }
-  .teacher-question-bank .selection-action-bar { position: static; }
-  .teacher-question-bank .question-item-row { flex-wrap: wrap; gap: 10px; }
-  .teacher-question-bank .question-item-content { flex-basis: calc(100% - 32px); }
-  .teacher-question-bank .stack-actions { flex-direction: row; flex-wrap: wrap; margin-left: 28px; max-width: calc(100% - 28px); }
-  .teacher-question-bank .stack-actions .button { white-space: normal; }
-  .teacher-question-bank .range-inputs { flex-wrap: wrap; }
-  .teacher-question-bank .range-picker-left { min-width: 0; max-width: 100%; }
-  .teacher-question-bank .bank-filter-group { min-width: 0; }
-  .teacher-question-bank .bank-filter-group select, .teacher-question-bank .bank-filter-group input { min-width: 0; }
-  .teacher-question-bank .question-options-preview { grid-template-columns: 1fr; }
-  .teacher-question-workspace .feature-card { padding: 18px; }
-  .teacher-assignment-dialog { padding: 20px; }
-  .teacher-assignment-dialog .form-grid { grid-template-columns: minmax(0, 1fr); }
+.teacher-question-workspace {
+  min-width: 0;
+  max-width: 100%;
 }
-@media (prefers-reduced-motion: reduce) { .teacher-question-spin { animation: none; } }
+.teacher-question-workspace .page-heading {
+  margin-bottom: 20px;
+}
+.teacher-question-workspace .page-heading p {
+  max-width: 690px;
+  line-height: 1.7;
+}
+.teacher-library-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 17px 20px;
+  margin-bottom: 24px;
+  background: linear-gradient(110deg, #f0f2ff, #f8faff);
+  border: 1px solid #e1e6fb;
+  border-radius: 16px;
+}
+.teacher-library-steps > span {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-size: 12px;
+  font-weight: 650;
+  color: #637093;
+}
+.teacher-library-steps i {
+  display: grid;
+  place-items: center;
+  width: 25px;
+  height: 25px;
+  flex-shrink: 0;
+  border-radius: 50%;
+  background: white;
+  color: #5966cc;
+  font-size: 11px;
+  font-style: normal;
+  box-shadow: 0 2px 7px #5966cc0b;
+}
+.teacher-question-workspace .tab-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 0;
+  margin-bottom: 20px;
+}
+.teacher-question-workspace .tab-bar > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+  min-height: 45px;
+}
+.teacher-tab-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 20px;
+  padding: 0 6px;
+  background: #e8ecff;
+  border-radius: 6px;
+  font-size: 10px;
+  color: #5664bf;
+}
+.teacher-question-workspace .feature-card {
+  border-radius: 18px;
+  box-shadow: 0 3px 16px #33467b05;
+}
+.teacher-question-workspace .panel-heading {
+  gap: 18px;
+  flex-wrap: wrap;
+}
+.teacher-question-workspace .panel-heading p {
+  margin-bottom: 0;
+  line-height: 1.7;
+  font-size: 13px;
+}
+.teacher-question-bank .bank-filter-bar {
+  background: #f8faff;
+  border-color: #e4e9f5;
+}
+.teacher-question-bank .range-picker-box {
+  background: #f5f6ff;
+  border-color: #e0e5fa;
+}
+.teacher-question-bank .selection-action-bar {
+  position: sticky;
+  top: 78px;
+  z-index: 5;
+  padding: 18px;
+  background: #eef1ff;
+  border-color: #c9d1f7;
+  box-shadow: 0 5px 20px #3949830b;
+}
+.teacher-question-bank .selection-actions .button {
+  min-height: 39px;
+  font-size: 12px;
+}
+.teacher-question-bank .question-item-row {
+  padding: 22px 0;
+  gap: 16px;
+}
+.teacher-question-bank .question-item-content > div:first-child > strong {
+  margin-top: 8px;
+  font-size: 14px;
+  line-height: 1.7;
+}
+.teacher-question-bank .question-item-meta {
+  font-size: 11px;
+}
+.teacher-question-bank .question-options-preview {
+  gap: 8px 15px;
+  padding: 14px;
+  margin-top: 12px;
+  border-radius: 10px;
+  background: #fafbff;
+  font-size: 12px;
+  line-height: 1.7;
+}
+.teacher-question-bank .question-option-item strong {
+  display: inline;
+  font-size: inherit;
+}
+.teacher-question-bank .stack-actions {
+  flex-shrink: 0;
+}
+.teacher-question-bank .stack-actions .button {
+  padding: 7px 10px;
+  min-height: 34px;
+  font-size: 11px;
+}
+.teacher-assignment-dialog {
+  width: min(620px, calc(100vw - 28px));
+  max-height: calc(100dvh - 40px);
+  margin: auto;
+  padding: 28px;
+  overflow-y: auto;
+  border: 1px solid #e1e6f3;
+  border-radius: 20px;
+  color: #14213d;
+  background: white;
+  box-shadow: 0 30px 90px #14213d33;
+}
+.teacher-assignment-dialog::backdrop {
+  background: #17244475;
+  backdrop-filter: blur(3px);
+}
+.teacher-assignment-dialog .panel-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+.teacher-assignment-dialog h2 {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  font-size: 21px;
+  margin: 0;
+}
+.teacher-assignment-dialog > p {
+  font-size: 13px;
+  line-height: 1.7;
+  margin-bottom: 23px;
+}
+.teacher-assignment-dialog .form-grid {
+  gap: 17px;
+}
+.teacher-assignment-dialog label {
+  font-size: 12px;
+  line-height: 1.6;
+}
+.teacher-assignment-dialog input,
+.teacher-assignment-dialog select,
+.teacher-assignment-dialog textarea {
+  width: 100%;
+  min-width: 0;
+}
+.teacher-assignment-preview {
+  padding: 14px;
+  border-radius: 11px;
+  border: 1px solid #e3e8f4;
+  background: #f8faff;
+}
+.teacher-assignment-preview summary {
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: #5868ae;
+}
+.teacher-assignment-preview ol {
+  max-height: 180px;
+  overflow-y: auto;
+  padding-left: 23px;
+  margin: 12px 0 0;
+}
+.teacher-assignment-preview li {
+  padding: 5px 0;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.teacher-assignment-note {
+  font-size: 11px;
+  line-height: 1.7;
+  margin: 0;
+}
+.teacher-assignment-dialog .button-row {
+  justify-content: flex-end;
+  margin-top: 5px;
+}
+.teacher-assignment-dialog button:focus-visible {
+  outline: 3px solid #a0acf4;
+  outline-offset: 3px;
+}
+.teacher-question-spin {
+  animation: teacher-question-spin 1s linear infinite;
+}
+@keyframes teacher-question-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 700px) {
+  .teacher-library-steps {
+    grid-template-columns: 1fr;
+    padding: 15px;
+    gap: 10px;
+  }
+  .teacher-question-bank .selection-action-bar {
+    position: static;
+  }
+  .teacher-question-bank .question-item-row {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .teacher-question-bank .question-item-content {
+    flex-basis: calc(100% - 32px);
+  }
+  .teacher-question-bank .stack-actions {
+    flex-direction: row;
+    flex-wrap: wrap;
+    margin-left: 28px;
+    max-width: calc(100% - 28px);
+  }
+  .teacher-question-bank .stack-actions .button {
+    white-space: normal;
+  }
+  .teacher-question-bank .range-inputs {
+    flex-wrap: wrap;
+  }
+  .teacher-question-bank .range-picker-left {
+    min-width: 0;
+    max-width: 100%;
+  }
+  .teacher-question-bank .bank-filter-group {
+    min-width: 0;
+  }
+  .teacher-question-bank .bank-filter-group select,
+  .teacher-question-bank .bank-filter-group input {
+    min-width: 0;
+  }
+  .teacher-question-bank .question-options-preview {
+    grid-template-columns: 1fr;
+  }
+  .teacher-question-workspace .feature-card {
+    padding: 18px;
+  }
+  .teacher-assignment-dialog {
+    padding: 20px;
+  }
+  .teacher-assignment-dialog .form-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .teacher-question-spin {
+    animation: none;
+  }
+}
 .questions-toolbar-left {
   display: flex;
   align-items: center;
@@ -321,4 +548,3 @@
   border-radius: 4px;
   margin-right: 8px;
 }
-

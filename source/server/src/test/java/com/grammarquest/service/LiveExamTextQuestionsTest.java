@@ -1,21 +1,20 @@
 package com.grammarquest.service;
 
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.*;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.grammarquest.controller.TeacherQuestionController;
 import com.grammarquest.entity.User;
 import com.grammarquest.repository.UserRepository;
+import java.time.Instant;
+import java.util.*;
 import org.junit.jupiter.api.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.core.Authentication;
-
-import java.time.Instant;
-import java.util.*;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.*;
 
 class LiveExamTextQuestionsTest {
 
@@ -114,8 +113,9 @@ class LiveExamTextQuestionsTest {
         teacher.role = "TEACHER";
         when(users.findByUsernameIgnoreCase("teacher1")).thenReturn(Optional.of(teacher));
 
-        when(db.queryForList("select teacher_id from classrooms where id=?", Long.class, 5L))
-            .thenReturn(List.of(10L));
+        when(
+            db.queryForList("select teacher_id from classrooms where id=?", Long.class, 5L)
+        ).thenReturn(List.of(10L));
 
         Map<String, Object> textQ = new HashMap<>();
         textQ.put("id", 101L);
@@ -123,22 +123,37 @@ class LiveExamTextQuestionsTest {
         textQ.put("question_type", "REWRITE");
         textQ.put("accepted_answer", "I went home.");
 
-        when(db.queryForList("select * from questions where id=? and owner_id=? and deleted=false", 101L, 10L))
-            .thenReturn(List.of(textQ));
+        when(
+            db.queryForList(
+                "select * from questions where id=? and owner_id=? and deleted=false",
+                101L,
+                10L
+            )
+        ).thenReturn(List.of(textQ));
 
         final String[] savedJson = new String[1];
-        when(db.update(any(org.springframework.jdbc.core.PreparedStatementCreator.class), any(org.springframework.jdbc.support.GeneratedKeyHolder.class)))
-            .thenAnswer(invocation -> {
-                var kh = invocation.getArgument(1, org.springframework.jdbc.support.GeneratedKeyHolder.class);
-                try {
-                    var field = org.springframework.jdbc.support.GeneratedKeyHolder.class.getDeclaredField("keyList");
-                    field.setAccessible(true);
-                    @SuppressWarnings("unchecked")
-                    var list = (List<Map<String, Object>>) field.get(kh);
-                    list.add(Map.of("GENERATED_KEY", 999L));
-                } catch (Exception ignored) {}
-                return 1;
-            });
+        when(
+            db.update(
+                any(org.springframework.jdbc.core.PreparedStatementCreator.class),
+                any(org.springframework.jdbc.support.GeneratedKeyHolder.class)
+            )
+        ).thenAnswer(invocation -> {
+            var kh = invocation.getArgument(
+                1,
+                org.springframework.jdbc.support.GeneratedKeyHolder.class
+            );
+            try {
+                var field =
+                    org.springframework.jdbc.support.GeneratedKeyHolder.class.getDeclaredField(
+                        "keyList"
+                    );
+                field.setAccessible(true);
+                @SuppressWarnings("unchecked")
+                var list = (List<Map<String, Object>>) field.get(kh);
+                list.add(Map.of("GENERATED_KEY", 999L));
+            } catch (Exception ignored) {}
+            return 1;
+        });
 
         var controller = new TeacherQuestionController(db, users, json);
         var input = new TeacherQuestionController.LiveExamInput(

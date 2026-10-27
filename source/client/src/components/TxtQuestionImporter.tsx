@@ -1,9 +1,24 @@
-import { AlertCircle, CheckCircle2, FileText, PlusCircle, Sparkles, Trash2, Upload } from 'lucide-react'
-import { useId, useRef, useState, type ChangeEvent, type ClipboardEvent, type DragEvent } from 'react'
+import {
+  AlertCircle,
+  CheckCircle2,
+  FileText,
+  PlusCircle,
+  Sparkles,
+  Trash2,
+  Upload,
+} from 'lucide-react'
+import {
+  useId,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ClipboardEvent,
+  type DragEvent,
+} from 'react'
 import {
   parseQuestionsFromTxt,
   validateParsedQuestion,
-  type ParsedQuestionDraft
+  type ParsedQuestionDraft,
 } from '../services/questionTxtParser'
 import type { TeacherQuestion } from '../types'
 import './TxtQuestionImporter.css'
@@ -31,7 +46,7 @@ const typeLabels: Record<TeacherQuestion['questionType'], string> = {
   MCQ: 'Trắc nghiệm (MCQ)',
   FILL_BLANK: 'Điền từ khuyết',
   ERROR_CORRECTION: 'Sửa lỗi sai',
-  REWRITE: 'Viết lại câu'
+  REWRITE: 'Viết lại câu',
 }
 
 export function TxtQuestionImporter({
@@ -44,7 +59,7 @@ export function TxtQuestionImporter({
   saveDisabled = false,
   saveDisabledReason = 'Vui lòng hoàn thành thông tin bộ bài trước khi lưu.',
   onCompleteSaveDetails,
-  initialQuestions = []
+  initialQuestions = [],
 }: TxtQuestionImporterProps) {
   const [lessonId, setLessonId] = useState<number>(defaultLessonId)
   const [questions, setQuestions] = useState<ParsedQuestionDraft[]>(initialQuestions)
@@ -56,16 +71,19 @@ export function TxtQuestionImporter({
 
   const processText = (text: string) => {
     setParseError('')
-    const fallbackType: TeacherQuestion['questionType'] =
-      commonCurriculumMode ? 'MCQ' : 'FILL_BLANK'
+    const fallbackType: TeacherQuestion['questionType'] = commonCurriculumMode
+      ? 'MCQ'
+      : 'FILL_BLANK'
     const drafts = parseQuestionsFromTxt(text, fallbackType)
     if (drafts.length === 0) {
-      setParseError('Không nhận diện được câu hỏi nào từ nội dung vừa nhập. Hãy kiểm tra định dạng hoặc bấm "Xem mẫu định dạng .txt".')
+      setParseError(
+        'Không nhận diện được câu hỏi nào từ nội dung vừa nhập. Hãy kiểm tra định dạng hoặc bấm "Xem mẫu định dạng .txt".',
+      )
     }
 
     // In common curriculum mode, ensure only MCQ with A,B,C,D are valid
     if (commonCurriculumMode) {
-      drafts.forEach(d => {
+      drafts.forEach((d) => {
         if (d.questionType !== 'MCQ') {
           d.errors.push('Câu hỏi chung của hệ thống chỉ hỗ trợ dạng trắc nghiệm 4 phương án (MCQ)')
         }
@@ -127,7 +145,7 @@ export function TxtQuestionImporter({
   }
 
   const handleQuestionFieldChange = (index: number, patch: Partial<ParsedQuestionDraft>) => {
-    setQuestions(prev => {
+    setQuestions((prev) => {
       const next = [...prev]
       const updated = { ...next[index], ...patch }
       const errors = validateParsedQuestion(updated)
@@ -141,44 +159,55 @@ export function TxtQuestionImporter({
   }
 
   const handleDeleteQuestion = (index: number) => {
-    setQuestions(prev => prev.filter((_, i) => i !== index))
+    setQuestions((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const validQuestionsCount = questions.filter(q => q.errors.length === 0).length
-  const hasErrors = questions.some(q => q.errors.length > 0)
+  const validQuestionsCount = questions.filter((q) => q.errors.length === 0).length
+  const hasErrors = questions.some((q) => q.errors.length > 0)
 
   const handleSave = async () => {
-    if (busy || saveDisabled || (!materialMode && !lessonId) || questions.length === 0 || hasErrors) return
-    try { await onSaveBatch(lessonId, questions) }
-    catch (error) { setParseError((error as Error).message); return }
+    if (busy || saveDisabled || (!materialMode && !lessonId) || questions.length === 0 || hasErrors)
+      return
+    try {
+      await onSaveBatch(lessonId, questions)
+    } catch (error) {
+      setParseError((error as Error).message)
+      return
+    }
     setQuestions([])
   }
 
   return (
     <div className="importer-card">
-      {!materialMode && <div className="form-grid" style={{ marginBottom: 16 }}>
-        {!materialMode && <label>
-          Bài học áp dụng cho bộ câu hỏi
-          <select
-            required
-            value={lessonId}
-            onChange={e => setLessonId(Number(e.target.value))}
-            style={{ fontWeight: 600, borderColor: lessonId ? '#aeb6ff' : undefined }}
-          >
-            <option value={0}>-- Vui lòng chọn bài học --</option>
-            {lessons.map(l => (
-              <option key={l.id} value={l.id}>
-                {l.title}
-              </option>
-            ))}
-          </select>
-        </label>}
+      {!materialMode && (
+        <div className="form-grid" style={{ marginBottom: 16 }}>
+          {!materialMode && (
+            <label>
+              Bài học áp dụng cho bộ câu hỏi
+              <select
+                required
+                value={lessonId}
+                onChange={(e) => setLessonId(Number(e.target.value))}
+                style={{ fontWeight: 600, borderColor: lessonId ? '#aeb6ff' : undefined }}
+              >
+                <option value={0}>-- Vui lòng chọn bài học --</option>
+                {lessons.map((l) => (
+                  <option key={l.id} value={l.id}>
+                    {l.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
 
-        {commonCurriculumMode && <label>
-          Dạng câu hỏi
-          <input disabled value="Trắc nghiệm 4 phương án (MCQ)"/>
-        </label>}
-      </div>}
+          {commonCurriculumMode && (
+            <label>
+              Dạng câu hỏi
+              <input disabled value="Trắc nghiệm 4 phương án (MCQ)" />
+            </label>
+          )}
+        </div>
+      )}
 
       <div
         className={`importer-dropzone ${isDragging ? 'dragging' : ''}`}
@@ -201,7 +230,9 @@ export function TxtQuestionImporter({
         <div className="dropzone-instructions">
           <strong>Kéo & thả file .txt hoặc dán nội dung câu hỏi tại đây</strong>
           <p>
-            Hỗ trợ <strong>Ctrl+V</strong> dán trực tiếp file .txt từ máy tính, dán đoạn văn bản đã copy, kéo-thả file, hoặc bấm nút bên dưới. Hệ thống tự động nhận diện dạng câu hỏi, bóc tách đề bài, đáp án mẫu và tự điền giải thích nếu thiếu.
+            Hỗ trợ <strong>Ctrl+V</strong> dán trực tiếp file .txt từ máy tính, dán đoạn văn bản đã
+            copy, kéo-thả file, hoặc bấm nút bên dưới. Hệ thống tự động nhận diện dạng câu hỏi, bóc
+            tách đề bài, đáp án mẫu và tự điền giải thích nếu thiếu.
           </p>
         </div>
         <div className="dropzone-actions">
@@ -212,8 +243,12 @@ export function TxtQuestionImporter({
           >
             <FileText size={18} /> Chọn file .txt từ máy
           </button>
-          <button type="button" className="button secondary" onClick={() => setPlayground('sample')}>
-            <Sparkles size={18}/> Xem mẫu định dạng .txt
+          <button
+            type="button"
+            className="button secondary"
+            onClick={() => setPlayground('sample')}
+          >
+            <Sparkles size={18} /> Xem mẫu định dạng .txt
           </button>
           <button type="button" className="button secondary" onClick={() => setPlayground('raw')}>
             Thử phân tích văn bản
@@ -221,11 +256,20 @@ export function TxtQuestionImporter({
         </div>
       </div>
 
-      {playground && <QuestionFormatPlayground initialMode={playground} initialFormat={commonCurriculumMode ? 'MCQ' : 'ALL'} onClose={() => setPlayground(null)}/>}
+      {playground && (
+        <QuestionFormatPlayground
+          initialMode={playground}
+          initialFormat={commonCurriculumMode ? 'MCQ' : 'ALL'}
+          onClose={() => setPlayground(null)}
+        />
+      )}
 
       {parseError && (
         <div className="error-banner" role="alert" style={{ marginTop: 16 }}>
-          <AlertCircle size={18} style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle' }} />
+          <AlertCircle
+            size={18}
+            style={{ display: 'inline', marginRight: 8, verticalAlign: 'middle' }}
+          />
           {parseError}
         </div>
       )}
@@ -249,7 +293,8 @@ export function TxtQuestionImporter({
                 aria-describedby={saveStatusId}
                 onClick={handleSave}
               >
-                <CheckCircle2 size={18} /> {materialMode ? 'Lưu bộ bài' : `Lưu toàn bộ ${questions.length} câu vào bài học`}
+                <CheckCircle2 size={18} />{' '}
+                {materialMode ? 'Lưu bộ bài' : `Lưu toàn bộ ${questions.length} câu vào bài học`}
               </button>
             )}
           </div>
@@ -273,17 +318,26 @@ export function TxtQuestionImporter({
                         {isValid ? '✓ Hợp lệ' : '⚠️ Cần bổ sung'}
                       </span>
                       {q.autoCompletedFields.includes('explanation') && (
-                        <span className="badge-auto" title="Hệ thống đã tự tạo câu giải thích theo đáp án">
+                        <span
+                          className="badge-auto"
+                          title="Hệ thống đã tự tạo câu giải thích theo đáp án"
+                        >
                           ✨ Đã tự điền giải thích
                         </span>
                       )}
                       {q.autoCompletedFields.includes('acceptedAnswer') && (
-                        <span className="badge-auto" title="Hệ thống đã tự bóc tách đáp án mẫu từ nội dung trong ngoặc vuông []">
+                        <span
+                          className="badge-auto"
+                          title="Hệ thống đã tự bóc tách đáp án mẫu từ nội dung trong ngoặc vuông []"
+                        >
                           🎯 Tự bóc tách đáp án
                         </span>
                       )}
                       {q.autoCompletedFields.includes('correctOption') && (
-                        <span className="badge-auto" title="Hệ thống đã tự nhận diện đáp án đúng từ dấu sao hoặc nội dung so khớp">
+                        <span
+                          className="badge-auto"
+                          title="Hệ thống đã tự nhận diện đáp án đúng từ dấu sao hoặc nội dung so khớp"
+                        >
                           🎯 Tự suy luận đáp án
                         </span>
                       )}
@@ -316,7 +370,7 @@ export function TxtQuestionImporter({
                         maxLength={500}
                         rows={2}
                         value={q.prompt}
-                        onChange={e => handleQuestionFieldChange(idx, { prompt: e.target.value })}
+                        onChange={(e) => handleQuestionFieldChange(idx, { prompt: e.target.value })}
                         placeholder="Nhập nội dung đề bài..."
                       />
                     </label>
@@ -326,9 +380,9 @@ export function TxtQuestionImporter({
                         Dạng câu hỏi
                         <select
                           value={q.questionType}
-                          onChange={e =>
+                          onChange={(e) =>
                             handleQuestionFieldChange(idx, {
-                              questionType: e.target.value as ParsedQuestionDraft['questionType']
+                              questionType: e.target.value as ParsedQuestionDraft['questionType'],
                             })
                           }
                           style={{ fontWeight: 600 }}
@@ -347,9 +401,10 @@ export function TxtQuestionImporter({
                           Đáp án đúng
                           <select
                             value={q.correctOption}
-                            onChange={e =>
+                            onChange={(e) =>
                               handleQuestionFieldChange(idx, {
-                                correctOption: e.target.value as ParsedQuestionDraft['correctOption']
+                                correctOption: e.target
+                                  .value as ParsedQuestionDraft['correctOption'],
                               })
                             }
                             style={{ fontWeight: 700, color: 'var(--primary-strong)' }}
@@ -362,22 +417,33 @@ export function TxtQuestionImporter({
                           </select>
                         </label>
 
-                        {(['optionA', 'optionB', 'optionC', 'optionD'] as const).map((optKey, optIdx) => {
-                          const letter = String.fromCharCode(65 + optIdx)
-                          const isCorrect = q.correctOption === letter
-                          return (
-                            <label key={optKey}>
-                              Phương án {letter} {isCorrect ? '(Đáp án đúng ⭐)' : ''}
-                              <input
-                                required
-                                maxLength={255}
-                                value={q[optKey]}
-                                onChange={e => handleQuestionFieldChange(idx, { [optKey]: e.target.value })}
-                                style={isCorrect ? { borderColor: 'var(--primary)', background: 'var(--primary-soft)' } : undefined}
-                              />
-                            </label>
-                          )
-                        })}
+                        {(['optionA', 'optionB', 'optionC', 'optionD'] as const).map(
+                          (optKey, optIdx) => {
+                            const letter = String.fromCharCode(65 + optIdx)
+                            const isCorrect = q.correctOption === letter
+                            return (
+                              <label key={optKey}>
+                                Phương án {letter} {isCorrect ? '(Đáp án đúng ⭐)' : ''}
+                                <input
+                                  required
+                                  maxLength={255}
+                                  value={q[optKey]}
+                                  onChange={(e) =>
+                                    handleQuestionFieldChange(idx, { [optKey]: e.target.value })
+                                  }
+                                  style={
+                                    isCorrect
+                                      ? {
+                                          borderColor: 'var(--primary)',
+                                          background: 'var(--primary-soft)',
+                                        }
+                                      : undefined
+                                  }
+                                />
+                              </label>
+                            )
+                          },
+                        )}
                       </>
                     ) : (
                       <label className="full-span">
@@ -386,13 +452,15 @@ export function TxtQuestionImporter({
                           required
                           maxLength={255}
                           value={q.acceptedAnswer}
-                          onChange={e => handleQuestionFieldChange(idx, { acceptedAnswer: e.target.value })}
+                          onChange={(e) =>
+                            handleQuestionFieldChange(idx, { acceptedAnswer: e.target.value })
+                          }
                           placeholder={
                             q.questionType === 'FILL_BLANK'
                               ? 'Ví dụ: goes hoặc have been living...'
                               : q.questionType === 'ERROR_CORRECTION'
-                              ? 'Ví dụ: went hoặc are (phần đã sửa đúng)...'
-                              : 'Nhập câu viết lại hoàn chỉnh...'
+                                ? 'Ví dụ: went hoặc are (phần đã sửa đúng)...'
+                                : 'Nhập câu viết lại hoàn chỉnh...'
                           }
                         />
                         <small style={{ color: 'var(--muted)', marginTop: 4 }}>
@@ -407,7 +475,9 @@ export function TxtQuestionImporter({
                         required
                         rows={2}
                         value={q.explanation}
-                        onChange={e => handleQuestionFieldChange(idx, { explanation: e.target.value })}
+                        onChange={(e) =>
+                          handleQuestionFieldChange(idx, { explanation: e.target.value })
+                        }
                         placeholder="Giải thích vì sao đáp án này đúng..."
                       />
                     </label>
@@ -419,28 +489,44 @@ export function TxtQuestionImporter({
 
           <div className="batch-save-bar">
             <div className="batch-save-info">
-              <strong>{saveDisabled || hasErrors || (!materialMode && !lessonId) ? 'Câu hỏi hợp lệ:' : 'Sẵn sàng lưu'} {validQuestionsCount}/{questions.length} câu hỏi</strong>
+              <strong>
+                {saveDisabled || hasErrors || (!materialMode && !lessonId)
+                  ? 'Câu hỏi hợp lệ:'
+                  : 'Sẵn sàng lưu'}{' '}
+                {validQuestionsCount}/{questions.length} câu hỏi
+              </strong>
               <span id={saveStatusId} aria-live="polite">
                 {saveDisabled
                   ? saveDisabledReason
                   : !materialMode && !lessonId
-                  ? 'Vui lòng chọn Bài học ở trên để hoàn tất việc lưu.'
-                  : hasErrors
-                  ? 'Vui lòng bổ sung các ô còn thiếu trước khi lưu.'
-                  : `Tất cả câu hỏi đã hoàn thiện hợp lệ và sẽ được thêm vào kho câu hỏi.`}
+                    ? 'Vui lòng chọn Bài học ở trên để hoàn tất việc lưu.'
+                    : hasErrors
+                      ? 'Vui lòng bổ sung các ô còn thiếu trước khi lưu.'
+                      : `Tất cả câu hỏi đã hoàn thiện hợp lệ và sẽ được thêm vào kho câu hỏi.`}
               </span>
-              {saveDisabled && onCompleteSaveDetails && <button type="button" className="text-button" onClick={onCompleteSaveDetails}>Nhập tên bộ bài</button>}
+              {saveDisabled && onCompleteSaveDetails && (
+                <button type="button" className="text-button" onClick={onCompleteSaveDetails}>
+                  Nhập tên bộ bài
+                </button>
+              )}
             </div>
             <button
               type="button"
               className="button primary"
-              disabled={busy || saveDisabled || (!materialMode && !lessonId) || questions.length === 0 || hasErrors}
+              disabled={
+                busy ||
+                saveDisabled ||
+                (!materialMode && !lessonId) ||
+                questions.length === 0 ||
+                hasErrors
+              }
               title={saveDisabled ? saveDisabledReason : undefined}
               aria-describedby={saveStatusId}
               onClick={handleSave}
               style={{ minWidth: 220 }}
             >
-              <PlusCircle size={18} /> {materialMode ? 'Lưu bộ bài' : `Lưu toàn bộ ${questions.length} câu hỏi`}
+              <PlusCircle size={18} />{' '}
+              {materialMode ? 'Lưu bộ bài' : `Lưu toàn bộ ${questions.length} câu hỏi`}
             </button>
           </div>
         </div>

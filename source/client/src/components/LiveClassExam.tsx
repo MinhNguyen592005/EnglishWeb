@@ -63,21 +63,29 @@ const isTextType = (t?: string): boolean =>
 
 const typeLabel = (t?: string): string => {
   switch (t) {
-    case 'FILL_BLANK': return 'Điền từ'
-    case 'ERROR_CORRECTION': return 'Sửa lỗi'
-    case 'REWRITE': return 'Viết lại câu'
+    case 'FILL_BLANK':
+      return 'Điền từ'
+    case 'ERROR_CORRECTION':
+      return 'Sửa lỗi'
+    case 'REWRITE':
+      return 'Viết lại câu'
     case 'MCQ':
-    default: return 'Trắc nghiệm'
+    default:
+      return 'Trắc nghiệm'
   }
 }
 
 const typeBadgeClass = (t?: string): string => {
   switch (t) {
-    case 'FILL_BLANK': return 'exam-q-badge fill_blank'
-    case 'ERROR_CORRECTION': return 'exam-q-badge error_correction'
-    case 'REWRITE': return 'exam-q-badge rewrite'
+    case 'FILL_BLANK':
+      return 'exam-q-badge fill_blank'
+    case 'ERROR_CORRECTION':
+      return 'exam-q-badge error_correction'
+    case 'REWRITE':
+      return 'exam-q-badge rewrite'
     case 'MCQ':
-    default: return 'exam-q-badge mcq'
+    default:
+      return 'exam-q-badge mcq'
   }
 }
 
@@ -87,7 +95,7 @@ const question = (): Question => ({
   questionType: 'MCQ',
   options: ['', '', '', ''],
   correct: 0,
-  acceptedAnswer: ''
+  acceptedAnswer: '',
 })
 
 const localDate = (value: string) => {
@@ -96,12 +104,22 @@ const localDate = (value: string) => {
 }
 
 const status = (s: string) =>
-  ({ NOT_STARTED: 'Chưa bắt đầu', WORKING: 'Đang làm', SUBMITTED: 'Đã nộp', EXPIRED: 'Hết giờ' }[s] || s)
+  ({ NOT_STARTED: 'Chưa bắt đầu', WORKING: 'Đang làm', SUBMITTED: 'Đã nộp', EXPIRED: 'Hết giờ' })[
+    s
+  ] || s
 
-export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classId: number; isOwner: boolean; allowCreate?: boolean }) {
+export function LiveClassExam({
+  classId,
+  isOwner,
+  allowCreate = true,
+}: {
+  classId: number
+  isOwner: boolean
+  allowCreate?: boolean
+}) {
   const { request, subscribe, connected } = useSystemSocket()
   const [list, setList] = useState<Listing[]>([])
-  const [listPage,setListPage]=useState(1)
+  const [listPage, setListPage] = useState(1)
   const [exam, setExam] = useState<Exam | null>(null)
   const [draft, setDraft] = useState<Draft | null>(null)
   const [bankOpen, setBankOpen] = useState(false)
@@ -118,20 +136,30 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
   const mounted = useRef(true)
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
 
-  const apply = useCallback((next: Exam) => {
-    if (!mounted.current || next.classId !== classId) return
-    const old = current.current
-    if (old?.id === next.id && (old.revision > next.revision || (old.revision === next.revision && old.closed && !next.closed))) return
-    if (old?.id === next.id && next.version > old.version && !next.owner) {
-      setNotice('Giáo viên vừa cập nhật đề. Nội dung mới đã được áp dụng; hãy kiểm tra lại các câu trả lời của bạn.')
-    }
-    current.current = next
-    setExam(next)
-  }, [classId])
+  const apply = useCallback(
+    (next: Exam) => {
+      if (!mounted.current || next.classId !== classId) return
+      const old = current.current
+      if (
+        old?.id === next.id &&
+        (old.revision > next.revision ||
+          (old.revision === next.revision && old.closed && !next.closed))
+      )
+        return
+      if (old?.id === next.id && next.version > old.version && !next.owner) {
+        setNotice(
+          'Giáo viên vừa cập nhật đề. Nội dung mới đã được áp dụng; hãy kiểm tra lại các câu trả lời của bạn.',
+        )
+      }
+      current.current = next
+      setExam(next)
+    },
+    [classId],
+  )
 
   useEffect(() => {
     if (exam?.answers) {
-      setTextAnswers(prev => {
+      setTextAnswers((prev) => {
         const next = { ...prev }
         for (const [k, v] of Object.entries(exam.answers || {})) {
           if (typeof v === 'string' && next[k] === undefined) {
@@ -143,14 +171,17 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
     }
   }, [exam?.answers])
 
-  const load = useCallback(() =>
-    request<Listing[]>('EXAM_LIST', 'EXAM_DATA', { classId }).then(data => {
-      if (mounted.current) setList(data)
-    }), [classId, request])
+  const load = useCallback(
+    () =>
+      request<Listing[]>('EXAM_LIST', 'EXAM_DATA', { classId }).then((data) => {
+        if (mounted.current) setList(data)
+      }),
+    [classId, request],
+  )
 
   useEffect(() => {
     mounted.current = true
-    const off = subscribe(message => {
+    const off = subscribe((message) => {
       if (message.action === 'EXAM_UPDATE') {
         const next = message.payload as Exam
         if (next.id === current.current?.id) apply(next)
@@ -172,12 +203,18 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
   useEffect(() => {
     if (!connected) return
     const sync = () => {
-      load().catch(e => { if (mounted.current) setError(e.message) })
+      load().catch((e) => {
+        if (mounted.current) setError(e.message)
+      })
       const id = current.current?.id
       if (id) {
         request<Exam>('EXAM_SYNC', 'EXAM_DATA', { examId: id })
-          .then(next => { if (current.current?.id === id) apply(next) })
-          .catch(e => { if (mounted.current) setError(e.message) })
+          .then((next) => {
+            if (current.current?.id === id) apply(next)
+          })
+          .catch((e) => {
+            if (mounted.current) setError(e.message)
+          })
       }
     }
     sync()
@@ -210,26 +247,28 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
     setBusy(true)
     setError('')
     try {
-      const sanitizedQuestions = draft.questions.map(q => {
+      const sanitizedQuestions = draft.questions.map((q) => {
         const rawType = (q.questionType || '').toString().toUpperCase()
         const accepted = (q.acceptedAnswer || '').trim()
         const isText = isTextType(rawType) || (q.options?.length !== 4 && !!accepted)
-        const qType = isText ? ((rawType && isTextType(rawType) ? rawType : 'FILL_BLANK') as LiveExamQuestionType) : 'MCQ'
+        const qType = isText
+          ? ((rawType && isTextType(rawType) ? rawType : 'FILL_BLANK') as LiveExamQuestionType)
+          : 'MCQ'
         if (isText) {
           return {
             id: q.id,
             prompt: q.prompt.trim(),
             questionType: qType,
             acceptedAnswer: accepted,
-            options: []
+            options: [],
           }
         }
         return {
           id: q.id,
           prompt: q.prompt.trim(),
           questionType: 'MCQ' as const,
-          options: (q.options || ['', '', '', '']).map(o => o.trim()),
-          correct: q.correct ?? 0
+          options: (q.options || ['', '', '', '']).map((o) => o.trim()),
+          correct: q.correct ?? 0,
         }
       })
 
@@ -238,7 +277,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
         classId,
         examId: draft.id,
         endsAt: new Date(draft.endsAt).toISOString(),
-        questions: sanitizedQuestions
+        questions: sanitizedQuestions,
       }
       const next = await request<Exam>(draft.id ? 'EXAM_EDIT' : 'EXAM_CREATE', 'EXAM_DATA', payload)
       apply(next)
@@ -261,7 +300,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
       const payload: Record<string, unknown> = {
         examId: active.id,
         version: active.version,
-        questionId
+        questionId,
       }
       if (typeof val === 'number') {
         payload.option = val
@@ -275,7 +314,9 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
     } catch (e) {
       setError((e as Error).message)
       request<Exam>('EXAM_SYNC', 'EXAM_DATA', { examId: active.id })
-        .then(next => { if (current.current?.id === active.id) apply(next) })
+        .then((next) => {
+          if (current.current?.id === active.id) apply(next)
+        })
         .catch(() => {})
     } finally {
       setSaving(false)
@@ -283,7 +324,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
   }
 
   const handleTextChange = (questionId: string, val: string) => {
-    setTextAnswers(prev => ({ ...prev, [questionId]: val }))
+    setTextAnswers((prev) => ({ ...prev, [questionId]: val }))
     if (debounceTimers.current[questionId]) {
       clearTimeout(debounceTimers.current[questionId])
     }
@@ -298,8 +339,12 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
       clearTimeout(debounceTimers.current[questionId])
       delete debounceTimers.current[questionId]
     }
-    const currentVal = (textAnswers[questionId] ?? (exam?.answers?.[questionId] as string ?? '')).trim()
-    const serverVal = (exam?.answers?.[questionId] as string ?? '').trim()
+    const currentVal = (
+      textAnswers[questionId] ??
+      (exam?.answers?.[questionId] as string) ??
+      ''
+    ).trim()
+    const serverVal = ((exam?.answers?.[questionId] as string) ?? '').trim()
     if (currentVal !== serverVal) {
       answer(questionId, currentVal)
     }
@@ -321,7 +366,9 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
     setSaving(true)
     setError('')
     try {
-      apply(await request<Exam>('EXAM_SUBMIT', 'EXAM_DATA', { examId: exam.id, version: exam.version }))
+      apply(
+        await request<Exam>('EXAM_SUBMIT', 'EXAM_DATA', { examId: exam.id, version: exam.version }),
+      )
       setNotice('Đã nộp bài. Giáo viên đã nhận được kết quả.')
     } catch (e) {
       setError((e as Error).message)
@@ -338,13 +385,13 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
       title: exam.title,
       endsAt: localDate(exam.endsAt),
       closed: exam.closed,
-      questions: structuredClone(exam.questions).map(q => ({
+      questions: structuredClone(exam.questions).map((q) => ({
         ...q,
         questionType: q.questionType || 'MCQ',
         options: q.options || (isTextType(q.questionType) ? [] : ['', '', '', '']),
         acceptedAnswer: q.acceptedAnswer || '',
-        correct: q.correct ?? 0
-      }))
+        correct: q.correct ?? 0,
+      })),
     })
   }
 
@@ -367,7 +414,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
           }
         }
         return updated
-      })
+      }),
     })
   }
 
@@ -388,19 +435,33 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
 
   function importFromBank() {
     if (!draft || !bankSelected.size) return
-    const selected = bankQuestions.filter(q => bankSelected.has(q.id))
-    const imported: Question[] = selected.map(q => {
-      const rawType = (q.questionType || (q as unknown as Record<string, unknown>).question_type || '').toString().toUpperCase()
-      const accepted = (q.acceptedAnswer || (q as unknown as Record<string, unknown>).accepted_answer || '').toString().trim()
+    const selected = bankQuestions.filter((q) => bankSelected.has(q.id))
+    const imported: Question[] = selected.map((q) => {
+      const rawType = (
+        q.questionType ||
+        (q as unknown as Record<string, unknown>).question_type ||
+        ''
+      )
+        .toString()
+        .toUpperCase()
+      const accepted = (
+        q.acceptedAnswer ||
+        (q as unknown as Record<string, unknown>).accepted_answer ||
+        ''
+      )
+        .toString()
+        .trim()
       const isText = isTextType(rawType) || (!rawType && !!accepted)
-      const qType = (isText ? (rawType && isTextType(rawType) ? rawType : 'FILL_BLANK') : 'MCQ') as LiveExamQuestionType
+      const qType = (
+        isText ? (rawType && isTextType(rawType) ? rawType : 'FILL_BLANK') : 'MCQ'
+      ) as LiveExamQuestionType
       if (isText) {
         return {
           id: crypto.randomUUID(),
           prompt: q.prompt,
           questionType: qType,
           options: [],
-          acceptedAnswer: accepted
+          acceptedAnswer: accepted,
         }
       }
       return {
@@ -408,7 +469,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
         prompt: q.prompt,
         questionType: 'MCQ',
         options: [q.optionA || '', q.optionB || '', q.optionC || '', q.optionD || ''],
-        correct: Math.max(0, 'ABCD'.indexOf(q.correctOption?.toUpperCase() || 'A'))
+        correct: Math.max(0, 'ABCD'.indexOf(q.correctOption?.toUpperCase() || 'A')),
       }
     })
     let base = draft.questions
@@ -419,41 +480,80 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
     setNotice(`Đã lấy ${imported.length} câu từ kho câu hỏi vào đề kiểm tra.`)
   }
 
-  const remaining = exam ? Math.max(0, Math.ceil((new Date(exam.endsAt).getTime() - now) / 1000)) : 0
+  const remaining = exam
+    ? Math.max(0, Math.ceil((new Date(exam.endsAt).getTime() - now) / 1000))
+    : 0
   const readonly = !!exam && (exam.closed || exam.submitted || remaining === 0)
-  const currentListPage=Math.min(listPage,Math.max(1,Math.ceil(list.length/PAGE_SIZE)))
-  const visibleExams=list.slice((currentListPage-1)*PAGE_SIZE,currentListPage*PAGE_SIZE)
+  const currentListPage = Math.min(listPage, Math.max(1, Math.ceil(list.length / PAGE_SIZE)))
+  const visibleExams = list.slice((currentListPage - 1) * PAGE_SIZE, currentListPage * PAGE_SIZE)
 
   return (
     <section className="card feature-card live-exam">
       <div className="panel-heading">
         <div>
           <span className="section-label">KIỂM TRA TRỰC TIẾP</span>
-          <h2>Kiểm tra của lớp <span className="exam-list-count">{list.length}</span></h2>
+          <h2>
+            Kiểm tra của lớp <span className="exam-list-count">{list.length}</span>
+          </h2>
           <p className="muted">
             {isOwner
               ? 'Chọn bài kiểm tra để xem đề, quản lý và theo dõi kết quả.'
               : 'Câu trả lời được tự động lưu qua WebSocket. Không cần tải lại trang.'}
           </p>
         </div>
-        <span className={`tag ${connected ? '' : 'muted'}`}>{connected ? '● Đã kết nối' : 'Đang kết nối lại…'}</span>
+        <span className={`tag ${connected ? '' : 'muted'}`}>
+          {connected ? '● Đã kết nối' : 'Đang kết nối lại…'}
+        </span>
       </div>
 
-      {error && <div className="error-banner" role="alert">{error}</div>}
-      {notice && <div className="success-banner" role="status">{notice}</div>}
+      {error && (
+        <div className="error-banner" role="alert">
+          {error}
+        </div>
+      )}
+      {notice && (
+        <div className="success-banner" role="status">
+          {notice}
+        </div>
+      )}
 
       <div className="live-exam-list">
-        {visibleExams.map(item => (
+        {visibleExams.map((item) => (
           <button
             className={`exam-list-card ${exam?.id === item.id ? 'is-selected' : ''}`}
             disabled={busy || !connected}
             key={item.id}
             onClick={() => open(item.id)}
           >
-            <span className="exam-list-icon"><Radio size={20}/></span><span className="exam-list-info"><strong>{item.title}</strong><small><CalendarDays size={14}/>Hạn {new Date(item.endsAt).toLocaleString('vi-VN')}</small></span><span className={`exam-list-state ${item.closed || new Date(item.endsAt).getTime() <= now?'closed':'open'}`}>{item.closed || new Date(item.endsAt).getTime() <= now ? 'Đã đóng' : 'Đang mở'}</span><ChevronRight size={18}/>
+            <span className="exam-list-icon">
+              <Radio size={20} />
+            </span>
+            <span className="exam-list-info">
+              <strong>{item.title}</strong>
+              <small>
+                <CalendarDays size={14} />
+                Hạn {new Date(item.endsAt).toLocaleString('vi-VN')}
+              </small>
+            </span>
+            <span
+              className={`exam-list-state ${item.closed || new Date(item.endsAt).getTime() <= now ? 'closed' : 'open'}`}
+            >
+              {item.closed || new Date(item.endsAt).getTime() <= now ? 'Đã đóng' : 'Đang mở'}
+            </span>
+            <ChevronRight size={18} />
           </button>
         ))}
-        {!list.length && <div className="exam-list-empty"><Radio size={30}/><h3>Chưa có bài kiểm tra trực tiếp</h3><p>{isOwner?'Bấm “Tạo kiểm tra mới” để chọn bộ câu hỏi đã lưu và mở kiểm tra cho lớp.':'Bài kiểm tra sẽ xuất hiện tại đây khi giáo viên tạo đề.'}</p></div>}
+        {!list.length && (
+          <div className="exam-list-empty">
+            <Radio size={30} />
+            <h3>Chưa có bài kiểm tra trực tiếp</h3>
+            <p>
+              {isOwner
+                ? 'Bấm “Tạo kiểm tra mới” để chọn bộ câu hỏi đã lưu và mở kiểm tra cho lớp.'
+                : 'Bài kiểm tra sẽ xuất hiện tại đây khi giáo viên tạo đề.'}
+            </p>
+          </div>
+        )}
         {isOwner && allowCreate && (
           <button
             className="button secondary"
@@ -462,7 +562,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                 title: '',
                 endsAt: localDate(new Date(Date.now() + 3600000).toISOString()),
                 closed: false,
-                questions: [question()]
+                questions: [question()],
               })
             }
           >
@@ -470,7 +570,9 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
           </button>
         )}
       </div>
-      {list.length>0&&<Pagination total={list.length} page={currentListPage} onPageChange={setListPage}/>}
+      {list.length > 0 && (
+        <Pagination total={list.length} page={currentListPage} onPageChange={setListPage} />
+      )}
 
       {exam && (
         <div className="live-exam-body">
@@ -486,7 +588,11 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
               </p>
             </div>
             <div className="button-row">
-              {exam.owner && <button className="button secondary" onClick={edit}>Sửa đề / Đáp án</button>}
+              {exam.owner && (
+                <button className="button secondary" onClick={edit}>
+                  Sửa đề / Đáp án
+                </button>
+              )}
               <button
                 className="button secondary"
                 onClick={() => {
@@ -504,7 +610,8 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
           {exam.owner ? (
             <>
               <p className="muted">
-                Bảng xếp hạng cập nhật thời gian thực. Điểm /10 được server tự động chấm lại khi sửa đề/đáp án, kể cả các bài đã nộp.
+                Bảng xếp hạng cập nhật thời gian thực. Điểm /10 được server tự động chấm lại khi sửa
+                đề/đáp án, kể cả các bài đã nộp.
               </p>
               <div className="table-wrap">
                 <table>
@@ -524,11 +631,19 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                         <td>{i + 1}</td>
                         <td>
                           <strong>{r.displayName}</strong>
-                          <small>#{r.userId} · {r.username}</small>
+                          <small>
+                            #{r.userId} · {r.username}
+                          </small>
                         </td>
-                        <td>{r.answeredCount}/{exam.questions.length}</td>
+                        <td>
+                          {r.answeredCount}/{exam.questions.length}
+                        </td>
                         <td>{r.correctCount}</td>
-                        <td><strong>{(10 * r.correctCount / exam.questions.length).toFixed(2)}</strong></td>
+                        <td>
+                          <strong>
+                            {((10 * r.correctCount) / exam.questions.length).toFixed(2)}
+                          </strong>
+                        </td>
                         <td>{status(r.status)}</td>
                       </tr>
                     ))}
@@ -542,15 +657,22 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                 {exam.submitted
                   ? 'Bạn đã nộp bài.'
                   : saving
-                  ? 'Đang lưu đáp án…'
-                  : `Đã làm ${Object.keys(exam.answers || {}).length}/${exam.questions.length} câu.`}{' '}
-                {exam.closed && `Kết quả: ${exam.correctCount ?? 0}/${exam.questions.length} câu đúng.`}
+                    ? 'Đang lưu đáp án…'
+                    : `Đã làm ${Object.keys(exam.answers || {}).length}/${exam.questions.length} câu.`}{' '}
+                {exam.closed &&
+                  `Kết quả: ${exam.correctCount ?? 0}/${exam.questions.length} câu đúng.`}
               </p>
 
               {exam.questions.map((q, i) => (
-                <fieldset className="live-exam-question" key={q.id} disabled={readonly || saving || !connected}>
+                <fieldset
+                  className="live-exam-question"
+                  key={q.id}
+                  disabled={readonly || saving || !connected}
+                >
                   <legend>
-                    <span className={typeBadgeClass(q.questionType)}>{typeLabel(q.questionType)}</span>
+                    <span className={typeBadgeClass(q.questionType)}>
+                      {typeLabel(q.questionType)}
+                    </span>
                     {i + 1}. {q.prompt}
                   </legend>
 
@@ -558,8 +680,10 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                     <div className="live-exam-text-answer">
                       <label>
                         <span>
-                          {q.questionType === 'FILL_BLANK' && 'Câu trả lời (từ hoặc cụm từ điền vào chỗ trống):'}
-                          {q.questionType === 'ERROR_CORRECTION' && 'Câu trả lời (từ hoặc cụm từ sau khi sửa đúng):'}
+                          {q.questionType === 'FILL_BLANK' &&
+                            'Câu trả lời (từ hoặc cụm từ điền vào chỗ trống):'}
+                          {q.questionType === 'ERROR_CORRECTION' &&
+                            'Câu trả lời (từ hoặc cụm từ sau khi sửa đúng):'}
                           {q.questionType === 'REWRITE' && 'Câu trả lời (câu viết lại hoàn chỉnh):'}
                         </span>
                         <input
@@ -567,8 +691,11 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                           maxLength={255}
                           disabled={readonly || !connected}
                           placeholder="Nhập câu trả lời của bạn..."
-                          value={textAnswers[q.id] ?? (exam.answers?.[q.id] != null ? String(exam.answers[q.id]) : '')}
-                          onChange={e => handleTextChange(q.id, e.target.value)}
+                          value={
+                            textAnswers[q.id] ??
+                            (exam.answers?.[q.id] != null ? String(exam.answers[q.id]) : '')
+                          }
+                          onChange={(e) => handleTextChange(q.id, e.target.value)}
                           onBlur={() => handleTextBlur(q.id)}
                         />
                       </label>
@@ -585,7 +712,9 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                           checked={exam.answers?.[q.id] === index}
                           onChange={() => answer(q.id, index)}
                         />
-                        <span>{String.fromCharCode(65 + index)}. {option}</span>
+                        <span>
+                          {String.fromCharCode(65 + index)}. {option}
+                        </span>
                       </label>
                     ))
                   )}
@@ -606,8 +735,9 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
         <form className="live-exam-editor" onSubmit={save}>
           <h3>{draft.id ? 'Chỉnh sửa đề kiểm tra trực tiếp' : 'Tạo bài kiểm tra trực tiếp'}</h3>
           <p className="muted">
-            Hỗ trợ 4 dạng câu: Trắc nghiệm (MCQ), Điền từ (FILL_BLANK), Sửa lỗi (ERROR_CORRECTION), Viết lại câu (REWRITE).
-            Lưu đề sẽ tự động chấm lại toàn bộ bài làm của học sinh theo đáp án mới.
+            Hỗ trợ 4 dạng câu: Trắc nghiệm (MCQ), Điền từ (FILL_BLANK), Sửa lỗi (ERROR_CORRECTION),
+            Viết lại câu (REWRITE). Lưu đề sẽ tự động chấm lại toàn bộ bài làm của học sinh theo đáp
+            án mới.
           </p>
 
           <div className="form-grid">
@@ -617,7 +747,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                 required
                 maxLength={160}
                 value={draft.title}
-                onChange={e => setDraft({ ...draft, title: e.target.value })}
+                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
               />
             </label>
             <label>
@@ -626,14 +756,14 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                 required
                 type="datetime-local"
                 value={draft.endsAt}
-                onChange={e => setDraft({ ...draft, endsAt: e.target.value })}
+                onChange={(e) => setDraft({ ...draft, endsAt: e.target.value })}
               />
             </label>
             <label>
               Trạng thái
               <select
                 value={String(draft.closed)}
-                onChange={e => setDraft({ ...draft, closed: e.target.value === 'true' })}
+                onChange={(e) => setDraft({ ...draft, closed: e.target.value === 'true' })}
               >
                 <option value="false">Đang mở</option>
                 <option value="true">Đóng kiểm tra</option>
@@ -645,12 +775,22 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
             <div className="live-exam-question" key={q.id}>
               <div className="editor-q-header">
                 <strong>Câu {i + 1}</strong>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: 600, fontSize: '0.9rem' }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    fontWeight: 600,
+                    fontSize: '0.9rem',
+                  }}
+                >
                   Dạng câu:
                   <select
                     className="editor-q-type-select"
                     value={q.questionType || 'MCQ'}
-                    onChange={e => changeQuestion(i, { questionType: e.target.value as LiveExamQuestionType })}
+                    onChange={(e) =>
+                      changeQuestion(i, { questionType: e.target.value as LiveExamQuestionType })
+                    }
                   >
                     <option value="MCQ">Trắc nghiệm (MCQ)</option>
                     <option value="FILL_BLANK">Điền từ (FILL_BLANK)</option>
@@ -667,7 +807,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                   required
                   maxLength={500}
                   value={q.prompt}
-                  onChange={e => changeQuestion(i, { prompt: e.target.value })}
+                  onChange={(e) => changeQuestion(i, { prompt: e.target.value })}
                 />
               </label>
 
@@ -682,44 +822,48 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                         q.questionType === 'FILL_BLANK'
                           ? 'Nhập từ/cụm từ mẫu cần điền...'
                           : q.questionType === 'ERROR_CORRECTION'
-                          ? 'Nhập từ/cụm từ đã sửa đúng...'
-                          : 'Nhập câu viết lại hoàn chỉnh...'
+                            ? 'Nhập từ/cụm từ đã sửa đúng...'
+                            : 'Nhập câu viết lại hoàn chỉnh...'
                       }
                       value={q.acceptedAnswer || ''}
-                      onChange={e => changeQuestion(i, { acceptedAnswer: e.target.value })}
+                      onChange={(e) => changeQuestion(i, { acceptedAnswer: e.target.value })}
                     />
                   </label>
                   <small style={{ color: 'var(--muted)', display: 'block', marginTop: '4px' }}>
-                    * Hệ thống tự động bỏ qua viết hoa/thường, khoảng trắng thừa và dấu câu cuối câu (. ! ?) khi chấm bài.
+                    * Hệ thống tự động bỏ qua viết hoa/thường, khoảng trắng thừa và dấu câu cuối câu
+                    (. ! ?) khi chấm bài.
                   </small>
                 </div>
               ) : (
                 <div className="form-grid">
-                  {(q.options && q.options.length === 4 ? q.options : ['', '', '', '']).map((option, index) => (
-                    <label key={index}>
-                      Lựa chọn {String.fromCharCode(65 + index)}
-                      <input
-                        required
-                        maxLength={160}
-                        value={option}
-                        onChange={e =>
-                          changeQuestion(i, {
-                            options: (q.options && q.options.length === 4 ? q.options : ['', '', '', '']).map((o, j) =>
-                              j === index ? e.target.value : o
-                            )
-                          })
-                        }
-                      />
-                    </label>
-                  ))}
+                  {(q.options && q.options.length === 4 ? q.options : ['', '', '', '']).map(
+                    (option, index) => (
+                      <label key={index}>
+                        Lựa chọn {String.fromCharCode(65 + index)}
+                        <input
+                          required
+                          maxLength={160}
+                          value={option}
+                          onChange={(e) =>
+                            changeQuestion(i, {
+                              options: (q.options && q.options.length === 4
+                                ? q.options
+                                : ['', '', '', '']
+                              ).map((o, j) => (j === index ? e.target.value : o)),
+                            })
+                          }
+                        />
+                      </label>
+                    ),
+                  )}
                   <label>
                     Đáp án đúng
                     <select
                       aria-label="Đáp án đúng"
                       value={q.correct ?? 0}
-                      onChange={e => changeQuestion(i, { correct: Number(e.target.value) })}
+                      onChange={(e) => changeQuestion(i, { correct: Number(e.target.value) })}
                     >
-                      {[0, 1, 2, 3].map(index => (
+                      {[0, 1, 2, 3].map((index) => (
                         <option value={index} key={index}>
                           {String.fromCharCode(65 + index)}
                         </option>
@@ -734,7 +878,9 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                   type="button"
                   className="text-button"
                   disabled={draft.questions.length === 1}
-                  onClick={() => setDraft({ ...draft, questions: draft.questions.filter((_, j) => j !== i) })}
+                  onClick={() =>
+                    setDraft({ ...draft, questions: draft.questions.filter((_, j) => j !== i) })
+                  }
                 >
                   Xóa câu {i + 1}
                 </button>
@@ -773,9 +919,16 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
         <div
           className="modal-backdrop"
           role="presentation"
-          onClick={e => { if (e.target === e.currentTarget) setBankOpen(false) }}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setBankOpen(false)
+          }}
         >
-          <div className="card modal-card" role="dialog" aria-modal="true" aria-label="Lấy câu hỏi từ kho">
+          <div
+            className="card modal-card"
+            role="dialog"
+            aria-modal="true"
+            aria-label="Lấy câu hỏi từ kho"
+          >
             <div className="panel-heading">
               <h2>Lấy từ kho câu hỏi của tôi</h2>
               <button type="button" className="text-button" onClick={() => setBankOpen(false)}>
@@ -783,10 +936,19 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
               </button>
             </div>
             <p className="muted">
-              Chọn câu hỏi bạn đã soạn trong kho riêng (hỗ trợ cả trắc nghiệm và câu tự luận) để đưa vào đề kiểm tra trực tiếp (tối đa 30 câu trong đề).
+              Chọn câu hỏi bạn đã soạn trong kho riêng (hỗ trợ cả trắc nghiệm và câu tự luận) để đưa
+              vào đề kiểm tra trực tiếp (tối đa 30 câu trong đề).
             </p>
-            <div style={{ maxHeight: '360px', overflowY: 'auto', display: 'grid', gap: '8px', marginBottom: '16px' }}>
-              {bankQuestions.map(q => (
+            <div
+              style={{
+                maxHeight: '360px',
+                overflowY: 'auto',
+                display: 'grid',
+                gap: '8px',
+                marginBottom: '16px',
+              }}
+            >
+              {bankQuestions.map((q) => (
                 <label
                   key={q.id}
                   style={{
@@ -797,7 +959,7 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                     background: '#f8fafc',
                     border: '1px solid var(--border)',
                     borderRadius: '8px',
-                    cursor: 'pointer'
+                    cursor: 'pointer',
                   }}
                 >
                   <input
@@ -812,7 +974,11 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                   />
                   <div>
                     <strong>
-                      #{q.id} · <span className={typeBadgeClass(q.questionType)}>{typeLabel(q.questionType)}</span> {q.prompt}
+                      #{q.id} ·{' '}
+                      <span className={typeBadgeClass(q.questionType)}>
+                        {typeLabel(q.questionType)}
+                      </span>{' '}
+                      {q.prompt}
                     </strong>
                     <small style={{ display: 'block', color: 'var(--muted)', marginTop: '2px' }}>
                       {isTextType(q.questionType)
@@ -823,7 +989,9 @@ export function LiveClassExam({ classId, isOwner, allowCreate = true }: { classI
                 </label>
               ))}
               {!bankQuestions.length && (
-                <p className="muted">Kho câu hỏi của bạn đang trống. Hãy soạn câu hỏi ở mục "Soạn câu hỏi".</p>
+                <p className="muted">
+                  Kho câu hỏi của bạn đang trống. Hãy soạn câu hỏi ở mục "Soạn câu hỏi".
+                </p>
               )}
             </div>
             <div className="button-row">
