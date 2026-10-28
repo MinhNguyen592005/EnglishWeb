@@ -154,6 +154,12 @@ export function Layout({ children, title }: { children: ReactNode; title: string
                 <i /> Trực tuyến
               </span>
             )}
+            {!isAdmin && !isTeacher && user && (
+              <span className="topbar-exp" title="Tổng EXP tích lũy">
+                <strong>{user.totalXp.toLocaleString('vi-VN')}</strong>
+                <span>EXP</span>
+              </span>
+            )}
             <Link
               to={isAdmin ? '/admin' : '/profile'}
               className="topbar-profile"

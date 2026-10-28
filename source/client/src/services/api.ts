@@ -6,6 +6,7 @@ import type {
   Attempt,
   Assignment,
   AssignmentResult,
+  MyAssignmentResult,
   ClassOverview,
   ClassMessage,
   Classroom,
@@ -285,6 +286,10 @@ export const api = {
     }),
   assignmentResults: (classId: number, assignmentId: number) =>
     request<AssignmentResult[]>(`/classes/${classId}/assignments/${assignmentId}/results`),
+  myClassResults: (classId: number) =>
+    request<MyAssignmentResult[]>(`/classes/${classId}/my-results`),
+  startClassAssignment: (classId: number, assignmentId: number) =>
+    request<Attempt>(`/classes/${classId}/assignments/${assignmentId}/start`, { method: 'POST' }),
   classMessages: (classId: number) => request<ClassMessage[]>(`/classes/${classId}/messages`),
   sendClassMessage: (classId: number, body: string) =>
     request<ClassMessage>(`/classes/${classId}/messages`, {

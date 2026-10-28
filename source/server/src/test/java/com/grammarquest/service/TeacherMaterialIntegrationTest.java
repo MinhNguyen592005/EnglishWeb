@@ -72,6 +72,122 @@ class TeacherMaterialIntegrationTest {
     }
 
     @Test
+    void learnerExamSubmitsLatestDraftPrivatelyAndRespectsVersionAndDeadline() throws Exception {
+        var users = app.getBean(UserRepository.class);
+        var db = app.getBean(JdbcTemplate.class);
+        var classes = app.getBean(ClassroomController.class);
+        var exams = app.getBean(LiveExamService.class);
+        var json = app.getBean(com.fasterxml.jackson.databind.ObjectMapper.class);
+        var teacher = new User("exam_flow_teacher", "Teacher", "hash");
+        teacher.role = "TEACHER";
+        users.save(teacher);
+        var alice = users.save(new User("exam_flow_alice", "Alice", "hash"));
+        var bob = users.save(new User("exam_flow_bob", "Bob", "hash"));
+        var outsider = users.save(new User("exam_flow_outsider", "Outsider", "hash"));
+        var teacherAuth = new UsernamePasswordAuthenticationToken(teacher.username, "n/a");
+        var classroom = classes.create(teacherAuth, new ClassroomController.NewClass("Exam flow"));
+        long classId = ((Number) classroom.get("id")).longValue();
+        for (var learner : List.of(alice, bob))
+            classes.join(
+                new UsernamePasswordAuthenticationToken(learner.username, "n/a"),
+                new ClassroomController.Join(classroom.get("joinCode").toString())
+            );
+        var qs = json.createArrayNode();
+        for (int index = 0; index < 12; index++) {
+            var q = qs
+                .addObject()
+                .put("id", "q" + index)
+                .put("prompt", "Question " + index);
+            if (index == 1 || index == 11) q.put("questionType", "FILL_BLANK").put(
+                "acceptedAnswer",
+                "since"
+            );
+            else {
+                q.put("questionType", "MCQ").put("correct", 1);
+                q.putArray("options").add("A").add("B").add("C").add("D");
+            }
+        }
+        var input = json
+            .createObjectNode()
+            .put("classId", classId)
+            .put("title", "Mixed exam")
+            .put("endsAt", Instant.now().plusSeconds(3600).toString());
+        input.set("questions", qs);
+        var created = json.valueToTree(exams.action(teacher.username, "EXAM_CREATE", input));
+        long id = created.path("id").asLong();
+        var open = json.createObjectNode().put("examId", id);
+        assertThrows(ApiException.class, () -> exams.action(outsider.username, "EXAM_OPEN", open));
+        var aliceView = json.valueToTree(exams.action(alice.username, "EXAM_OPEN", open));
+        assertFalse(aliceView.has("ranking"));
+        assertFalse(aliceView.has("correctCount"));
+        for (var q : aliceView.path("questions")) {
+            assertFalse(q.has("correct"));
+            assertFalse(q.has("acceptedAnswer"));
+        }
+        var answer = json
+            .createObjectNode()
+            .put("examId", id)
+            .put("version", 1)
+            .put("questionId", "q0")
+            .put("option", 0);
+        exams.action(alice.username, "EXAM_ANSWER", answer);
+        assertThrows(ApiException.class, () ->
+            exams.action(teacher.username, "EXAM_ANSWER", answer)
+        );
+        answer.put("version", 0);
+        assertThrows(ApiException.class, () -> exams.action(alice.username, "EXAM_ANSWER", answer));
+        var submit = json.createObjectNode().put("examId", id).put("version", 1);
+        submit.set(
+            "answers",
+            json.createObjectNode().put("q0", 1).put("q1", " Since! ").put("q11", "since")
+        );
+        var submitted = json.valueToTree(exams.action(alice.username, "EXAM_SUBMIT", submit));
+        assertTrue(submitted.path("submitted").asBoolean());
+        assertEquals(1, submitted.path("answers").path("q0").asInt());
+        assertEquals("Since!", submitted.path("answers").path("q1").asText());
+        assertFalse(submitted.has("correctCount"));
+        var bobView = json.valueToTree(exams.action(bob.username, "EXAM_OPEN", open));
+        assertEquals(0, bobView.path("answers").size());
+        var bad = json.createObjectNode().put("examId", id).put("version", 1);
+        bad.set("answers", json.createObjectNode().put("unknown", 0));
+        assertThrows(ApiException.class, () -> exams.action(bob.username, "EXAM_SUBMIT", bad));
+        assertFalse(json.valueToTree(exams.view(bob.username, id)).path("submitted").asBoolean());
+        var ranking = json.valueToTree(exams.view(teacher.username, id)).path("ranking");
+        assertEquals(3, ranking.get(0).path("correctCount").asInt());
+        var list = json.valueToTree(
+            exams.action(
+                alice.username,
+                "EXAM_LIST",
+                json.createObjectNode().put("classId", classId)
+            )
+        );
+        assertTrue(list.get(0).path("submitted").asBoolean());
+        assertFalse(list.get(0).has("correctCount"));
+        db.update(
+            "update class_exams set ends_at=? where id=?",
+            java.sql.Timestamp.from(Instant.now().minusSeconds(5)),
+            id
+        );
+        assertThrows(ApiException.class, () -> exams.action(bob.username, "EXAM_SUBMIT", submit));
+        var closed = json.valueToTree(exams.view(alice.username, id));
+        assertTrue(closed.path("closed").asBoolean());
+        assertEquals(3, closed.path("correctCount").asInt());
+        assertEquals(0, closed.path("questions").size());
+        assertEquals(0, closed.path("answers").size());
+        assertThrows(ApiException.class, () -> exams.action(alice.username, "EXAM_OPEN", open));
+        assertThrows(ApiException.class, () -> exams.action(alice.username, "EXAM_SYNC", open));
+        assertEquals(
+            12,
+            json
+                .valueToTree(exams.action(teacher.username, "EXAM_OPEN", open))
+                .path("questions")
+                .size()
+        );
+        db.update("delete from class_members where class_id=? and user_id=?", classId, alice.id);
+        assertThrows(ApiException.class, () -> exams.view(alice.username, id));
+    }
+
+    @Test
     void roadmapReviewsUseUnlockedContentAndUpdateDailyQuestsOnlyOnce() throws Exception {
         var users = app.getBean(UserRepository.class);
         var db = app.getBean(JdbcTemplate.class);
@@ -424,10 +540,119 @@ class TeacherMaterialIntegrationTest {
         );
         classes.join(learnerAuth, new ClassroomController.Join(classA.get("joinCode").toString()));
         var attempt = classes.start(learnerAuth, a, assignmentId);
+        assertEquals(a, attempt.classId());
+        assertEquals(
+            a,
+            app.getBean(LearningService.class).get(learner.username, attempt.id()).classId()
+        );
         assertNull(attempt.lessonId());
         assertEquals(2, attempt.totalQuestions());
         assertEquals(first.prompt(), attempt.questions().getFirst().prompt());
         assertNull(attempt.questions().getFirst().correctOption());
+        // Learners can start/resume their own work, without teacher-grade permissions.
+        assertEquals(attempt.id(), classes.start(learnerAuth, a, assignmentId).id());
+        assertThrows(ApiException.class, () -> classes.results(learnerAuth, a, assignmentId));
+        var ownWork = classes.myResults(learnerAuth, a);
+        assertEquals(1, ownWork.size());
+        assertEquals(
+            attempt.id().longValue(),
+            ((Number) ownWork.getFirst().get("attemptId")).longValue()
+        );
+        assertEquals(
+            learner.id.longValue(),
+            ((Number) ownWork.getFirst().get("userId")).longValue()
+        );
+        assertEquals(assignmentId, ((Number) ownWork.getFirst().get("assignmentId")).longValue());
+        assertNotNull(ownWork.getFirst().get("submitDeadlineAt"));
+        User classmate = users.save(new User("material_classmate", "Classmate", "hash"));
+        var classmateAuth = new UsernamePasswordAuthenticationToken(classmate.username, "n/a");
+        assertThrows(ApiException.class, () -> classes.start(classmateAuth, a, assignmentId));
+        assertThrows(ApiException.class, () -> classes.myResults(classmateAuth, a));
+        classes.join(
+            classmateAuth,
+            new ClassroomController.Join(classA.get("joinCode").toString())
+        );
+        assertTrue(classes.myResults(classmateAuth, a).isEmpty());
+        var classmatesAttempt = classes.start(classmateAuth, a, assignmentId);
+        assertNotEquals(attempt.id(), classmatesAttempt.id());
+        assertEquals(1, classes.myResults(learnerAuth, a).size());
+        var learning = app.getBean(LearningService.class);
+        assertThrows(ApiException.class, () -> learning.get(classmate.username, attempt.id()));
+        var feedback = learning.answer(learner.username, attempt.id(), 1, "A");
+        assertNull(feedback.correctOption());
+        assertNull(feedback.explanation());
+        learning.answer(learner.username, attempt.id(), 2, "wrong");
+        var failed = learning.get(learner.username, attempt.id());
+        assertEquals("LOST", failed.status());
+        assertTrue(
+            failed
+                .questions()
+                .stream()
+                .allMatch(q -> q.correctOption() == null && q.explanation() == null)
+        );
+        var successful = classes.start(learnerAuth, a, assignmentId);
+        learning.answer(learner.username, successful.id(), 1, "B");
+        assertNull(
+            learning.get(learner.username, successful.id()).questions().getFirst().correctOption()
+        );
+        var passedAnswer = learning.answer(learner.username, successful.id(), 2, "since");
+        assertNotNull(passedAnswer.correctOption());
+        assertTrue(
+            learning
+                .get(learner.username, attempt.id())
+                .questions()
+                .stream()
+                .allMatch(q -> q.correctOption() != null)
+        );
+        var ownGrade = classes.myResults(learnerAuth, a).getFirst();
+        assertEquals(2, ((Number) ownGrade.get("correctCount")).intValue());
+        assertEquals("WON", ownGrade.get("status"));
+        var retry = classes.start(learnerAuth, a, assignmentId);
+        var duringRetry = classes.myResults(learnerAuth, a).getFirst();
+        assertEquals(true, duringRetry.get("passed"));
+        assertEquals("IN_PROGRESS", duringRetry.get("status"));
+        learning.answer(learner.username, retry.id(), 1, "A");
+        learning.answer(learner.username, retry.id(), 2, "wrong");
+        var retried = classes.myResults(learnerAuth, a).getFirst();
+        var json = app.getBean(com.fasterxml.jackson.databind.ObjectMapper.class);
+        var summary = json.valueToTree(retried);
+        assertTrue(summary.path("passed").asBoolean());
+        assertEquals(3, summary.path("attemptCount").asInt());
+        assertEquals(0, summary.path("firstAttempt").path("correctCount").asInt());
+        assertEquals(0, summary.path("latestAttempt").path("correctCount").asInt());
+        assertEquals(2, summary.path("bestAttempt").path("correctCount").asInt());
+        assertEquals(3, summary.path("history").size());
+        assertNotNull(retried.get("firstPassedAt"));
+        var teacherGrade = json.valueToTree(classes.results(ownerAuth, a, assignmentId)).get(0);
+        // Find the learner rather than relying on display-name sorting.
+        for (var grade : json.valueToTree(classes.results(ownerAuth, a, assignmentId))) {
+            if (grade.path("userId").asLong() == learner.id) teacherGrade = grade;
+        }
+        assertEquals(2, teacherGrade.path("correctCount").asInt());
+        assertTrue(teacherGrade.path("passed").asBoolean());
+        assertEquals(
+            100.0,
+            ((Number) classes.overview(ownerAuth, a).get("averageScore")).doubleValue()
+        );
+        db.update(
+            "update attempts set completed_at=? where id=?",
+            java.sql.Timestamp.from(due.plusSeconds(1)),
+            successful.id()
+        );
+        var late = json.valueToTree(classes.myResults(learnerAuth, a)).get(0);
+        assertFalse(late.path("passed").asBoolean());
+        assertEquals(0, late.path("bestAttempt").path("correctCount").asInt());
+        assertEquals(
+            0.0,
+            ((Number) classes.overview(ownerAuth, a).get("averageScore")).doubleValue()
+        );
+        assertNull(
+            learning.get(learner.username, retry.id()).questions().getFirst().correctOption()
+        );
+        assertEquals(2, classes.results(ownerAuth, a, assignmentId).size());
+        db.update("delete from class_members where class_id=? and user_id=?", a, classmate.id);
+        assertThrows(ApiException.class, () -> classes.myResults(classmateAuth, a));
+        assertThrows(ApiException.class, () -> classes.start(classmateAuth, a, assignmentId));
         var exam = materials.exam(
             ownerAuth,
             materialId,

@@ -1,0 +1,10 @@
+.quiz-grid.classroom-quiz-grid {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 960px;
+  margin: 0 auto;
+}
+
+.result-stats.classroom-result-stats {
+  grid-template-columns: minmax(200px, 340px);
+  justify-content: center;
+}

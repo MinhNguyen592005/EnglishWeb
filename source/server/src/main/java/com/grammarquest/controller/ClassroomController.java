@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.grammarquest.entity.*;
 import com.grammarquest.exception.ApiException;
 import com.grammarquest.repository.*;
+import com.grammarquest.service.AssignmentResults;
 import com.grammarquest.service.LearningService;
 import com.grammarquest.service.RealtimeNotifier;
 import jakarta.validation.Valid;
@@ -309,19 +310,23 @@ public class ClassroomController {
         );
         int submitted = Objects.requireNonNullElse(
             db.queryForObject(
-                "select count(distinct aa.assignment_id, a.user_id) from assignment_attempts aa join attempts a on a.id=aa.attempt_id join assignments x on x.id=aa.assignment_id join class_members m on m.class_id=x.class_id and m.user_id=a.user_id where x.class_id=? and a.status<>'IN_PROGRESS'",
+                "select count(distinct aa.assignment_id, a.user_id) from assignment_attempts aa join attempts a on a.id=aa.attempt_id join assignments x on x.id=aa.assignment_id join class_members m on m.class_id=x.class_id and m.user_id=a.user_id where x.class_id=? and a.completed_at is not null and a.completed_at<=least(coalesce(aa.submit_deadline_at,x.due_at),x.due_at)",
                 Integer.class,
                 id
             ),
             0
         );
+        String officialGrades =
+            "select a.user_id,aa.assignment_id,max(a.correct_count*100.0/nullif(a.total_questions,0)) as score,max(ass.pass_percent) as passPercent from assignment_attempts aa join attempts a on a.id=aa.attempt_id join assignments ass on ass.id=aa.assignment_id join class_members m on m.class_id=ass.class_id and m.user_id=a.user_id where ass.class_id=? and a.completed_at is not null and a.completed_at<=least(coalesce(aa.submit_deadline_at,ass.due_at),ass.due_at) group by a.user_id,aa.assignment_id";
         Double average = db.queryForObject(
-            "select avg(case when a.total_questions>0 then a.correct_count*100.0/a.total_questions end) from assignment_attempts aa join attempts a on a.id=aa.attempt_id join assignments x on x.id=aa.assignment_id where x.class_id=? and a.status<>'IN_PROGRESS'",
+            "select avg(g.score) from (" + officialGrades + ") g",
             Double.class,
             id
         );
         Double passed = db.queryForObject(
-            "select avg(case when a.total_questions>0 and a.correct_count*100>=a.total_questions*x.pass_percent then 100.0 else 0.0 end) from assignment_attempts aa join attempts a on a.id=aa.attempt_id join assignments x on x.id=aa.assignment_id where x.class_id=? and a.status<>'IN_PROGRESS'",
+            "select avg(case when g.score>=g.passPercent then 100.0 else 0.0 end) from (" +
+                officialGrades +
+                ") g",
             Double.class,
             id
         );
@@ -552,7 +557,7 @@ public class ClassroomController {
         );
         if (
             !"PUBLISHED".equals(a.get("status")) ||
-            ((Timestamp) a.get("dueAt")).toInstant().isBefore(Instant.now())
+            !((Timestamp) a.get("dueAt")).toInstant().isAfter(Instant.now())
         ) throw new ApiException(
             HttpStatus.CONFLICT,
             "ASSIGNMENT_CLOSED",
@@ -560,6 +565,14 @@ public class ClassroomController {
         );
         Long assignedLesson =
             a.get("lessonId") == null ? null : ((Number) a.get("lessonId")).longValue();
+        users.findWithLockById(u.id).orElseThrow();
+        var ongoing = db.queryForList(
+            "select a.id from assignment_attempts aa join attempts a on a.id=aa.attempt_id where aa.assignment_id=? and a.user_id=? and a.status='IN_PROGRESS' and (aa.submit_deadline_at is null or aa.submit_deadline_at>current_timestamp(6)) order by a.id desc limit 1",
+            Long.class,
+            assignmentId,
+            u.id
+        );
+        if (!ongoing.isEmpty()) return learning.get(auth.getName(), ongoing.getFirst());
         var attempt =
             a.get("questionSnapshot") == null
                 ? learning.startAssignment(
@@ -580,7 +593,15 @@ public class ClassroomController {
             Timestamp.from(Instant.now().plusSeconds(900))
         );
         notifier.classroom(id);
-        return attempt;
+        return attempt.forClass(id);
+    }
+
+    @GetMapping("/{id}/my-results")
+    public List<Map<String, Object>> myResults(Authentication auth, @PathVariable long id) {
+        User u = current(auth);
+        access(id, u);
+        if (!"LEARNER".equals(u.role)) throw denied();
+        return assignmentResults(id, null, u.id, false);
     }
 
     @GetMapping("/{id}/assignments/{assignmentId}/results")
@@ -592,10 +613,34 @@ public class ClassroomController {
         User u = current(auth);
         owner(id, u);
         row("select id from assignments where id=? and class_id=?", assignmentId, id);
-        return db.queryForList(
-            "select x.userId,x.displayName,x.attemptId,x.status,x.correctCount,x.totalQuestions,x.completedAt,x.passed from (select u.id as userId,u.display_name as displayName,a.id as attemptId,a.status,a.correct_count as correctCount,a.total_questions as totalQuestions,a.completed_at as completedAt,(a.status<>'IN_PROGRESS' and a.correct_count*100>=a.total_questions*ass.pass_percent) as passed,row_number() over(partition by u.id order by case when a.status='IN_PROGRESS' then -1 else a.correct_count/a.total_questions end desc,a.id desc) as rn from assignment_attempts aa join assignments ass on ass.id=aa.assignment_id join attempts a on a.id=aa.attempt_id join users u on u.id=a.user_id where aa.assignment_id=?) x where x.rn=1 order by x.displayName",
-            assignmentId
-        );
+        return assignmentResults(id, assignmentId, null, true);
+    }
+
+    private List<Map<String, Object>> assignmentResults(
+        long classId,
+        Long assignmentId,
+        Long userId,
+        boolean teacher
+    ) {
+        String eligible =
+            "a.completed_at is not null and a.completed_at<=least(coalesce(aa.submit_deadline_at,ass.due_at),ass.due_at)";
+        String sql =
+            "select ass.id as assignmentId,u.id as userId,u.display_name as displayName,a.id as attemptId,a.status,a.correct_count as correctCount,a.total_questions as totalQuestions,a.completed_at as completedAt,(" +
+            eligible +
+            ") as eligible,(" +
+            eligible +
+            " and a.correct_count*100>=a.total_questions*ass.pass_percent) as passed,least(coalesce(aa.submit_deadline_at,ass.due_at),ass.due_at) as submitDeadlineAt from assignment_attempts aa join assignments ass on ass.id=aa.assignment_id join attempts a on a.id=aa.attempt_id join users u on u.id=a.user_id where ass.class_id=?";
+        List<Object> args = new ArrayList<>(List.of(classId));
+        if (assignmentId != null) {
+            sql += " and ass.id=?";
+            args.add(assignmentId);
+        }
+        if (userId != null) {
+            sql += " and a.user_id=?";
+            args.add(userId);
+        }
+        sql += " order by ass.id desc,u.display_name,a.id";
+        return AssignmentResults.summarize(db.queryForList(sql, args.toArray()), teacher);
     }
 
     @GetMapping("/{id}/messages")

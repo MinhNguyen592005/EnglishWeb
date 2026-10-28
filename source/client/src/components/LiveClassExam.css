@@ -303,3 +303,16 @@
     line-height: 1.5;
   }
 }
+.exam-save-note {
+  padding: 11px 14px;
+  border: 1px solid #e6ebf3;
+  border-radius: 9px;
+  background: #f8fafd;
+  color: #8797b0;
+  font-size: 12px;
+  line-height: 1.8;
+}
+.live-exam-body .list-pagination,
+.live-exam-editor .list-pagination {
+  margin: 18px 0;
+}

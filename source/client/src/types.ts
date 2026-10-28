@@ -62,6 +62,7 @@ export type Question = {
   explanation: string | null
 }
 export type Attempt = {
+  classId?: number | null
   id: number
   kind: 'PRACTICE' | 'LESSON_BOSS' | 'CHAPTER_BOSS'
   status: 'IN_PROGRESS' | 'WON' | 'LOST'
@@ -111,7 +112,7 @@ export type ClassMessage = {
   body: string
   createdAt: string
 }
-export type AssignmentResult = {
+export type AssignmentAttempt = {
   userId: number
   displayName: string
   attemptId: number
@@ -120,6 +121,20 @@ export type AssignmentResult = {
   totalQuestions: number
   completedAt: string | null
   passed: boolean
+  eligible?: boolean
+}
+export type AssignmentResult = AssignmentAttempt & {
+  attemptCount?: number
+  completedCount?: number
+  bestAttempt?: AssignmentAttempt | null
+  firstAttempt?: AssignmentAttempt | null
+  latestAttempt?: AssignmentAttempt
+  firstPassedAt?: string | null
+  history?: AssignmentAttempt[]
+}
+export type MyAssignmentResult = AssignmentResult & {
+  assignmentId: number
+  submitDeadlineAt: string | null
 }
 export type ClassOverview = {
   classId: number

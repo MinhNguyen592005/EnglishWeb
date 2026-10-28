@@ -70,10 +70,7 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
               <Target size={16} />
               Cấp độ hiện tại
             </span>
-            <strong>
-              {level}
-              <small>cấp</small>
-            </strong>
+            <strong>Cấp {level}</strong>
             <p>{(user?.totalXp ?? 0).toLocaleString('vi-VN')} XP tích lũy</p>
           </div>
           <div>

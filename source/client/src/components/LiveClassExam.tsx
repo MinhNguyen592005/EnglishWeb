@@ -47,6 +47,8 @@ type Listing = {
   title: string
   endsAt: string
   closed: boolean
+  submitted?: boolean
+  answeredCount?: number
 }
 
 type Draft = {
@@ -129,16 +131,39 @@ export function LiveClassExam({
   const [notice, setNotice] = useState('')
   const [busy, setBusy] = useState(false)
   const [saving, setSaving] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
+  const [questionPage, setQuestionPage] = useState(1)
+  const [rankingPage, setRankingPage] = useState(1)
+  const [editorPage, setEditorPage] = useState(1)
   const [now, setNow] = useState(Date.now())
-  const [textAnswers, setTextAnswers] = useState<Record<string, string>>({})
+  const [answerDrafts, setAnswerDrafts] = useState<Record<string, number | string>>({})
 
   const current = useRef<Exam | null>(null)
   const mounted = useRef(true)
   const debounceTimers = useRef<Record<string, ReturnType<typeof setTimeout>>>({})
+  const drafts = useRef<Record<string, number | string>>({})
+  const unsaved = useRef(new Map<string, number | string>())
+  const queue = useRef<Promise<void>>(Promise.resolve())
+  const pendingCount = useRef(0)
+  const submitLock = useRef(false)
+  const clearTimers = useCallback(() => {
+    Object.values(debounceTimers.current).forEach(clearTimeout)
+    debounceTimers.current = {}
+  }, [])
 
   const apply = useCallback(
     (next: Exam) => {
       if (!mounted.current || next.classId !== classId) return
+      if (!next.owner && (next.closed || new Date(next.endsAt).getTime() <= Date.now())) {
+        clearTimers()
+        unsaved.current.clear()
+        drafts.current = {}
+        current.current = null
+        setAnswerDrafts({})
+        setExam(null)
+        setNotice('Bài kiểm tra đã đóng hoặc hết giờ. Bạn không thể xem lại đề.')
+        return
+      }
       const old = current.current
       if (
         old?.id === next.id &&
@@ -152,24 +177,18 @@ export function LiveClassExam({
         )
       }
       current.current = next
+      if (old?.id !== next.id || old.version !== next.version) {
+        clearTimers()
+        unsaved.current.clear()
+        setQuestionPage(1)
+        setRankingPage(1)
+      }
+      drafts.current = { ...(next.answers || {}), ...Object.fromEntries(unsaved.current) }
+      setAnswerDrafts(drafts.current)
       setExam(next)
     },
-    [classId],
+    [classId, clearTimers],
   )
-
-  useEffect(() => {
-    if (exam?.answers) {
-      setTextAnswers((prev) => {
-        const next = { ...prev }
-        for (const [k, v] of Object.entries(exam.answers || {})) {
-          if (typeof v === 'string' && next[k] === undefined) {
-            next[k] = v
-          }
-        }
-        return next
-      })
-    }
-  }, [exam?.answers])
 
   const load = useCallback(
     () =>
@@ -194,11 +213,12 @@ export function LiveClassExam({
     })
     return () => {
       mounted.current = false
+      clearTimers()
       off()
       current.current = null
       request('EXAM_UNWATCH', 'EXAM_DATA').catch(() => {})
     }
-  }, [request, subscribe, apply])
+  }, [request, subscribe, apply, clearTimers])
 
   useEffect(() => {
     if (!connected) return
@@ -227,11 +247,20 @@ export function LiveClassExam({
     return () => clearInterval(timer)
   }, [])
 
+  useEffect(() => {
+    if (exam && !exam.owner && (exam.closed || new Date(exam.endsAt).getTime() <= now)) {
+      apply({ ...exam, closed: true })
+    }
+  }, [exam, now, apply])
+
   async function open(id: number) {
+    const item = list.find((entry) => entry.id === id)
+    if (!isOwner && item && (item.closed || new Date(item.endsAt).getTime() <= Date.now())) return
     setBusy(true)
     setError('')
     setNotice('')
     try {
+      if (current.current?.id !== id) await persistCurrentDrafts()
       const next = await request<Exam>('EXAM_OPEN', 'EXAM_DATA', { examId: id })
       apply(next)
     } catch (e) {
@@ -279,6 +308,16 @@ export function LiveClassExam({
         endsAt: new Date(draft.endsAt).toISOString(),
         questions: sanitizedQuestions,
       }
+      const invalidIndex = sanitizedQuestions.findIndex(
+        (q) =>
+          !q.prompt ||
+          (isTextType(q.questionType) ? !q.acceptedAnswer : q.options.some((option) => !option)),
+      )
+      if (invalidIndex >= 0) {
+        setEditorPage(Math.floor(invalidIndex / PAGE_SIZE) + 1)
+        setError(`Vui lòng hoàn thiện nội dung và đáp án câu ${invalidIndex + 1}.`)
+        return
+      }
       const next = await request<Exam>(draft.id ? 'EXAM_EDIT' : 'EXAM_CREATE', 'EXAM_DATA', payload)
       apply(next)
       setDraft(null)
@@ -291,94 +330,131 @@ export function LiveClassExam({
     }
   }
 
-  async function answer(questionId: string, val: number | string) {
-    const active = current.current
-    if (!active || saving) return
-    setSaving(true)
-    setError('')
-    try {
-      const payload: Record<string, unknown> = {
-        examId: active.id,
-        version: active.version,
-        questionId,
-      }
-      if (typeof val === 'number') {
-        payload.option = val
-      } else {
-        payload.option = 0
-        payload.answer = val
-        payload.textAnswer = val
-      }
-      const next = await request<Exam>('EXAM_ANSWER', 'EXAM_DATA', payload)
-      if (current.current?.id === active.id) apply(next)
-    } catch (e) {
-      setError((e as Error).message)
-      request<Exam>('EXAM_SYNC', 'EXAM_DATA', { examId: active.id })
-        .then((next) => {
-          if (current.current?.id === active.id) apply(next)
-        })
-        .catch(() => {})
-    } finally {
-      setSaving(false)
-    }
+  function updateDraft(questionId: string, value: number | string) {
+    drafts.current = { ...drafts.current, [questionId]: value }
+    unsaved.current.set(questionId, value)
+    setAnswerDrafts(drafts.current)
   }
 
-  const handleTextChange = (questionId: string, val: string) => {
-    setTextAnswers((prev) => ({ ...prev, [questionId]: val }))
-    if (debounceTimers.current[questionId]) {
-      clearTimeout(debounceTimers.current[questionId])
-    }
+  function answer(questionId: string, value: number | string) {
+    const active = current.current
+    if (!active || active.owner || active.closed || active.submitted || submitLock.current) return
+    updateDraft(questionId, value)
+    pendingCount.current++
+    setSaving(true)
+    queue.current = queue.current
+      .catch(() => {})
+      .then(async () => {
+        try {
+          if (
+            !mounted.current ||
+            current.current?.id !== active.id ||
+            current.current.version !== active.version
+          )
+            return
+          const next = await request<Exam>('EXAM_ANSWER', 'EXAM_DATA', {
+            examId: active.id,
+            version: active.version,
+            questionId,
+            ...(typeof value === 'number' ? { option: value } : { answer: value }),
+          })
+          if (current.current?.id === active.id && current.current.version === active.version) {
+            if (unsaved.current.get(questionId) === value) unsaved.current.delete(questionId)
+            apply(next)
+          }
+        } catch (e) {
+          if (mounted.current && current.current?.id === active.id) setError((e as Error).message)
+        } finally {
+          pendingCount.current--
+          if (mounted.current) setSaving(pendingCount.current > 0)
+        }
+      })
+  }
+
+  function handleTextChange(questionId: string, value: string) {
+    updateDraft(questionId, value)
+    clearTimeout(debounceTimers.current[questionId])
     debounceTimers.current[questionId] = setTimeout(() => {
       delete debounceTimers.current[questionId]
-      answer(questionId, val.trim())
+      answer(questionId, value)
     }, 600)
   }
 
-  const handleTextBlur = (questionId: string) => {
-    if (debounceTimers.current[questionId]) {
-      clearTimeout(debounceTimers.current[questionId])
-      delete debounceTimers.current[questionId]
-    }
-    const currentVal = (
-      textAnswers[questionId] ??
-      (exam?.answers?.[questionId] as string) ??
-      ''
-    ).trim()
-    const serverVal = ((exam?.answers?.[questionId] as string) ?? '').trim()
-    if (currentVal !== serverVal) {
-      answer(questionId, currentVal)
-    }
-  }
-
-  const flushTextTimers = () => {
-    for (const [qId, timer] of Object.entries(debounceTimers.current)) {
-      clearTimeout(timer)
-      const currentVal = (textAnswers[qId] ?? '').trim()
-      answer(qId, currentVal)
-    }
-    debounceTimers.current = {}
+  function handleTextBlur(questionId: string) {
+    clearTimeout(debounceTimers.current[questionId])
+    delete debounceTimers.current[questionId]
+    if (unsaved.current.has(questionId))
+      answer(questionId, String(drafts.current[questionId] ?? ''))
   }
 
   async function submit() {
-    if (!exam) return
-    flushTextTimers()
-    if (!window.confirm('Nộp bài? Sau khi nộp bạn không thể đổi đáp án.')) return
-    setSaving(true)
+    const active = current.current
+    if (!active || submitLock.current || active.owner) return
+    const answered = Object.values(drafts.current).filter(
+      (value) => typeof value === 'number' || value.trim(),
+    ).length
+    const message = `Nộp bài ${answered}/${active.questions.length} câu? Sau khi nộp bạn không thể đổi đáp án.`
+    if (!window.confirm(message)) return
+    submitLock.current = true
+    setSubmitting(true)
     setError('')
+    clearTimers()
+    const latestAnswers = { ...drafts.current }
     try {
+      await queue.current
+      if (current.current?.id !== active.id || current.current.version !== active.version)
+        throw new Error('Đề đã thay đổi. Vui lòng kiểm tra lại trước khi nộp.')
       apply(
-        await request<Exam>('EXAM_SUBMIT', 'EXAM_DATA', { examId: exam.id, version: exam.version }),
+        await request<Exam>('EXAM_SUBMIT', 'EXAM_DATA', {
+          examId: active.id,
+          version: active.version,
+          answers: latestAnswers,
+        }),
       )
-      setNotice('Đã nộp bài. Giáo viên đã nhận được kết quả.')
+      unsaved.current.clear()
+      setError('')
+      setNotice('Đã nộp bài. Kết quả sẽ hiển thị khi bài kiểm tra đóng hoặc hết giờ.')
+    } catch (e) {
+      setError((e as Error).message)
+      request<Exam>('EXAM_SYNC', 'EXAM_DATA', { examId: active.id })
+        .then(apply)
+        .catch(() => {})
+    } finally {
+      submitLock.current = false
+      setSubmitting(false)
+    }
+  }
+
+  async function persistCurrentDrafts() {
+    clearTimers()
+    const active = current.current
+    if (!active || active.owner || active.closed || active.submitted) return
+    for (const [id, value] of [...unsaved.current]) answer(id, value)
+    await queue.current
+    if (unsaved.current.size)
+      throw new Error('Còn đáp án chưa lưu. Vui lòng kiểm tra kết nối rồi thử lại.')
+  }
+
+  async function closeExam() {
+    if (submitLock.current) return
+    setBusy(true)
+    try {
+      await persistCurrentDrafts()
+      current.current = null
+      unsaved.current.clear()
+      setExam(null)
+      setDraft(null)
+      await request('EXAM_UNWATCH', 'EXAM_DATA')
     } catch (e) {
       setError((e as Error).message)
     } finally {
-      setSaving(false)
+      setBusy(false)
     }
   }
 
   function edit() {
     if (!exam) return
+    setEditorPage(1)
     setDraft({
       id: exam.id,
       version: exam.version,
@@ -484,6 +560,24 @@ export function LiveClassExam({
     ? Math.max(0, Math.ceil((new Date(exam.endsAt).getTime() - now) / 1000))
     : 0
   const readonly = !!exam && (exam.closed || exam.submitted || remaining === 0)
+  const currentQuestionPage = Math.min(
+    questionPage,
+    Math.max(1, Math.ceil((exam?.questions.length || 0) / PAGE_SIZE)),
+  )
+  const currentRankingPage = Math.min(
+    rankingPage,
+    Math.max(1, Math.ceil((exam?.ranking?.length || 0) / PAGE_SIZE)),
+  )
+  const currentEditorPage = Math.min(
+    editorPage,
+    Math.max(1, Math.ceil((draft?.questions.length || 0) / PAGE_SIZE)),
+  )
+  const questionRows = (exam?.questions || [])
+    .map((q, i) => ({ q, i }))
+    .slice((currentQuestionPage - 1) * PAGE_SIZE, currentQuestionPage * PAGE_SIZE)
+  const editorRows = (draft?.questions || [])
+    .map((q, i) => ({ q, i }))
+    .slice((currentEditorPage - 1) * PAGE_SIZE, currentEditorPage * PAGE_SIZE)
   const currentListPage = Math.min(listPage, Math.max(1, Math.ceil(list.length / PAGE_SIZE)))
   const visibleExams = list.slice((currentListPage - 1) * PAGE_SIZE, currentListPage * PAGE_SIZE)
 
@@ -498,7 +592,7 @@ export function LiveClassExam({
           <p className="muted">
             {isOwner
               ? 'Chọn bài kiểm tra để xem đề, quản lý và theo dõi kết quả.'
-              : 'Câu trả lời được tự động lưu qua WebSocket. Không cần tải lại trang.'}
+              : 'Chọn bài kiểm tra của lớp. Đáp án tự lưu trong khi bạn làm bài.'}
           </p>
         </div>
         <span className={`tag ${connected ? '' : 'muted'}`}>
@@ -521,7 +615,11 @@ export function LiveClassExam({
         {visibleExams.map((item) => (
           <button
             className={`exam-list-card ${exam?.id === item.id ? 'is-selected' : ''}`}
-            disabled={busy || !connected}
+            disabled={
+              busy ||
+              !connected ||
+              (!isOwner && (item.closed || new Date(item.endsAt).getTime() <= now))
+            }
             key={item.id}
             onClick={() => open(item.id)}
           >
@@ -538,7 +636,13 @@ export function LiveClassExam({
             <span
               className={`exam-list-state ${item.closed || new Date(item.endsAt).getTime() <= now ? 'closed' : 'open'}`}
             >
-              {item.closed || new Date(item.endsAt).getTime() <= now ? 'Đã đóng' : 'Đang mở'}
+              {item.closed || new Date(item.endsAt).getTime() <= now
+                ? 'Đã đóng'
+                : !isOwner && item.submitted
+                  ? 'Đã nộp'
+                  : !isOwner && item.answeredCount
+                    ? 'Đang làm'
+                    : 'Đang mở'}
             </span>
             <ChevronRight size={18} />
           </button>
@@ -580,8 +684,8 @@ export function LiveClassExam({
             <div>
               <h3>{exam.title}</h3>
               <p className="muted">
-                Phiên bản {exam.version} ·{' '}
-                {exam.closed
+                {exam.owner && <>Phiên bản {exam.version} · </>}
+                {exam.closed || remaining === 0
                   ? 'Đã đóng'
                   : `Còn ${Math.floor(remaining / 60)}:${String(remaining % 60).padStart(2, '0')}`}{' '}
                 · {exam.questions.length} câu
@@ -595,14 +699,10 @@ export function LiveClassExam({
               )}
               <button
                 className="button secondary"
-                onClick={() => {
-                  current.current = null
-                  setExam(null)
-                  setDraft(null)
-                  request('EXAM_UNWATCH', 'EXAM_DATA').catch(() => {})
-                }}
+                disabled={busy || submitting}
+                onClick={() => void closeExam()}
               >
-                Đóng màn hình
+                {exam.owner ? 'Đóng màn hình' : 'Về lớp học'}
               </button>
             </div>
           </div>
@@ -626,48 +726,77 @@ export function LiveClassExam({
                     </tr>
                   </thead>
                   <tbody>
-                    {exam.ranking?.map((r, i) => (
-                      <tr key={r.userId}>
-                        <td>{i + 1}</td>
-                        <td>
-                          <strong>{r.displayName}</strong>
-                          <small>
-                            #{r.userId} · {r.username}
-                          </small>
-                        </td>
-                        <td>
-                          {r.answeredCount}/{exam.questions.length}
-                        </td>
-                        <td>{r.correctCount}</td>
-                        <td>
-                          <strong>
-                            {((10 * r.correctCount) / exam.questions.length).toFixed(2)}
-                          </strong>
-                        </td>
-                        <td>{status(r.status)}</td>
-                      </tr>
-                    ))}
+                    {exam.ranking
+                      ?.slice((currentRankingPage - 1) * PAGE_SIZE, currentRankingPage * PAGE_SIZE)
+                      .map((r, i) => (
+                        <tr key={r.userId}>
+                          <td>{(currentRankingPage - 1) * PAGE_SIZE + i + 1}</td>
+                          <td>
+                            <strong>{r.displayName}</strong>
+                            <small>
+                              #{r.userId} · {r.username}
+                            </small>
+                          </td>
+                          <td>
+                            {r.answeredCount}/{exam.questions.length}
+                          </td>
+                          <td>{r.correctCount}</td>
+                          <td>
+                            <strong>
+                              {((10 * r.correctCount) / exam.questions.length).toFixed(2)}
+                            </strong>
+                          </td>
+                          <td>{status(r.status)}</td>
+                        </tr>
+                      ))}
                   </tbody>
                 </table>
               </div>
+              {!!exam.ranking?.length && (
+                <Pagination
+                  total={exam.ranking.length}
+                  page={currentRankingPage}
+                  onPageChange={setRankingPage}
+                />
+              )}
             </>
           ) : (
             <>
+              {!readonly && (
+                <p className="exam-save-note" role="status">
+                  {!connected
+                    ? 'Mất kết nối. Giữ trang này mở để tiếp tục khi kết nối trở lại.'
+                    : saving
+                      ? 'Đang lưu đáp án…'
+                      : unsaved.current.size
+                        ? 'Còn đáp án chờ lưu. Bài nộp sẽ gửi kèm đáp án mới nhất.'
+                        : 'Đáp án đã được lưu.'}
+                </p>
+              )}
+              {remaining === 0 && !exam.closed && (
+                <p className="exam-save-note" role="status">
+                  Đã hết thời gian. Đang cập nhật kết quả từ máy chủ.
+                </p>
+              )}
               <p className="muted">
                 {exam.submitted
                   ? 'Bạn đã nộp bài.'
                   : saving
                     ? 'Đang lưu đáp án…'
-                    : `Đã làm ${Object.keys(exam.answers || {}).length}/${exam.questions.length} câu.`}{' '}
+                    : `Đã làm ${Object.values(answerDrafts).filter((value) => typeof value === 'number' || value.trim()).length}/${exam.questions.length} câu.`}{' '}
+                {!exam.submitted && !exam.closed && 'Đáp án tự lưu; bạn có thể sửa trước khi nộp.'}
+                {exam.submitted &&
+                  !exam.closed &&
+                  'Điểm sẽ hiển thị khi đóng kiểm tra hoặc hết giờ.'}
                 {exam.closed &&
                   `Kết quả: ${exam.correctCount ?? 0}/${exam.questions.length} câu đúng.`}
               </p>
 
-              {exam.questions.map((q, i) => (
+              {questionRows.map(({ q, i }) => (
                 <fieldset
                   className="live-exam-question"
                   key={q.id}
-                  disabled={readonly || saving || !connected}
+                  disabled={readonly || submitting || !connected}
                 >
                   <legend>
                     <span className={typeBadgeClass(q.questionType)}>
@@ -689,10 +818,10 @@ export function LiveClassExam({
                         <input
                           type="text"
                           maxLength={255}
-                          disabled={readonly || !connected}
+                          disabled={readonly || submitting || !connected}
                           placeholder="Nhập câu trả lời của bạn..."
                           value={
-                            textAnswers[q.id] ??
+                            answerDrafts[q.id] ??
                             (exam.answers?.[q.id] != null ? String(exam.answers[q.id]) : '')
                           }
                           onChange={(e) => handleTextChange(q.id, e.target.value)}
@@ -703,13 +832,13 @@ export function LiveClassExam({
                   ) : (
                     (q.options || []).map((option, index) => (
                       <label
-                        className={`live-exam-option ${exam.answers?.[q.id] === index ? 'selected' : ''}`}
+                        className={`live-exam-option ${answerDrafts[q.id] === index ? 'selected' : ''}`}
                         key={index}
                       >
                         <input
                           type="radio"
                           name={`exam-${exam.id}-${q.id}`}
-                          checked={exam.answers?.[q.id] === index}
+                          checked={answerDrafts[q.id] === index}
                           onChange={() => answer(q.id, index)}
                         />
                         <span>
@@ -720,10 +849,21 @@ export function LiveClassExam({
                   )}
                 </fieldset>
               ))}
+              {exam.questions.length > PAGE_SIZE && (
+                <Pagination
+                  total={exam.questions.length}
+                  page={currentQuestionPage}
+                  onPageChange={setQuestionPage}
+                />
+              )}
 
               {!readonly && (
-                <button className="button primary" disabled={saving || !connected} onClick={submit}>
-                  Nộp bài kiểm tra
+                <button
+                  className="button primary"
+                  disabled={submitting || !connected}
+                  onClick={submit}
+                >
+                  {submitting ? 'Đang nộp bài…' : 'Nộp bài kiểm tra'}
                 </button>
               )}
             </>
@@ -771,7 +911,7 @@ export function LiveClassExam({
             </label>
           </div>
 
-          {draft.questions.map((q, i) => (
+          {editorRows.map(({ q, i }) => (
             <div className="live-exam-question" key={q.id}>
               <div className="editor-q-header">
                 <strong>Câu {i + 1}</strong>
@@ -887,13 +1027,23 @@ export function LiveClassExam({
               </div>
             </div>
           ))}
+          {draft.questions.length > PAGE_SIZE && (
+            <Pagination
+              total={draft.questions.length}
+              page={currentEditorPage}
+              onPageChange={setEditorPage}
+            />
+          )}
 
           <div className="button-row">
             <button
               type="button"
               className="button secondary"
               disabled={draft.questions.length >= 30}
-              onClick={() => setDraft({ ...draft, questions: [...draft.questions, question()] })}
+              onClick={() => {
+                setDraft({ ...draft, questions: [...draft.questions, question()] })
+                setEditorPage(Math.ceil((draft.questions.length + 1) / PAGE_SIZE))
+              }}
             >
               + Thêm câu
             </button>

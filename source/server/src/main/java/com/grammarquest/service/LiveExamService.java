@@ -280,7 +280,12 @@ public class LiveExamService {
         User u = user(username);
         if (action.equals("EXAM_LIST")) {
             long classId = id(p, "classId");
-            access(classId, u);
+            boolean owner = access(classId, u);
+            if (!owner) return db.queryForList(
+                "select e.id,e.title,e.version,e.closed,e.ends_at as endsAt,coalesce(s.submitted,false) as submitted,coalesce(s.answered_count,0) as answeredCount from class_exams e left join class_exam_submissions s on s.exam_id=e.id and s.user_id=? where e.class_id=? order by e.id desc",
+                u.id,
+                classId
+            );
             return db.queryForList(
                 "select id,title,version,closed,ends_at as endsAt from class_exams where class_id=? order by id desc",
                 classId
@@ -347,6 +352,7 @@ public class LiveExamService {
                 }
             }
             case "EXAM_OPEN", "EXAM_SYNC" -> {
+                require(owner || !ended(e), "Bài kiểm tra đã đóng hoặc hết giờ, không thể xem đề");
                 if (
                     !owner &&
                     !ended(e) &&
@@ -376,6 +382,32 @@ public class LiveExamService {
                 );
                 require(!Boolean.TRUE.equals(s.get("submitted")), "Bạn đã nộp bài");
                 var answers = validAnswers(qs, parse(s.get("answers_json")));
+                // Submit the latest client draft atomically, including debounced text answers.
+                if (action.equals("EXAM_SUBMIT") && p.has("answers")) {
+                    var input = p.path("answers");
+                    require(input.isObject(), "Danh sách đáp án không hợp lệ");
+                    var allowed = new HashMap<String, JsonNode>();
+                    for (var q : qs) allowed.put(q.path("id").asText(), q);
+                    var fields = input.fields();
+                    while (fields.hasNext()) {
+                        var field = fields.next();
+                        var q = allowed.get(field.getKey());
+                        require(q != null, "Câu hỏi không còn trong đề");
+                        if (isTextType(q.path("questionType").asText())) {
+                            require(
+                                field.getValue().isTextual() &&
+                                    field.getValue().asText().trim().length() <= 255,
+                                "Câu trả lời không hợp lệ"
+                            );
+                        } else require(
+                            field.getValue().isInt() &&
+                                field.getValue().asInt() >= 0 &&
+                                field.getValue().asInt() < 4,
+                            "Đáp án không hợp lệ"
+                        );
+                    }
+                    answers = validAnswers(qs, input);
+                }
                 if (action.equals("EXAM_ANSWER")) {
                     String question = text(p, "questionId", 64);
                     JsonNode targetQ = null;
@@ -429,7 +461,6 @@ public class LiveExamService {
                     u.id
                 );
                 if (isSubmit && dailyQuests != null) {
-                    dailyQuests.recordProgress(u.id, "CLASS_ASSIGNMENT", 1);
                     if (currentCorrect > 0) dailyQuests.recordProgress(
                         u.id,
                         "CORRECT_COUNT",
@@ -469,7 +500,8 @@ public class LiveExamService {
         out.put("endsAt", ((Timestamp) e.get("ends_at")).toInstant().toString());
         out.put("closed", ended);
         out.put("owner", owner);
-        out.put("questions", safe);
+        // Expired exams expose only the learner's result, never the question list.
+        out.put("questions", !owner && ended ? json.createArrayNode() : safe);
         if (owner) {
             out.put(
                 "ranking",
@@ -488,7 +520,7 @@ public class LiveExamService {
             );
             out.put(
                 "answers",
-                rows.isEmpty()
+                ended || rows.isEmpty()
                     ? json.createObjectNode()
                     : parse(rows.getFirst().get("answers_json"))
             );

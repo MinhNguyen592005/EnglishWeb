@@ -1,7 +1,7 @@
 .practice-home {
-  --practice-ink: #354358;
-  --practice-muted: #919cad;
-  --practice-line: #e5e9f0;
+  --practice-ink: #172844;
+  --practice-muted: #4e607a;
+  --practice-line: #cbd5e3;
   max-width: 1180px;
   margin: 0 auto;
   color: var(--practice-ink);
@@ -14,19 +14,19 @@
   margin-bottom: 27px;
 }
 .practice-eyebrow {
-  font-size: 9px;
-  font-weight: 550;
+  font-size: 12px;
+  font-weight: 650;
   letter-spacing: 1.2px;
-  color: #949eb1;
+  color: #52617b;
 }
 .practice-heading h1 {
-  font-size: 29px;
+  font-size: 32px;
   letter-spacing: -0.7px;
   margin: 10px 0;
   line-height: 1.3;
 }
 .practice-heading p {
-  font-size: 13px;
+  font-size: 16px;
   color: var(--practice-muted);
   line-height: 1.8;
   margin: 0;
@@ -36,8 +36,8 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  color: #8490a6;
-  font-size: 12px;
+  color: #394f91;
+  font-size: 15px;
   white-space: nowrap;
 }
 .practice-levels {
@@ -53,31 +53,34 @@
   justify-content: center;
   gap: 10px;
   white-space: nowrap;
-  border: 1px solid #e4e8f0;
+  border: 1px solid #cbd5e3;
   border-radius: 8px;
   background: white;
-  color: #919db0;
+  color: #465773;
   padding: 10px 18px;
-  font-size: 12px;
+  font-size: 15px;
   cursor: pointer;
 }
 .practice-levels button[aria-pressed='true'] {
-  color: #596b9f;
-  border-color: #bac5e2;
-  background: #f0f3fa;
+  color: #323f9e;
+  border-color: #8e9be0;
+  background: #e9edff;
 }
 .practice-levels button:disabled {
-  color: #b6bdc9;
-  background: #f7f8fa;
-  cursor: default;
+  color: #58667a;
+  background: #edf0f5;
+  cursor: not-allowed;
+}
+.practice-home button:disabled {
+  opacity: 1;
 }
 .practice-mixed {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 25px;
-  background: #f2f4fa;
-  border: 1px solid #e1e6f2;
+  background: #edf1fc;
+  border: 1px solid #c5cee8;
   border-radius: 14px;
   padding: 28px;
   margin-bottom: 29px;
@@ -87,16 +90,16 @@
   min-width: 0;
 }
 .practice-mixed h2 {
-  font-size: 23px;
+  font-size: 25px;
   letter-spacing: -0.5px;
   line-height: 1.45;
   margin: 13px 0 10px;
-  font-weight: 600;
+  font-weight: 700;
 }
 .practice-mixed p {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.9;
-  color: #8c99af;
+  color: #4e607a;
   max-width: 550px;
   margin: 0;
 }
@@ -111,31 +114,32 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 10px;
-  color: #95a1b6;
+  font-size: 13px;
+  color: #52617b;
 }
 .practice-primary {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 9px;
-  background: #6373b3;
-  border: 1px solid #6373b3;
+  background: #3d47b0;
+  border: 1px solid #3d47b0;
   border-radius: 8px;
   padding: 12px 16px;
-  font-size: 12px;
-  font-weight: 550;
+  font-size: 15px;
+  font-weight: 650;
   color: white;
   cursor: pointer;
   white-space: nowrap;
 }
 .practice-primary:hover {
-  background: #5867a7;
+  background: #2e3690;
 }
 .practice-primary:disabled {
-  background: #aab4d3;
-  border-color: #aab4d3;
-  cursor: default;
+  background: #d9dfeb;
+  border-color: #d9dfeb;
+  color: #465773;
+  cursor: not-allowed;
 }
 .practice-module-heading {
   display: flex;
@@ -145,20 +149,20 @@
   margin-bottom: 17px;
 }
 .practice-module-heading h2 {
-  font-size: 17px;
+  font-size: 19px;
   letter-spacing: -0.3px;
   margin: 0 0 7px;
-  font-weight: 600;
+  font-weight: 700;
 }
 .practice-module-heading p {
-  font-size: 12px;
+  font-size: 15px;
   color: var(--practice-muted);
   margin: 0;
   line-height: 1.8;
 }
 .practice-module-heading > span {
-  font-size: 10px;
-  color: #a0a9b9;
+  font-size: 13px;
+  color: #53637b;
 }
 .practice-modules {
   display: grid;
@@ -181,9 +185,9 @@
   height: 41px;
   flex-shrink: 0;
   border-radius: 9px;
-  background: #f2f4fa;
-  color: #8c9ab8;
-  font-size: 13px;
+  background: #edf1fc;
+  color: #3b4f96;
+  font-size: 16px;
   font-variant-numeric: tabular-nums;
 }
 .practice-module > div {
@@ -191,19 +195,19 @@
   min-width: 0;
 }
 .practice-module .practice-eyebrow {
-  font-size: 8px;
+  font-size: 12px;
 }
 .practice-module h3 {
-  font-size: 15px;
+  font-size: 18px;
   line-height: 1.6;
   letter-spacing: -0.1px;
   margin: 5px 0 5px;
-  color: #53647c;
-  font-weight: 550;
+  color: #172844;
+  font-weight: 650;
 }
 .practice-module p {
-  font-size: 11px;
-  color: #a0aabc;
+  font-size: 14px;
+  color: #4e607a;
   margin: 0;
   line-height: 1.8;
 }
@@ -213,38 +217,38 @@
   justify-content: center;
   gap: 12px;
   padding: 9px 13px;
-  border: 1px solid #e1e6f1;
+  border: 1px solid #a8b7d9;
   border-radius: 8px;
   background: #fff;
-  color: #8393b2;
-  font-size: 11px;
+  color: #344996;
+  font-size: 14px;
   white-space: nowrap;
   cursor: pointer;
 }
 .practice-module > button:hover:not(:disabled) {
-  border-color: #b4c0dd;
-  color: #6278ad;
+  border-color: #667ac0;
+  color: #2e3f93;
 }
 .practice-module.is-locked {
-  background: #f8f9fb;
-  border-color: #e9ecf1;
+  background: #f0f2f6;
+  border-color: #cbd3df;
 }
 .practice-module.is-locked .practice-module-index {
-  background: #eff1f5;
-  color: #b1b9c7;
+  background: #e2e7ef;
+  color: #596a81;
 }
 .practice-module.is-locked h3 {
-  color: #9da6b6;
+  color: #526078;
 }
 .practice-module > button:disabled {
-  background: transparent;
-  border-color: transparent;
-  color: #adb6c5;
-  cursor: default;
+  background: #e5e9f0;
+  border-color: #ccd4df;
+  color: #58667a;
+  cursor: not-allowed;
 }
 .practice-explainer {
   margin-top: 20px;
-  border-top: 1px solid #e5e9f0;
+  border-top: 1px solid #cbd5e3;
 }
 .practice-explainer summary {
   display: flex;
@@ -253,17 +257,17 @@
   gap: 12px;
   padding: 19px 0;
   cursor: pointer;
-  font-size: 12px;
-  color: #8895aa;
+  font-size: 15px;
+  color: #374b72;
   list-style: none;
 }
 .practice-explainer summary::-webkit-details-marker {
   display: none;
 }
 .practice-explainer p {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.9;
-  color: #94a0b3;
+  color: #4e607a;
   margin: 0 0 14px;
   max-width: 850px;
 }
@@ -274,42 +278,42 @@
   padding: 0;
   border: 0;
   background: transparent;
-  font-size: 12px;
-  color: #8594ae;
+  font-size: 15px;
+  color: #394f91;
   cursor: pointer;
   margin: 0 0 22px;
 }
 .practice-attempt-note {
-  font-size: 10px;
+  font-size: 13px;
   letter-spacing: 1px;
-  color: #8897b0;
+  color: #52617b;
   margin: 0 0 18px;
 }
 .practice-attempt-note > span {
   display: block;
-  font-size: 11px;
+  font-size: 14px;
   letter-spacing: 0;
   margin-top: 8px;
-  color: #a2abba;
+  color: #4e607a;
 }
 .practice-home .study-quiz-heading {
   border-radius: 14px;
-  border: 1px solid #e1e6f0;
+  border: 1px solid #cbd5e3;
   background: #f4f6fb;
   padding: 24px;
   box-shadow: none;
 }
 .practice-home .study-quiz-heading h2 {
-  font-size: 23px;
+  font-size: 25px;
   margin: 12px 0;
 }
 .practice-home .study-quiz-heading p {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.9;
-  color: #96a1b5;
+  color: #4e607a;
 }
 .practice-home .study-quiz-heading .hero-progress {
-  font-size: 11px;
+  font-size: 14px;
   margin-top: 20px;
 }
 .practice-home .study-question {
@@ -321,48 +325,48 @@
   margin: 18px 0;
 }
 .practice-home .study-question h3 {
-  font-size: 16px;
+  font-size: 18px;
   line-height: 1.8;
-  color: #52617a;
+  color: #172844;
 }
 .practice-home .study-question .tag {
-  font-size: 9px;
-  background: #f2f4fa;
-  color: #98a4bc;
+  font-size: 12px;
+  background: #edf1fc;
+  color: #394f91;
   border: 0;
-  font-weight: 500;
+  font-weight: 650;
 }
 .practice-home .question-meta {
-  font-size: 10px;
-  color: #a2acbb;
+  font-size: 13px;
+  color: #52617b;
   gap: 12px;
 }
 .practice-home .answer-option {
-  font-size: 13px;
+  font-size: 16px;
   border-radius: 9px;
   padding: 13px;
-  border-color: #e5e9f0;
+  border-color: #cbd5e3;
   background: #fff;
 }
 .practice-home .answer-option .option-letter {
-  font-size: 11px;
+  font-size: 14px;
   background: #f3f5fa;
-  color: #97a2b9;
+  color: #3b4f96;
   border-radius: 7px;
 }
 .practice-home .answer-option.chosen {
-  background: #f7f9fc;
-  border-color: #acb9d8;
+  background: #edf0ff;
+  border-color: #6577c6;
 }
 .practice-home .study-actions {
   padding: 18px;
   border: 1px solid var(--practice-line);
   border-radius: 12px;
   box-shadow: none;
-  font-size: 12px;
+  font-size: 15px;
 }
 .practice-home .study-actions .button {
-  font-size: 12px;
+  font-size: 15px;
   border-radius: 8px;
   box-shadow: none;
 }
@@ -375,20 +379,20 @@
   border: 1px dashed #e0e5ef;
   border-radius: 13px;
   padding: 40px 20px;
-  color: #8e9ab1;
+  color: #4e607a;
 }
 .practice-empty h2 {
-  font-size: 18px;
-  color: #61718b;
+  font-size: 20px;
+  color: #243b60;
 }
 .practice-empty p {
-  font-size: 12px;
+  font-size: 15px;
   line-height: 1.9;
 }
 .practice-home button:focus-visible,
 .practice-home a:focus-visible,
 .practice-home summary:focus-visible {
-  outline: 2px solid #a2afd0;
+  outline: 2px solid #3945ad;
   outline-offset: 3px;
 }
 .practice-spin {
@@ -405,7 +409,7 @@
     gap: 15px;
   }
   .practice-heading h1 {
-    font-size: 24px;
+    font-size: 26px;
   }
   .practice-heading > a {
     display: none;
@@ -415,7 +419,7 @@
   }
   .practice-levels button {
     padding: 9px 12px;
-    font-size: 11px;
+    font-size: 14px;
   }
   .practice-mixed {
     flex-direction: column;
@@ -424,13 +428,13 @@
     gap: 22px;
   }
   .practice-mixed h2 {
-    font-size: 21px;
+    font-size: 23px;
   }
   .practice-mixed-meta {
     gap: 12px;
   }
   .practice-mixed-meta > span {
-    font-size: 9px;
+    font-size: 12px;
   }
   .practice-start-mixed {
     width: 100%;
@@ -449,7 +453,7 @@
     height: 36px;
   }
   .practice-module h3 {
-    font-size: 14px;
+    font-size: 16px;
   }
   .practice-module > button {
     margin-left: 44px;

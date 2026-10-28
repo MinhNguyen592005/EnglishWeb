@@ -16,7 +16,6 @@ import {
   Lock,
   MessageCircle,
   Pencil,
-  PieChart,
   Plus,
   Radio,
   RefreshCw,
@@ -40,6 +39,7 @@ import { Pagination, PAGE_SIZE } from '../components/Pagination'
 import { Loading } from '../components/States'
 import { LiveClassExam } from '../components/LiveClassExam'
 import { MaterialDeliveryForm } from '../components/MaterialDeliveryForm'
+import { LearnerClasswork } from '../components/LearnerClasswork'
 import { api } from '../services/api'
 import { teacherMaterialChanged } from '../services/teacherMaterialEvents'
 import type {
@@ -54,6 +54,13 @@ import './classroom.css'
 
 type View = 'overview' | 'assignments' | 'members' | 'grades' | 'exams' | 'chat'
 type DueTone = 'open' | 'urgent' | 'overdue' | 'closed'
+function submittedCount(result: AssignmentResult) {
+  return (
+    result.completedCount ??
+    result.history?.filter((item) => item.completedAt).length ??
+    (result.status === 'IN_PROGRESS' ? 0 : 1)
+  )
+}
 const localDate = (value: string) => {
   const date = new Date(value)
   return Number.isNaN(date.getTime())
@@ -299,8 +306,16 @@ export function ClassDetailPage() {
     { user } = useAuth(),
     { subscribe, connected } = useSystemSocket(),
     [params, setParams] = useSearchParams()
-  const raw = params.get('view') || 'overview',
-    view = (raw === 'all' ? 'overview' : raw) as View
+  const learnerView = user?.role === 'LEARNER'
+  const allowedViews: View[] = learnerView
+    ? ['assignments', 'grades', 'exams', 'chat']
+    : TABS.map((tab) => tab.key)
+  const raw = params.get('view')
+  const view: View = allowedViews.includes(raw as View)
+    ? (raw as View)
+    : learnerView
+      ? 'assignments'
+      : 'overview'
   const [detail, setDetail] = useState<Classroom | null>(null),
     [overview, setOverview] = useState<ClassOverview | null>(null),
     [materials, setMaterials] = useState<TeacherMaterialSummary[]>([]),
@@ -314,7 +329,7 @@ export function ClassDetailPage() {
     [selected, setSelected] = useState(Number(params.get('assignmentId')) || 0),
     [className, setClassName] = useState(''),
     [editing, setEditing] = useState<Assignment | null>(null)
-  const isOwner = detail?.teacherId === user?.id
+  const isOwner = user?.role === 'TEACHER' && detail?.teacherId === user.id
   const [examRevision, setExamRevision] = useState(0)
   const [examComposer, setExamComposer] = useState(false)
   const [materialsError, setMaterialsError] = useState('')
@@ -323,13 +338,12 @@ export function ClassDetailPage() {
   async function reload() {
     try {
       setError('')
-      const [next, stats] = await Promise.all([
-        api.classroom(classId),
-        api.classroomOverview(classId),
-      ])
+      const next = await api.classroom(classId)
       setDetail(next)
       setClassName(next.name)
-      setOverview(stats)
+      if (user?.role === 'TEACHER' && next.teacherId === user.id)
+        setOverview(await api.classroomOverview(classId))
+      else setOverview(null)
       if (view === 'chat') setMessages(await api.classMessages(classId))
     } catch (e) {
       setError((e as Error).message)
@@ -372,7 +386,7 @@ export function ClassDetailPage() {
   }, [classId, view, user?.role, loadMaterials])
   useEffect(() => {
     void reload()
-  }, [classId, view])
+  }, [classId, view, user?.id, user?.role])
   useEffect(
     () =>
       subscribe((message) => {
@@ -386,7 +400,7 @@ export function ClassDetailPage() {
     [classId, view, subscribe],
   )
   useEffect(() => {
-    if (view !== 'grades' || !detail?.assignments?.length) return
+    if (!isOwner || view !== 'grades' || !detail?.assignments?.length) return
     let active = true
     Promise.all(
       detail.assignments.map(
@@ -403,7 +417,7 @@ export function ClassDetailPage() {
     return () => {
       active = false
     }
-  }, [classId, view, detail?.assignments])
+  }, [classId, view, isOwner, detail?.assignments])
   const assignments = detail?.assignments || [],
     attention = useMemo(
       () =>
@@ -509,17 +523,17 @@ export function ClassDetailPage() {
   }
   function exportResults() {
     const rows = [
-      ['Bài tập', 'Học viên', 'Số câu đúng', 'Tổng câu', 'Trạng thái', 'Đạt', 'Nộp lúc'],
+      ['Bài tập', 'Học viên', 'Số lượt nộp', 'Điểm cao nhất', 'Kết quả'],
       ...assignments.flatMap((assignment) =>
-        (resultsByAssignment[assignment.id] || []).map((item) => [
-          assignment.title,
-          item.displayName,
-          item.correctCount,
-          item.totalQuestions,
-          item.status,
-          item.passed ? 'Có' : 'Không',
-          item.completedAt ? new Date(item.completedAt).toLocaleString('vi-VN') : '',
-        ]),
+        (resultsByAssignment[assignment.id] || [])
+          .filter((item) => submittedCount(item) > 0)
+          .map((item) => [
+            assignment.title,
+            item.displayName,
+            submittedCount(item),
+            item.status === 'IN_PROGRESS' ? '—' : `${item.correctCount}/${item.totalQuestions}`,
+            item.passed ? 'Đạt' : 'Chưa đạt',
+          ]),
       ),
     ]
     const csv = (value: unknown) => `"${String(value ?? '').replaceAll('"', '""')}"`
@@ -561,7 +575,7 @@ export function ClassDetailPage() {
     <Layout title={detail.name}>
       <div className="class-workspace">
         {/* Hero: breadcrumb, tên lớp, metadata, thao tác, tab */}
-        <section className={`class-hero ${isOwner ? 'with-tabs' : ''}`}>
+        <section className="class-hero with-tabs">
           <div className="breadcrumb">
             <Link to="/classes">
               <Building2 size={15} /> Lớp học
@@ -574,12 +588,6 @@ export function ClassDetailPage() {
           <div className="class-detail-header">
             <div>
               <div className="class-title-row">
-                <h1>{detail.name}</h1>
-                {isOwner && (
-                  <span className="class-role-badge">
-                    <ShieldCheck size={14} /> Chỉ huy quản lý
-                  </span>
-                )}
                 <span
                   className={`class-live-pill ${connected ? 'online' : 'offline'}`}
                   role="status"
@@ -632,9 +640,9 @@ export function ClassDetailPage() {
               </button>
             </div>
           </div>
-          {isOwner && (
+          {(isOwner || learnerView) && (
             <nav className="tab-bar class-tabs" aria-label="Công cụ lớp học">
-              {TABS.map((tab) => {
+              {TABS.filter((tab) => !learnerView || allowedViews.includes(tab.key)).map((tab) => {
                 const Icon = tab.icon,
                   count = tabCount[tab.key]
                 return (
@@ -645,7 +653,9 @@ export function ClassDetailPage() {
                     onClick={() => go(tab.key)}
                   >
                     <Icon size={18} />
-                    <span>{tab.label}</span>
+                    <span>
+                      {learnerView && tab.key === 'grades' ? 'Kết quả của tôi' : tab.label}
+                    </span>
                     {count !== undefined && <span className="class-tab-count">{count}</span>}
                   </button>
                 )
@@ -667,10 +677,17 @@ export function ClassDetailPage() {
             {notice}
           </div>
         )}
-        {view === 'overview' && (
+        {isOwner && view === 'overview' && (
           <Overview overview={overview} attention={attention} go={go} results={resultsOf} />
         )}
-        {view === 'assignments' && (
+        {learnerView && (view === 'assignments' || view === 'grades') && (
+          <LearnerClasswork
+            classId={classId}
+            assignments={assignments}
+            showResults={view === 'grades'}
+          />
+        )}
+        {isOwner && view === 'assignments' && (
           <Assignments
             assignments={assignments}
             materials={materials}
@@ -691,10 +708,10 @@ export function ClassDetailPage() {
             setFilter={setFilter}
           />
         )}
-        {view === 'members' && (
+        {isOwner && view === 'members' && (
           <Members detail={detail} isOwner={!!isOwner} userId={user?.id} remove={remove} />
         )}
-        {view === 'grades' && (
+        {isOwner && view === 'grades' && (
           <Grades
             assignments={assignments}
             resultsByAssignment={resultsByAssignment}
@@ -823,15 +840,6 @@ function Overview({
           ClipboardList,
           'indigo',
         )}
-        {metric('Bài chờ chấm', null, 'grades', 'Chưa có dữ liệu chấm thủ công', Pencil, 'danger')}
-        {metric(
-          'Tỷ lệ hoàn thành',
-          overview?.submissionRate == null ? null : `${overview.submissionRate.toFixed(1)}%`,
-          'grades',
-          'Lượt nộp / lượt được giao',
-          PieChart,
-          'teal',
-        )}
       </div>
       <section className="card feature-card class-panel">
         <div className="class-panel-head">
@@ -868,7 +876,6 @@ function Overview({
                       <span>
                         <Target size={15} /> Cần {item.passPercent}%
                       </span>
-                      {item.lessonTitle && <span className="class-chip">{item.lessonTitle}</span>}
                     </p>
                   </div>
                   <button className="button secondary" onClick={() => results(item.id)}>
@@ -923,6 +930,8 @@ function Assignments({
   setFilter: (value: string) => void
 }) {
   const [composerOpen, setComposerOpen] = useState(false)
+  const [assignmentPage, setAssignmentPage] = useState(1)
+  useEffect(() => setAssignmentPage(1), [filter])
   const composer = useRef<HTMLElement>(null)
   useEffect(() => {
     if (composerOpen) {
@@ -932,6 +941,10 @@ function Assignments({
   }, [composerOpen])
   const filtered = assignments.filter((item) =>
     item.title.toLocaleLowerCase().includes(filter.toLocaleLowerCase()),
+  )
+  const currentAssignmentPage = Math.min(
+    assignmentPage,
+    Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)),
   )
   return (
     <div className="class-tab-content">
@@ -965,46 +978,55 @@ function Assignments({
         </div>
         {filtered.length ? (
           <div className="class-assignment-grid">
-            {filtered.map((item) => {
-              const state = dueState(item)
-              return (
-                <article className={`class-assignment-card tone-${state.tone}`} key={item.id}>
-                  <div className="class-assignment-top">
-                    <StatePill state={state} />
-                    <code>#{item.id}</code>
-                  </div>
-                  <h3>{item.title}</h3>
-                  {item.lessonTitle && <span className="class-chip">{item.lessonTitle}</span>}
-                  {item.instructions && (
-                    <p className="class-assignment-desc">{item.instructions}</p>
-                  )}
-                  <div className="class-assignment-meta">
-                    <span>
-                      <CalendarDays size={15} /> Hạn {new Date(item.dueAt).toLocaleString('vi-VN')}
-                    </span>
-                    <span>
-                      <Target size={15} /> Cần {item.passPercent}%
-                    </span>
-                  </div>
-                  {isOwner && (
-                    <div className="class-assignment-actions">
-                      <button
-                        className="button secondary"
-                        onClick={() => setEditing({ ...item, dueAt: localDate(item.dueAt) })}
-                      >
-                        <Pencil size={15} /> Sửa
-                      </button>
-                      <button className="button secondary" onClick={() => results(item.id)}>
-                        <Eye size={15} /> Xem kết quả
-                      </button>
+            {filtered
+              .slice((currentAssignmentPage - 1) * PAGE_SIZE, currentAssignmentPage * PAGE_SIZE)
+              .map((item) => {
+                const state = dueState(item)
+                return (
+                  <article className={`class-assignment-card tone-${state.tone}`} key={item.id}>
+                    <div className="class-assignment-top">
+                      <StatePill state={state} />
+                      <code>#{item.id}</code>
                     </div>
-                  )}
-                </article>
-              )
-            })}
+                    <h3>{item.title}</h3>
+                    {item.instructions && (
+                      <p className="class-assignment-desc">{item.instructions}</p>
+                    )}
+                    <div className="class-assignment-meta">
+                      <span>
+                        <CalendarDays size={15} /> Hạn{' '}
+                        {new Date(item.dueAt).toLocaleString('vi-VN')}
+                      </span>
+                      <span>
+                        <Target size={15} /> Cần {item.passPercent}%
+                      </span>
+                    </div>
+                    {isOwner && (
+                      <div className="class-assignment-actions">
+                        <button
+                          className="button secondary"
+                          onClick={() => setEditing({ ...item, dueAt: localDate(item.dueAt) })}
+                        >
+                          <Pencil size={15} /> Sửa
+                        </button>
+                        <button className="button secondary" onClick={() => results(item.id)}>
+                          <Eye size={15} /> Xem kết quả
+                        </button>
+                      </div>
+                    )}
+                  </article>
+                )
+              })}
           </div>
         ) : (
           <p className="muted">Chưa có bài tập phù hợp.</p>
+        )}
+        {filtered.length > 0 && (
+          <Pagination
+            total={filtered.length}
+            page={currentAssignmentPage}
+            onPageChange={setAssignmentPage}
+          />
         )}
       </section>
       {isOwner && composerOpen && (
@@ -1221,11 +1243,11 @@ function Grades({
   exportResults: () => void
 }) {
   const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'graded'>('all')
+  const [resultPage, setResultPage] = useState(1)
+  useEffect(() => setResultPage(1), [selected, statusFilter])
   const assignmentStatus = (assignment: Assignment) => {
     const results = resultsByAssignment[assignment.id] || []
-    return results.length > 0 && results.every((item) => item.status !== 'IN_PROGRESS')
-      ? 'graded'
-      : 'pending'
+    return results.some((item) => submittedCount(item) > 0) ? 'graded' : 'pending'
   }
   const pendingAssignments = assignments.filter((item) => assignmentStatus(item) === 'pending')
   const gradedAssignments = assignments.filter((item) => assignmentStatus(item) === 'graded')
@@ -1235,7 +1257,14 @@ function Grades({
       : statusFilter === 'graded'
         ? gradedAssignments
         : assignments
-  const selectedResults = selected ? resultsByAssignment[selected] || [] : []
+  const activeAssignment = visibleAssignments.find((item) => item.id === selected)
+  const selectedResults = (
+    activeAssignment ? resultsByAssignment[activeAssignment.id] || [] : []
+  ).filter((item) => submittedCount(item) > 0)
+  const currentResultPage = Math.min(
+    resultPage,
+    Math.max(1, Math.ceil(selectedResults.length / PAGE_SIZE)),
+  )
   const completed = selectedResults.filter((item) => item.status !== 'IN_PROGRESS'),
     average = completed.length
       ? completed.reduce(
@@ -1266,7 +1295,7 @@ function Grades({
           [
             ['all', 'Tất cả', assignments.length],
             ['graded', 'Đã có điểm', gradedAssignments.length],
-            ['pending', 'Chưa chấm', pendingAssignments.length],
+            ['pending', 'Chưa có bài nộp', pendingAssignments.length],
           ] as const
         ).map(([key, label, count]) => (
           <button
@@ -1282,52 +1311,32 @@ function Grades({
           </button>
         ))}
       </div>
-      {visibleAssignments.length ? (
-        <div className="grades-assignment-list">
-          {visibleAssignments.map((assignment) => {
-            const assignmentResults = resultsByAssignment[assignment.id] || [],
-              state = assignmentStatus(assignment)
-            return (
-              <button
-                type="button"
-                className={`grades-assignment-card ${selected === assignment.id ? 'selected' : ''}`}
-                key={assignment.id}
-                onClick={() => setSelected(assignment.id)}
-              >
-                <span className={`grades-assignment-icon ${state}`}>
-                  <ClipboardList size={18} />
-                </span>
-                <span className="grades-assignment-copy">
-                  <strong>{assignment.title}</strong>
-                  <small>
-                    {assignment.lessonTitle || 'Bài tập lớp'} ·{' '}
-                    {assignmentResults.length
-                      ? `${assignmentResults.length} lượt nộp`
-                      : 'Chưa có bài nộp'}
-                  </small>
-                </span>
-                <span className={`class-status-chip ${state === 'pending' ? 'doing' : ''}`}>
-                  {state === 'pending' ? 'Chưa chấm' : 'Đã có điểm'}
-                </span>
-                <ArrowRight size={16} />
-              </button>
-            )
-          })}
-        </div>
-      ) : (
-        <div className="class-empty-state">
-          <CheckCircle2 size={22} />
-          <p>Không có bài tập thuộc trạng thái này.</p>
-        </div>
-      )}
-      {selected ? (
+      <div className="grades-assignment-picker">
+        <label htmlFor="grade-assignment">Chọn bài tập</label>
+        <select
+          id="grade-assignment"
+          value={activeAssignment?.id ?? 0}
+          disabled={visibleAssignments.length === 0}
+          onChange={(event) => setSelected(Number(event.target.value))}
+        >
+          <option value={0} disabled>
+            {visibleAssignments.length
+              ? 'Chọn bài tập để xem điểm'
+              : 'Không có bài tập thuộc trạng thái này'}
+          </option>
+          {visibleAssignments.map((assignment) => (
+            <option key={assignment.id} value={assignment.id}>
+              {assignment.title}
+            </option>
+          ))}
+        </select>
+      </div>
+      {activeAssignment ? (
         <>
           <div className="class-grade-detail-heading">
             <div>
-              <h3>
-                {assignments.find((item) => item.id === selected)?.title || 'Chi tiết bài tập'}
-              </h3>
-              <p className="muted">Kết quả từng học viên</p>
+              <h3>{activeAssignment.title}</h3>
+              <p className="muted">Điểm cao nhất nộp đúng hạn của mỗi học viên.</p>
             </div>
           </div>
           <div className="class-grade-summary">
@@ -1335,61 +1344,51 @@ function Grades({
               <span>Điểm trung bình</span>
               <strong>{average === null ? '—' : `${average.toFixed(1)}%`}</strong>
             </div>
-            <span className="grade-stat">{selectedResults.length} lượt</span>
-            <span className="grade-stat">{completed.length} đã có điểm</span>
+            <span className="grade-stat">{selectedResults.length} học viên</span>
           </div>
           <div className="class-table-wrap table-wrap">
             <table className="class-table">
               <thead>
                 <tr>
                   <th>Học viên</th>
-                  <th>Trạng thái</th>
-                  <th>Điểm</th>
-                  <th>Đạt</th>
-                  <th>Nộp lúc</th>
+                  <th>Số lượt nộp</th>
+                  <th>Điểm cao nhất</th>
+                  <th>Kết quả</th>
                 </tr>
               </thead>
               <tbody>
-                {selectedResults.map((item) => (
-                  <tr key={item.userId}>
-                    <td>
-                      <strong>{item.displayName}</strong>
-                    </td>
-                    <td>
-                      <span
-                        className={`class-status-chip ${item.status === 'IN_PROGRESS' ? 'doing' : ''}`}
-                      >
+                {selectedResults
+                  .slice((currentResultPage - 1) * PAGE_SIZE, currentResultPage * PAGE_SIZE)
+                  .map((item) => (
+                    <tr key={item.userId}>
+                      <td>
+                        <strong>{item.displayName}</strong>
+                      </td>
+                      <td>{submittedCount(item)} lượt</td>
+                      <td className="mono">
                         {item.status === 'IN_PROGRESS'
-                          ? 'Chưa chấm'
-                          : item.status === 'WON'
-                            ? 'Đã có điểm'
-                            : item.status}
-                      </span>
-                    </td>
-                    <td className="mono">
-                      {item.status === 'IN_PROGRESS'
-                        ? '—'
-                        : item.totalQuestions
-                          ? `${item.correctCount}/${item.totalQuestions}`
-                          : '—'}
-                    </td>
-                    <td>
-                      {item.status === 'IN_PROGRESS' ? (
-                        <span className="muted">Chờ chấm</span>
-                      ) : (
+                          ? '—'
+                          : item.totalQuestions
+                            ? `${item.correctCount}/${item.totalQuestions}`
+                            : '—'}
+                      </td>
+                      <td>
                         <span className={`class-pass-chip ${item.passed ? 'yes' : 'no'}`}>
-                          {item.passed ? 'Có' : 'Không'}
+                          {item.passed ? 'Đạt' : 'Chưa đạt'}
                         </span>
-                      )}
-                    </td>
-                    <td>
-                      {item.completedAt ? new Date(item.completedAt).toLocaleString('vi-VN') : '—'}
-                    </td>
-                  </tr>
-                ))}
+                      </td>
+                    </tr>
+                  ))}
               </tbody>
             </table>
           </div>
+          {selectedResults.length > 0 && (
+            <Pagination
+              total={selectedResults.length}
+              page={currentResultPage}
+              onPageChange={setResultPage}
+            />
+          )}
           {!selectedResults.length && (
             <div className="class-empty-state">
               <CheckCircle2 size={22} />

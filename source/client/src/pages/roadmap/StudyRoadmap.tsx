@@ -502,15 +502,18 @@ function LessonScreen({
                 <BookOpen size={35} />
               </div>
             </div>
-            <article className="card study-theory">
-              <section>
-                <h2>Mục tiêu bài học</h2>
+            <article className="card study-theory" key={lesson.id}>
+              <header className="study-theory-intro">
+                <div className="study-theory-title">
+                  <h2>Kiến thức bài học</h2>
+                  <a href="#lesson-practice" className="text-button">
+                    Đến luyện tập <ArrowRight size={14} />
+                  </a>
+                </div>
                 <p>{lesson.content.objective}</p>
-              </section>
-              {lesson.content.prerequisites.length > 0 && (
-                <section>
-                  <h2>Kiến thức cần biết trước</h2>
+                {lesson.content.prerequisites.length > 0 && (
                   <div className="study-prerequisites">
+                    <span>Cần biết:</span>
                     {lesson.content.prerequisites.map((p) => (
                       <button
                         key={p.id}
@@ -522,39 +525,55 @@ function LessonScreen({
                       </button>
                     ))}
                   </div>
-                </section>
+                )}
+              </header>
+              <div className="study-theory-core">
+                {lesson.content.sections.map((section, i) => (
+                  <section key={i}>
+                    <h2>{section.title}</h2>
+                    <p className="study-multiline">{section.body}</p>
+                  </section>
+                ))}
+              </div>
+              {lesson.content.examples.length > 0 && (
+                <details className="study-theory-detail">
+                  <summary>
+                    Ví dụ minh họa <span>{lesson.content.examples.length} ví dụ</span>
+                    <ChevronRight size={16} />
+                  </summary>
+                  <div className="study-examples-grid">
+                    {lesson.content.examples.map((example, i) => (
+                      <div className="study-example" key={i}>
+                        <strong>{example.english}</strong>
+                        <p>{example.vietnamese}</p>
+                      </div>
+                    ))}
+                  </div>
+                </details>
               )}
-              {lesson.content.sections.map((section, i) => (
-                <section key={i}>
-                  <h2>{section.title}</h2>
-                  <p className="study-multiline">{section.body}</p>
-                </section>
-              ))}
-              <section>
-                <h2>Ví dụ minh họa</h2>
-                {lesson.content.examples.map((example, i) => (
-                  <div className="study-example" key={i}>
-                    <strong>{example.english}</strong>
-                    <p>{example.vietnamese}</p>
-                  </div>
-                ))}
-              </section>
-              <section>
-                <h2>Lỗi thường gặp</h2>
-                {lesson.content.mistakes.map((mistake, i) => (
-                  <div className="study-mistake" key={i}>
-                    <p>
-                      <span>Sai:</span> {mistake.wrong}
-                    </p>
-                    <p>
-                      <strong>Đúng:</strong> {mistake.right}
-                    </p>
-                    <p>{mistake.explanation}</p>
-                  </div>
-                ))}
-              </section>
-              <section>
-                <h2>Vận dụng</h2>
+              {lesson.content.mistakes.length > 0 && (
+                <details className="study-theory-detail">
+                  <summary>
+                    Lỗi thường gặp <span>{lesson.content.mistakes.length} lưu ý</span>
+                    <ChevronRight size={16} />
+                  </summary>
+                  {lesson.content.mistakes.map((mistake, i) => (
+                    <div className="study-mistake" key={i}>
+                      <p>
+                        <span>Sai:</span> {mistake.wrong}
+                      </p>
+                      <p>
+                        <strong>Đúng:</strong> {mistake.right}
+                      </p>
+                      <p>{mistake.explanation}</p>
+                    </div>
+                  ))}
+                </details>
+              )}
+              <details className="study-theory-detail">
+                <summary>
+                  Vận dụng & ghi chú <ChevronRight size={16} />
+                </summary>
                 <p>{lesson.content.application}</p>
                 <label className="text-answer-label">
                   Ghi chú luyện viết của bạn
@@ -566,23 +585,27 @@ function LessonScreen({
                     onChange={(e) => sessionStorage.setItem(`study-writing-${id}`, e.target.value)}
                   />
                 </label>
-              </section>
-              <section>
-                <h2>Tổng kết</h2>
+              </details>
+              <details className="study-theory-detail">
+                <summary>
+                  Tổng kết <ChevronRight size={16} />
+                </summary>
                 <p>{lesson.content.summary}</p>
-              </section>
+              </details>
             </article>
-            <StudyQuiz
-              key={`${lesson.attempt.id}-${lesson.attempt.status}`}
-              attempt={lesson.attempt}
-              onAttempt={updateAttempt}
-              onBack={() => onBack(lesson.levelId, lesson.moduleId)}
-              onNext={
-                lesson.attempt.status !== 'IN_PROGRESS' && lesson.nextLessonId
-                  ? () => openLesson(lesson.nextLessonId!, lesson.levelId, lesson.moduleId)
-                  : undefined
-              }
-            />
+            <div id="lesson-practice" className="study-practice-anchor">
+              <StudyQuiz
+                key={`${lesson.attempt.id}-${lesson.attempt.status}`}
+                attempt={lesson.attempt}
+                onAttempt={updateAttempt}
+                onBack={() => onBack(lesson.levelId, lesson.moduleId)}
+                onNext={
+                  lesson.attempt.status !== 'IN_PROGRESS' && lesson.nextLessonId
+                    ? () => openLesson(lesson.nextLessonId!, lesson.levelId, lesson.moduleId)
+                    : undefined
+                }
+              />
+            </div>
           </>
         )}
       </div>

@@ -2,11 +2,11 @@
 :root {
   --page: #f8fafc;
   --surface: #fff;
-  --text: #14213d;
-  --muted: #64748b;
-  --border: #e5eaf2;
-  --primary: #6674e8;
-  --primary-strong: #4b57c9;
+  --text: #15233c;
+  --muted: #4e5f78;
+  --border: #ccd5e3;
+  --primary: #4b55d1;
+  --primary-strong: #373fb1;
   --primary-soft: #eef0ff;
   --success: #16b8a6;
   --success-text: #087f73;
@@ -16,6 +16,8 @@
   --warning: #f4b544;
   --focus: #3643bd;
   font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+  font-size: 17px;
+  font-weight: 500;
   color: var(--text);
   background: var(--page);
 }
@@ -26,7 +28,9 @@ body {
   margin: 0;
 }
 button,
-input {
+input,
+select,
+textarea {
   font: inherit;
 }
 button {

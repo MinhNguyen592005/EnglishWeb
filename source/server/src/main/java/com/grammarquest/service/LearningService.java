@@ -101,8 +101,52 @@ public class LearningService {
         int correctCount,
         double bossHp,
         int awardedXp,
-        List<QuestionView> questions
-    ) {}
+        List<QuestionView> questions,
+        Long classId
+    ) {
+        public AttemptView(
+            Long id,
+            String kind,
+            String status,
+            Long lessonId,
+            int totalQuestions,
+            int requiredCorrect,
+            int correctCount,
+            double bossHp,
+            int awardedXp,
+            List<QuestionView> questions
+        ) {
+            this(
+                id,
+                kind,
+                status,
+                lessonId,
+                totalQuestions,
+                requiredCorrect,
+                correctCount,
+                bossHp,
+                awardedXp,
+                questions,
+                null
+            );
+        }
+
+        public AttemptView forClass(long classId) {
+            return new AttemptView(
+                id,
+                kind,
+                status,
+                lessonId,
+                totalQuestions,
+                requiredCorrect,
+                correctCount,
+                bossHp,
+                awardedXp,
+                questions,
+                classId
+            );
+        }
+    }
 
     public record AnswerView(
         int ordinalNo,
@@ -536,6 +580,13 @@ public class LearningService {
 
     private AttemptView view(Attempt a, List<AttemptItem> entries) {
         boolean finished = !a.status.equals("IN_PROGRESS");
+        var classIds = db.queryForList(
+            "select ass.class_id from assignment_attempts aa join assignments ass on ass.id=aa.assignment_id where aa.attempt_id=?",
+            Long.class,
+            a.id
+        );
+        boolean classWork = !classIds.isEmpty();
+        boolean unlockedReview = classWork && assignmentPassed(a);
         List<QuestionView> visible = entries
             .stream()
             .map(i ->
@@ -548,10 +599,18 @@ public class LearningService {
                         : List.of(i.optionA, i.optionB, i.optionC, i.optionD),
                     answerOf(i),
                     answerOf(i) == null ? null : correct(i),
-                    finished || (a.kind.equals("PRACTICE") && answerOf(i) != null)
+                    (
+                        classWork
+                            ? unlockedReview
+                            : finished || (a.kind.equals("PRACTICE") && answerOf(i) != null)
+                    )
                         ? correctAnswer(i)
                         : null,
-                    finished || (a.kind.equals("PRACTICE") && answerOf(i) != null)
+                    (
+                        classWork
+                            ? unlockedReview
+                            : finished || (a.kind.equals("PRACTICE") && answerOf(i) != null)
+                    )
                         ? i.explanation
                         : null
                 )
@@ -567,7 +626,8 @@ public class LearningService {
             a.correctCount,
             BossRules.hp(a.kind, a.correctCount),
             a.awardedXp,
-            visible
+            visible,
+            classIds.isEmpty() ? null : classIds.getFirst()
         );
     }
 
@@ -651,7 +711,10 @@ public class LearningService {
             }
             if (entries.stream().allMatch(i -> answerOf(i) != null)) complete(a);
         }
-        boolean reveal = a.kind.equals("PRACTICE") || !a.status.equals("IN_PROGRESS");
+        boolean reveal =
+            assignmentId(a) == null
+                ? a.kind.equals("PRACTICE") || !a.status.equals("IN_PROGRESS")
+                : assignmentPassed(a);
         return new AnswerView(
             ordinal,
             correct(item),
@@ -663,6 +726,29 @@ public class LearningService {
             a.status.equals("WON"),
             a.awardedXp
         );
+    }
+
+    private Long assignmentId(Attempt a) {
+        var ids = db.queryForList(
+            "select assignment_id from assignment_attempts where attempt_id=?",
+            Long.class,
+            a.id
+        );
+        return ids.isEmpty() ? null : ids.getFirst();
+    }
+
+    private boolean assignmentPassed(Attempt a) {
+        Long assignmentId = assignmentId(a);
+        if (assignmentId == null) return false;
+        // The just-completed JPA attempt must be visible to the SQL grade query.
+        attempts.flush();
+        Integer count = db.queryForObject(
+            "select count(*) from assignment_attempts aa join assignments ass on ass.id=aa.assignment_id join attempts a on a.id=aa.attempt_id where ass.id=? and a.user_id=? and a.completed_at is not null and a.completed_at<=least(coalesce(aa.submit_deadline_at,ass.due_at),ass.due_at) and a.correct_count*100>=a.total_questions*ass.pass_percent",
+            Integer.class,
+            assignmentId,
+            a.userId
+        );
+        return count != null && count > 0;
     }
 
     private String type(AttemptItem item) {
@@ -699,7 +785,9 @@ public class LearningService {
     }
 
     private void complete(Attempt a) {
-        boolean won = a.kind.equals("PRACTICE") || a.correctCount >= a.requiredCorrect;
+        boolean won =
+            (a.kind.equals("PRACTICE") && assignmentId(a) == null) ||
+            a.correctCount >= a.requiredCorrect;
         a.status = won ? "WON" : "LOST";
         a.completedAt = Instant.now();
         if (dailyQuests != null) {

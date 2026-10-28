@@ -21,6 +21,7 @@ import { TeacherDashboardPage } from './pages/TeacherDashboardPage'
 import { TeacherCurriculumPage } from './pages/TeacherCurriculumPage'
 import { SupportChatWidget } from './components/SupportChat'
 import './styles.css'
+import './readability.css'
 
 function Protected({
   children,

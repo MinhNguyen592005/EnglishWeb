@@ -1,0 +1,80 @@
+/* Shared reading sizes and contrast across learner, teacher and admin screens. */
+.app-layout :is(p, li, td, label, input, select, textarea) {
+  font-size: max(0.875rem, 1em);
+  font-weight: 500;
+}
+
+.app-layout :is(h1, h2, h3) {
+  font-weight: 750;
+}
+
+.app-layout :is(button, .button) {
+  font-size: max(0.875rem, 1em);
+  font-weight: 650;
+}
+
+.app-layout small {
+  font-size: 0.8125rem;
+  font-weight: 550;
+}
+
+.topbar-exp {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 5px;
+  padding: 7px 10px;
+  border: 1px solid #c8ceeb;
+  border-radius: 8px;
+  background: #f0f2ff;
+  color: #373f9f;
+  white-space: nowrap;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.topbar-exp strong {
+  font-weight: 750;
+}
+
+.topbar-exp > span {
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.topbar-profile-copy strong {
+  font-size: 0.9375rem;
+}
+
+.app-layout .topbar-profile-copy small {
+  color: #4e5f78;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.topbar-left .eyebrow {
+  color: #53627a;
+}
+
+@media (max-width: 650px) {
+  .topbar-left {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .topbar-left > strong {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .topbar-actions {
+    flex-shrink: 0;
+    gap: 6px;
+  }
+
+  .topbar-exp {
+    padding: 6px 7px;
+    gap: 3px;
+    font-size: 0.8125rem;
+  }
+}
