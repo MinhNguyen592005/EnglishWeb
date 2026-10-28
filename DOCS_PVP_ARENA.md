@@ -198,7 +198,7 @@ Hệ thống cung cấp **18 vật phẩm trang trí (Cosmetics)** gồm **8 Khu
 ## 4. HƯỚNG DẪN CHẠY VÀ KIỂM THỬ
 
 ### 4.1. Khởi chạy ứng dụng
-1. **Chạy Backend (Cổng `8080`)**:
+1. **Chạy Backend (Cổng `8081`)**:
    ```powershell
    cd d:\EnglishWeb\source\server
    .\run-local.ps1

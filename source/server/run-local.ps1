@@ -15,6 +15,7 @@ if ([string]::IsNullOrWhiteSpace($env:DB_USERNAME) -or [string]::IsNullOrWhiteSp
     throw 'DB_USERNAME or DB_PASSWORD is missing in .env.local.ps1.'
 }
 if ([string]::IsNullOrWhiteSpace($env:SPRING_PROFILES_ACTIVE)) { $env:SPRING_PROFILES_ACTIVE = 'dev' }
+if ([string]::IsNullOrWhiteSpace($env:SERVER_PORT)) { $env:SERVER_PORT = '8081' }
 if ([string]::IsNullOrWhiteSpace($env:DB_NAME)) { $env:DB_NAME = 'grammar_quest' }
 if ($env:APP_SEED_DEMO -eq 'true' -and ([string]::IsNullOrWhiteSpace($env:DEMO_PASSWORD) -or $env:DEMO_PASSWORD.Length -lt 8)) {
     throw 'DEMO_PASSWORD must have at least 8 characters when APP_SEED_DEMO is true.'
