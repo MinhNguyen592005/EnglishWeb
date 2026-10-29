@@ -435,3 +435,25 @@ export type TeacherMaterialDraft = {
   description: string
   questions: Omit<TeacherQuestion, 'lessonId' | 'id' | 'active'>[]
 }
+export type AccountNotification = {
+  id: number
+  kind: 'ASSIGNMENT' | 'LIVE_EXAM' | 'ADMIN_ACTION' | 'REPORT_RESULT'
+  title: string
+  message: string
+  createdAt: string
+  readAt: string | null
+  classId: number | null
+  assignmentId: number | null
+  examId: number | null
+  className: string | null
+  teacherName: string | null
+  workTitle: string | null
+  dueAt: string | null
+  available: boolean
+}
+
+export type NotificationInbox = {
+  items: AccountNotification[]
+  unreadCount: number
+  nextBeforeId: number | null
+}

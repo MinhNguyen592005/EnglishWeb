@@ -9,6 +9,7 @@ Chạy từ `source/client`. Các script dùng Playwright và Microsoft Edge; sc
 | `check-classroom-socket.mjs`, `check-arena-socket.mjs` | Luồng lớp học/PvP, dùng socket giả lập |
 | `check-live-exam.mjs` | Giáo viên/học sinh làm kiểm tra, sửa đề và nhận cập nhật giả lập |
 | `check-account-realtime.mjs` | Đồng bộ tài khoản và thông báo báo cáo giả lập |
+| `check-notifications.mjs` | Chuông, trạng thái đã đọc, mở đúng bài trước khi làm, đồng bộ nhiều tab và mobile; dùng API/socket giả lập tại cổng 5173 (đổi bằng `NOTIFICATION_UI_URL`) |
 | `check-real-backend.mjs` | Kết nối backend thật trong phiên `FullRealtimeIntegrationTest`, nhận fixture tạm do test Java tạo |
 | `smoke-*.mjs`, `visual-*.mjs`, `offline-check.mjs` | Các kịch bản bổ trợ/được lưu từ những giai đoạn trước; xem URL, tài khoản và yêu cầu môi trường ở đầu từng script trước khi chạy |
 

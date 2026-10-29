@@ -26,6 +26,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/classes")
 public class ClassroomController {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.grammarquest.service.NotificationService notifications;
+
     private final JdbcTemplate db;
     private final UserRepository users;
     private final LearningService learning;
@@ -238,6 +241,7 @@ public class ClassroomController {
             "Học viên không còn trong lớp"
         );
         notifier.classroom(id);
+        if (notifications != null) notifications.changed(memberId);
         return Map.of("removed", true);
     }
 
@@ -499,6 +503,7 @@ public class ClassroomController {
             snapshot,
             body.materialId()
         );
+        if (notifications != null) notifications.classwork(id, assignmentId, null);
         notifier.classroom(id);
         return row(
             "select id,title,lesson_id as lessonId,pass_percent as passPercent,due_at as dueAt,status from assignments where id=?",

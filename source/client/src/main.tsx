@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from 'react-router-dom'
+import { NotificationsProvider } from './app/NotificationsContext'
 import { AuthProvider, useAuth } from './app/AuthContext'
 import { DailyQuestsProvider } from './app/DailyQuestsContext'
 import { SystemSocketProvider } from './app/SystemSocketContext'
@@ -253,12 +254,14 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <AuthProvider>
         <DailyQuestsProvider>
           <SystemSocketProvider>
-            <PlacementProvider>
-              <RegistrationWelcomeProvider>
-                <AppRoutes />
-                <AppSupport />
-              </RegistrationWelcomeProvider>
-            </PlacementProvider>
+            <NotificationsProvider>
+              <PlacementProvider>
+                <RegistrationWelcomeProvider>
+                  <AppRoutes />
+                  <AppSupport />
+                </RegistrationWelcomeProvider>
+              </PlacementProvider>
+            </NotificationsProvider>
           </SystemSocketProvider>
         </DailyQuestsProvider>
       </AuthProvider>

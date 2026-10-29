@@ -23,6 +23,7 @@ import { useDailyQuests } from '../app/DailyQuestsContext'
 import './DailyQuestsWidget.css'
 import { api } from '../services/api'
 import { QuestsDialog } from '../pages/QuestsPage'
+import { NotificationBell } from './NotificationBell'
 
 const FRAME_CLASSES: Record<string, string> = {
   FRAME_DEFAULT: 'frame-default',
@@ -139,13 +140,20 @@ export function Layout({ children, title }: { children: ReactNode; title: string
             </button>
             <strong>{title}</strong>
             {!isAdmin && !isTeacher && (
-              <button type="button" className="topbar-quests" onClick={() => setQuestsOpen(true)} aria-haspopup="dialog">
+              <button
+                type="button"
+                className="topbar-quests"
+                onClick={() => setQuestsOpen(true)}
+                aria-haspopup="dialog"
+                aria-label="Mở nhiệm vụ"
+              >
                 <Gift size={17} />
                 <span>Nhiệm vụ</span>
               </button>
             )}
           </div>
           <div className="topbar-actions">
+            <NotificationBell />
             {!isAdmin && !isTeacher && streak !== null && (
               <span className="streak-pill" title={`Chuỗi ngày liên tiếp: ${streak} ngày`}>
                 <Flame size={15} /> {streak}

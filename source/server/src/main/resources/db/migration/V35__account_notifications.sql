@@ -1,0 +1,20 @@
+CREATE TABLE account_notifications (
+    id BIGINT PRIMARY KEY AUTO_INCREMENT,
+    user_id BIGINT NOT NULL,
+    kind VARCHAR(32) NOT NULL,
+    title VARCHAR(160) NOT NULL,
+    message VARCHAR(1000) NOT NULL,
+    class_id BIGINT NULL,
+    assignment_id BIGINT NULL,
+    exam_id BIGINT NULL,
+    event_key VARCHAR(120) NULL,
+    created_at TIMESTAMP(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    read_at TIMESTAMP(6) NULL,
+    CONSTRAINT fk_notification_user FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notification_class FOREIGN KEY (class_id) REFERENCES classrooms(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notification_assignment FOREIGN KEY (assignment_id) REFERENCES assignments(id) ON DELETE CASCADE,
+    CONSTRAINT fk_notification_exam FOREIGN KEY (exam_id) REFERENCES class_exams(id) ON DELETE CASCADE,
+    UNIQUE KEY uq_notification_event (user_id, event_key),
+    KEY ix_notification_inbox (user_id, id),
+    KEY ix_notification_unread (user_id, read_at)
+);

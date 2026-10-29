@@ -47,6 +47,11 @@ class ClassroomSocketIntegrationTest {
     static class Config {
 
         @Bean
+        NotificationService notifications() {
+            return mock(NotificationService.class);
+        }
+
+        @Bean
         DataSource dataSource() {
             return source;
         }

@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.*;
 public class AdminController {
 
     @org.springframework.beans.factory.annotation.Autowired
+    private com.grammarquest.service.NotificationService notifications;
+
+    @org.springframework.beans.factory.annotation.Autowired
     private org.springframework.context.ApplicationEventPublisher events;
 
     private final JdbcTemplate db;
@@ -272,6 +275,17 @@ public class AdminController {
         target.role = body.role();
         users.save(target);
         audit(actor, "ROLE_CHANGE", "USER", id, before + " -> " + body.role());
+        if (notifications != null && !before.equals(body.role())) notifications.adminNotice(
+            id,
+            "Quyền tài khoản đã thay đổi",
+            "Quản trị viên đã đổi vai trò tài khoản của bạn thành " +
+                switch (body.role()) {
+                    case "TEACHER" -> "giáo viên";
+                    case "ADMIN" -> "quản trị viên";
+                    default -> "học sinh";
+                } +
+                "."
+        );
         return Map.of("id", id, "role", target.role);
     }
 
@@ -285,9 +299,17 @@ public class AdminController {
         User actor = admin(auth),
             target = target(id);
         if (body.locked() && !target.locked) protectLastAdmin(target);
+        boolean changed = target.locked != body.locked();
         target.locked = body.locked();
         users.save(target);
         audit(actor, body.locked() ? "LOCK" : "UNLOCK", "USER", id, "");
+        if (notifications != null && changed) notifications.adminNotice(
+            id,
+            body.locked() ? "Tài khoản đã bị khóa" : "Tài khoản đã được mở khóa",
+            body.locked()
+                ? "Quản trị viên đã khóa tài khoản của bạn. Vui lòng liên hệ để được hỗ trợ."
+                : "Quản trị viên đã mở khóa tài khoản của bạn. Bạn có thể tiếp tục sử dụng hệ thống."
+        );
         return Map.of("id", id, "locked", target.locked);
     }
 
@@ -369,6 +391,14 @@ public class AdminController {
             learner ? "USER_REPORT" : arena ? "ARENA_REPORT" : "REPORT",
             id,
             Objects.toString(body.note(), "")
+        );
+        if (notifications != null) notifications.reportDecision(
+            accused,
+            ((Number) rows.getFirst().get("reporterId")).longValue(),
+            body.source(),
+            id,
+            body.action(),
+            body.note()
         );
         if (events != null) events.publishEvent(
             new com.grammarquest.service.ReportResolved(
