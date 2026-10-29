@@ -11,7 +11,7 @@ import {
   Target,
 } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { api } from '../services/api'
 import { Pagination, PAGE_SIZE } from './Pagination'
 import type { Assignment, MyAssignmentResult } from '../types'
@@ -29,6 +29,10 @@ export function LearnerClasswork({
   showResults: boolean
 }) {
   const navigate = useNavigate()
+  const [params, setParams] = useSearchParams()
+  const targetId = Number(params.get('assignmentId')) || 0
+  const target = assignments.find((item) => item.id === targetId)
+  const targetRef = useRef<HTMLDivElement>(null)
   const [results, setResults] = useState<MyAssignmentResult[]>([])
   const [loading, setLoading] = useState(true)
   const [loadError, setLoadError] = useState('')
@@ -63,6 +67,14 @@ export function LearnerClasswork({
     setPage(1)
   }, [query, showResults, classId])
   useEffect(() => {
+    setPage(1)
+    setQuery('')
+  }, [targetId, classId])
+  useEffect(() => {
+    if (targetId && target)
+      targetRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+  }, [targetId, target?.id])
+  useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 30000)
     return () => window.clearInterval(timer)
   }, [])
@@ -73,11 +85,13 @@ export function LearnerClasswork({
   const available = assignments.filter(
     (item) => item.status === 'PUBLISHED' && new Date(item.dueAt).getTime() > now,
   )
-  const filtered = assignments.filter((item) =>
-    `${item.title} ${item.instructions}`
-      .toLocaleLowerCase('vi-VN')
-      .includes(query.toLocaleLowerCase('vi-VN')),
-  )
+  const filtered = assignments
+    .filter((item) =>
+      `${item.title} ${item.instructions}`
+        .toLocaleLowerCase('vi-VN')
+        .includes(query.toLocaleLowerCase('vi-VN')),
+    )
+    .sort((a, b) => Number(b.id === targetId) - Number(a.id === targetId))
   const currentPage = Math.min(page, Math.max(1, Math.ceil(filtered.length / PAGE_SIZE)))
   const rows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
 
@@ -123,6 +137,29 @@ export function LearnerClasswork({
           yêu cầu
         </span>
       </div>
+      {targetId > 0 && !showResults && (
+        <div className="classwork-notification-target" ref={targetRef}>
+          <strong>
+            {target ? `Bài tập từ thông báo: ${target.title}` : 'Bài tập này không còn khả dụng.'}
+          </strong>
+          {target && (
+            <p>
+              Xem yêu cầu và hạn nộp ở bài được đánh dấu bên dưới. Bấm nút làm bài khi bạn sẵn sàng.
+            </p>
+          )}
+          <button
+            type="button"
+            className="text-button"
+            onClick={() => {
+              const next = new URLSearchParams(params)
+              next.delete('assignmentId')
+              setParams(next, { replace: true })
+            }}
+          >
+            Bỏ đánh dấu
+          </button>
+        </div>
+      )}
       <label className="learner-work-search">
         <Search size={16} />
         <input
@@ -169,7 +206,10 @@ export function LearnerClasswork({
             (!result.submitDeadlineAt || new Date(result.submitDeadlineAt).getTime() > now) &&
             open
           return (
-            <article className="learner-work-item" key={item.id}>
+            <article
+              className={`learner-work-item ${item.id === targetId ? 'is-notification-target' : ''}`}
+              key={item.id}
+            >
               <div className="learner-work-item-top">
                 <span
                   className={`learner-work-state ${result?.passed ? 'passed' : completed ? 'submitted' : resume ? 'progress' : ''}`}

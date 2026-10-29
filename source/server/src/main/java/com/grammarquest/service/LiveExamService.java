@@ -20,6 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class LiveExamService {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private NotificationService notifications;
+
     private final JdbcTemplate db;
     private final UserRepository users;
     private final ObjectMapper json;
@@ -309,7 +312,9 @@ public class LiveExamService {
                 s.setTimestamp(4, Timestamp.from(end));
                 return s;
             }, key);
-            return view(username, Objects.requireNonNull(key.getKey()).longValue());
+            long createdId = Objects.requireNonNull(key.getKey()).longValue();
+            if (notifications != null) notifications.classwork(classId, null, createdId);
+            return view(username, createdId);
         }
         long examId = id(p, "examId");
         var e = exam(examId, true);

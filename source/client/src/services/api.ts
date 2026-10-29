@@ -25,6 +25,8 @@ import type {
   TeacherMaterialDraft,
   PvpCosmeticsResponse,
   PvpLeaderboardResponse,
+  AccountNotification,
+  NotificationInbox,
 } from '../types'
 
 type ApiError = { code?: string; message?: string; fields?: Record<string, string> }
@@ -94,6 +96,12 @@ export async function refreshCsrf() {
   if (!csrfToken) throw new Error('Máy chủ chưa cấp mã bảo mật phiên.')
 }
 export const api = {
+  notifications: (beforeId?: number) =>
+    request<NotificationInbox>(`/notifications${beforeId ? `?beforeId=${beforeId}` : ''}`),
+  readNotification: (notificationId: number) =>
+    request<AccountNotification>(`/notifications/${notificationId}/read`, { method: 'PATCH' }),
+  readAllNotifications: () =>
+    request<{ ok: boolean }>('/notifications/read-all', { method: 'PATCH' }),
   teacherMaterials: () =>
     request<TeacherMaterialSummary[]>('/teacher/materials').catch((error) => {
       if (error instanceof ApiRequestError && error.status === 404 && error.code === 'NOT_FOUND') {

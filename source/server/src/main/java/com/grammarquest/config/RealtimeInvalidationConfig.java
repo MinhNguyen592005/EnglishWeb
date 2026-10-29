@@ -28,7 +28,7 @@ public class RealtimeInvalidationConfig implements WebMvcConfigurer {
                     !java.util.Set.of("POST", "PUT", "PATCH", "DELETE").contains(request.getMethod()) ||
                     request.getUserPrincipal() == null) return;
                 String path = request.getRequestURI();
-                if (path.contains("/auth/")) return;
+                if (path.contains("/auth/") || path.startsWith("/api/v1/notifications")) return;
                 boolean personal = path.contains("/daily-quests") || path.contains("/cosmetics");
                 events.publishEvent(new Changed(personal ? request.getUserPrincipal().getName() : "*"));
             }

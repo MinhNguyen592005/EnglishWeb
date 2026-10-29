@@ -20,6 +20,23 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 public class SystemSocketHandler extends TextWebSocketHandler {
 
     @org.springframework.beans.factory.annotation.Autowired
+    private com.grammarquest.service.NotificationService notifications;
+
+    @org.springframework.transaction.event.TransactionalEventListener(
+        phase = org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT
+    )
+    public void notificationsChanged(com.grammarquest.service.NotificationService.Changed event) {
+        accounts.forEach((id, account) -> {
+            if (!event.userIds().contains(account.id())) return;
+            try {
+                sendTo(id, "NOTIFICATIONS_CHANGED", Map.of("refresh", true), "");
+            } catch (IOException ex) {
+                log.debug("Notification inbox refresh failed for {}", id, ex);
+            }
+        });
+    }
+
+    @org.springframework.beans.factory.annotation.Autowired
     private com.grammarquest.service.SocketWorkspaceService workspaces;
 
     @org.springframework.beans.factory.annotation.Autowired
@@ -269,8 +286,47 @@ public class SystemSocketHandler extends TextWebSocketHandler {
             updateAccountRole(session.getId(), authenticated.role);
             if (!"ADMIN".equals(authenticated.role)) roles.put(session.getId(), "GUEST");
             String action = body.path("action").asText();
-            if (java.util.Set.of("START_ATTEMPT", "SUBMIT_ANSWER", "ROADMAP_SUBMIT", "ROADMAP_START", "PLACEMENT_SUBMIT", "EXAM_SUBMIT", "EXAM_CREATE", "EXAM_EDIT", "ARENA_ANSWER", "ARENA_EQUIP_COSMETIC", "ARENA_CREATE", "ARENA_JOIN", "ARENA_CONFIRM", "ARENA_DECLINE", "ARENA_READY", "ARENA_START", "ARENA_LEAVE", "ARENA_REPORT", "REPORT_USER", "CLASS_REPORT", "CLASS_CREATE", "CLASS_JOIN", "CLASS_RENAME", "CLASS_REMOVE_MEMBER", "CLASS_ASSIGN", "CLASS_UPDATE_ASSIGNMENT", "CLASS_CHAT", "CLASS_START_ASSIGNMENT", "ADMIN_REPORT_DECIDE").contains(action)) {
-                changedBy = action.equals("SUBMIT_ANSWER") || action.startsWith("CLASS_") || action.startsWith("EXAM_") || action.startsWith("ARENA_") || action.startsWith("ADMIN_") ? "*" : state.username;
+            if (
+                java.util.Set.of(
+                    "START_ATTEMPT",
+                    "SUBMIT_ANSWER",
+                    "ROADMAP_SUBMIT",
+                    "ROADMAP_START",
+                    "PLACEMENT_SUBMIT",
+                    "EXAM_SUBMIT",
+                    "EXAM_CREATE",
+                    "EXAM_EDIT",
+                    "ARENA_ANSWER",
+                    "ARENA_EQUIP_COSMETIC",
+                    "ARENA_CREATE",
+                    "ARENA_JOIN",
+                    "ARENA_CONFIRM",
+                    "ARENA_DECLINE",
+                    "ARENA_READY",
+                    "ARENA_START",
+                    "ARENA_LEAVE",
+                    "ARENA_REPORT",
+                    "REPORT_USER",
+                    "CLASS_REPORT",
+                    "CLASS_CREATE",
+                    "CLASS_JOIN",
+                    "CLASS_RENAME",
+                    "CLASS_REMOVE_MEMBER",
+                    "CLASS_ASSIGN",
+                    "CLASS_UPDATE_ASSIGNMENT",
+                    "CLASS_CHAT",
+                    "CLASS_START_ASSIGNMENT",
+                    "ADMIN_REPORT_DECIDE"
+                ).contains(action)
+            ) {
+                changedBy =
+                    action.equals("SUBMIT_ANSWER") ||
+                    action.startsWith("CLASS_") ||
+                    action.startsWith("EXAM_") ||
+                    action.startsWith("ARENA_") ||
+                    action.startsWith("ADMIN_")
+                        ? "*"
+                        : state.username;
             }
             if (action.startsWith("PLACEMENT_")) {
                 if (action.equals("PLACEMENT_SUBMIT")) limiter.check(state.username);
@@ -483,6 +539,11 @@ public class SystemSocketHandler extends TextWebSocketHandler {
                         "INVALID_MESSAGE",
                         "Lời nhắc phải có từ 1 đến 300 ký tự"
                     );
+                    if (notifications != null) notifications.adminNotice(
+                        targetState.userId,
+                        "Lời nhắc từ quản trị viên",
+                        text
+                    );
                     sendTo(targetId, "SYSTEM_NOTICE", Map.of("message", text), "");
                     networkEvents.add(
                         "INFO",
@@ -493,6 +554,11 @@ public class SystemSocketHandler extends TextWebSocketHandler {
                             "'."
                     );
                 } else {
+                    if (notifications != null) notifications.adminNotice(
+                        targetState.userId,
+                        "Kết nối đã bị ngắt",
+                        "Quản trị viên đã ngắt một kết nối của bạn. Tải lại trang để kết nối lại."
+                    );
                     sendTo(
                         targetId,
                         "SYSTEM_NOTICE",
@@ -774,7 +840,8 @@ public class SystemSocketHandler extends TextWebSocketHandler {
         }
     }
 
-    private final java.util.Set<String> invalidatedUsers = java.util.concurrent.ConcurrentHashMap.newKeySet();
+    private final java.util.Set<String> invalidatedUsers =
+        java.util.concurrent.ConcurrentHashMap.newKeySet();
 
     @org.springframework.context.event.EventListener
     public void dataChanged(com.grammarquest.config.RealtimeInvalidationConfig.Changed event) {
@@ -1220,7 +1287,10 @@ public class SystemSocketHandler extends TextWebSocketHandler {
                 allocateArena(id, room);
                 long version = ((Number) room.get("stateVersion")).longValue();
                 if (version != watch.version()) {
-                    if ("FINISHED".equals(room.get("status")) || "CANCELLED".equals(room.get("status"))) invalidatedUsers.add("*");
+                    if (
+                        "FINISHED".equals(room.get("status")) ||
+                        "CANCELLED".equals(room.get("status"))
+                    ) invalidatedUsers.add("*");
                     sendTo(id, "ARENA_ROOM_UPDATE", room, "");
                     sendTo(
                         id,

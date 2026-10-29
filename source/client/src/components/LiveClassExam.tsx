@@ -5,6 +5,7 @@ import type { TeacherQuestion } from '../types'
 import './LiveClassExam.css'
 import { CalendarDays, ChevronRight, Radio } from 'lucide-react'
 import { Pagination, PAGE_SIZE } from './Pagination'
+import { useSearchParams } from 'react-router-dom'
 
 export type LiveExamQuestionType = 'MCQ' | 'FILL_BLANK' | 'ERROR_CORRECTION' | 'REWRITE'
 
@@ -120,6 +121,10 @@ export function LiveClassExam({
   allowCreate?: boolean
 }) {
   const { request, subscribe, connected } = useSystemSocket()
+  const [params] = useSearchParams()
+  const targetId = Number(params.get('examId')) || 0
+  const targetRef = useRef<HTMLDivElement>(null)
+  const [listLoaded, setListLoaded] = useState(false)
   const [list, setList] = useState<Listing[]>([])
   const [listPage, setListPage] = useState(1)
   const [exam, setExam] = useState<Exam | null>(null)
@@ -193,7 +198,10 @@ export function LiveClassExam({
   const load = useCallback(
     () =>
       request<Listing[]>('EXAM_LIST', 'EXAM_DATA', { classId }).then((data) => {
-        if (mounted.current) setList(data)
+        if (mounted.current) {
+          setList(data)
+          setListLoaded(true)
+        }
       }),
     [classId, request],
   )
@@ -581,6 +589,15 @@ export function LiveClassExam({
     .slice((currentEditorPage - 1) * PAGE_SIZE, currentEditorPage * PAGE_SIZE)
   const currentListPage = Math.min(listPage, Math.max(1, Math.ceil(list.length / PAGE_SIZE)))
   const visibleExams = list.slice((currentListPage - 1) * PAGE_SIZE, currentListPage * PAGE_SIZE)
+  const targetIndex = list.findIndex((item) => item.id === targetId)
+  const target = list[targetIndex]
+  const targetClosed = !!target && (target.closed || new Date(target.endsAt).getTime() <= now)
+  useEffect(() => {
+    if (targetIndex >= 0) {
+      setListPage(Math.floor(targetIndex / PAGE_SIZE) + 1)
+      targetRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' })
+    }
+  }, [targetId, targetIndex])
 
   return (
     <section className="card feature-card live-exam">
@@ -612,10 +629,45 @@ export function LiveClassExam({
         </div>
       )}
 
+      {targetId > 0 && !isOwner && exam?.id !== targetId && (
+        <div className="classwork-notification-target" ref={targetRef}>
+          <strong>
+            {target
+              ? `Kiểm tra từ thông báo: ${target.title}`
+              : listLoaded
+                ? 'Bài kiểm tra này không còn khả dụng.'
+                : 'Đang tải bài kiểm tra…'}
+          </strong>
+          {target && (
+            <>
+              <p>Hạn làm: {new Date(target.endsAt).toLocaleString('vi-VN')}</p>
+              <p>
+                {targetClosed
+                  ? 'Bài kiểm tra đã đóng hoặc hết giờ. Bạn không thể bắt đầu làm bài.'
+                  : 'Bài kiểm tra chưa được mở. Bấm nút bên dưới khi bạn sẵn sàng.'}
+              </p>
+              {!targetClosed && (
+                <button
+                  type="button"
+                  className="button primary"
+                  disabled={busy || !connected}
+                  onClick={() => void open(target.id)}
+                >
+                  {target.submitted
+                    ? 'Xem bài đã nộp'
+                    : target.answeredCount
+                      ? 'Tiếp tục làm bài'
+                      : 'Bắt đầu làm bài'}
+                </button>
+              )}
+            </>
+          )}
+        </div>
+      )}
       <div className="live-exam-list">
         {visibleExams.map((item) => (
           <button
-            className={`exam-list-card ${exam?.id === item.id ? 'is-selected' : ''}`}
+            className={`exam-list-card ${exam?.id === item.id || targetId === item.id ? 'is-selected' : ''}`}
             disabled={
               busy ||
               !connected ||

@@ -22,6 +22,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/v1/teacher/questions")
 public class TeacherQuestionController {
 
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.grammarquest.service.NotificationService notifications;
+
     private final JdbcTemplate db;
     private final UserRepository users;
     private final ObjectMapper json;
@@ -413,6 +416,7 @@ public class TeacherQuestionController {
             return ps;
         }, key);
         long examId = Objects.requireNonNull(key.getKey()).longValue();
+        if (notifications != null) notifications.classwork(body.classId(), null, examId);
         db.update(
             "insert into audit_logs(actor_id,action,target_type,target_id,detail) values(?,?,?,?,?)",
             u.id,
