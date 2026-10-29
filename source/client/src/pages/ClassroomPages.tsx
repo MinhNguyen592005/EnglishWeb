@@ -1,13 +1,14 @@
 import {
   AlertCircle,
+  ArrowLeft,
   ArrowRight,
   BookOpen,
-  Building2,
   CalendarDays,
   CheckCircle2,
   ClipboardList,
   Copy,
   Eye,
+  Flag,
   Hash,
   Hourglass,
   KeyRound,
@@ -19,13 +20,13 @@ import {
   Plus,
   Radio,
   RefreshCw,
-  Rocket,
   School,
   Search,
   Send,
   ShieldCheck,
   Star,
   Target,
+  Trash2,
   UserRound,
   UsersRound,
   type LucideIcon,
@@ -40,6 +41,7 @@ import { Loading } from '../components/States'
 import { LiveClassExam } from '../components/LiveClassExam'
 import { MaterialDeliveryForm } from '../components/MaterialDeliveryForm'
 import { LearnerClasswork } from '../components/LearnerClasswork'
+import { StudentClassResultsDialog } from '../components/StudentClassResultsDialog'
 import { api } from '../services/api'
 import { teacherMaterialChanged } from '../services/teacherMaterialEvents'
 import type {
@@ -51,6 +53,10 @@ import type {
   TeacherMaterialSummary,
 } from '../types'
 import './classroom.css'
+import './classroom-polish.css'
+import './classroom-teacher.css'
+import './classroom-chat.css'
+import { useRealtimeRefresh } from '../services/realtimeRefresh'
 
 type View = 'overview' | 'assignments' | 'members' | 'grades' | 'exams' | 'chat'
 type DueTone = 'open' | 'urgent' | 'overdue' | 'closed'
@@ -101,6 +107,7 @@ function StatePill({ state }: { state: { label: string; tone: DueTone } }) {
 }
 
 export function ClassesPage() {
+  const { request, subscribe, connected } = useSystemSocket()
   const { user } = useAuth(),
     navigate = useNavigate(),
     [classes, setClasses] = useState<Classroom[] | null>(null),
@@ -111,6 +118,18 @@ export function ClassesPage() {
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false)
   const teacher = user?.role === 'TEACHER'
+  useRealtimeRefresh(reload)
+  useEffect(() => {
+    if (!connected) return
+    let active = true
+    const apply = (data: { classes: Classroom[] }) => { if (active) setClasses(data.classes) }
+    const stop = subscribe((message) => {
+      if (message.action === 'CLASS_UPDATE') apply(message.payload as { classes: Classroom[] })
+      if (message.action === 'CLASS_ERROR') setError((message.payload as { message: string }).message)
+    })
+    void request<{ classes: Classroom[] }>('CLASS_LIST', 'CLASS_SNAPSHOT').then(apply).catch((e) => { if (active) setError(e.message) })
+    return () => { active = false; stop(); void request('CLASS_UNWATCH', 'CLASS_DATA').catch(() => {}) }
+  }, [connected, request, subscribe])
   async function reload() {
     try {
       setError('')
@@ -126,7 +145,8 @@ export function ClassesPage() {
     e.preventDefault()
     setBusy(true)
     try {
-      const created = await api.createClass(name)
+      if (!name.trim()) return
+      const created = await api.createClass(name.trim())
       navigate(`/classes/${created.id}`)
     } catch (e) {
       setError((e as Error).message)
@@ -160,12 +180,9 @@ export function ClassesPage() {
   }, [filter])
   return (
     <Layout title="Lớp học">
-      <div className="class-page">
+      <div className={`class-page${teacher ? ' teacher-classes' : ''}`}>
         <div className="page-heading">
           <div>
-            <span className="section-label class-eyebrow">
-              <School size={15} /> {teacher ? 'TRẠM LỚP HỌC' : 'KHOANG HỌC VIÊN'}
-            </span>
             <h1>{teacher ? 'Lớp học của tôi' : 'Lớp học của bạn'}</h1>
             <p>
               {teacher
@@ -186,20 +203,27 @@ export function ClassesPage() {
         {teacher ? (
           <section className="class-create-banner">
             <div>
+              <span className="class-eyebrow"><School size={16} /> KHÔNG GIAN GIẢNG DẠY</span>
               <h2>Tạo lớp học mới</h2>
               <p>Mã tham gia sẽ được tạo tự động.</p>
             </div>
             <form className="class-create-form" onSubmit={create}>
+              <label className="class-create-field" htmlFor="new-class-name">
+                <span>Tên lớp học <span className="class-required-note">Bắt buộc</span></span>
               <input
+                id="new-class-name"
                 required
                 maxLength={120}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Tên lớp học"
+                placeholder="Ví dụ: Tiếng Anh 10A · Năm học 2026"
+                aria-describedby="new-class-help"
               />
-              <button className="button primary" disabled={busy}>
+                <small id="new-class-help">Đặt tên dễ nhận biết để học viên tìm đúng lớp.</small>
+              </label>
+              <button className="button primary" disabled={busy || !name.trim()}>
                 <Plus size={18} />
-                Tạo lớp
+                {busy ? 'Đang tạo…' : 'Tạo lớp'}
               </button>
             </form>
           </section>
@@ -304,7 +328,7 @@ export function ClassDetailPage() {
   const { id } = useParams(),
     classId = Number(id),
     { user } = useAuth(),
-    { subscribe, connected } = useSystemSocket(),
+    { request, subscribe, connected } = useSystemSocket(),
     [params, setParams] = useSearchParams()
   const learnerView = user?.role === 'LEARNER'
   const allowedViews: View[] = learnerView
@@ -335,12 +359,19 @@ export function ClassDetailPage() {
   const [materialsError, setMaterialsError] = useState('')
   const [loadingMaterials, setLoadingMaterials] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  useRealtimeRefresh(reload)
+  useEffect(() => {
+    if (!connected) return
+    let active = true
+    void request('CLASS_OPEN', 'CLASS_SNAPSHOT', { classId }).catch((e) => { if (active) setError(e.message) })
+    return () => { active = false; void request('CLASS_UNWATCH', 'CLASS_DATA').catch(() => {}) }
+  }, [connected, classId, request])
   async function reload() {
     try {
       setError('')
       const next = await api.classroom(classId)
       setDetail(next)
-      setClassName(next.name)
+      setClassName((current) => current === detail?.name || !detail ? next.name : current)
       if (user?.role === 'TEACHER' && next.teacherId === user.id)
         setOverview(await api.classroomOverview(classId))
       else setOverview(null)
@@ -363,6 +394,7 @@ export function ClassDetailPage() {
       if (request === materialRequest.current) setLoadingMaterials(false)
     }
   }, [user?.id])
+  useRealtimeRefresh(loadMaterials, !!isOwner && (view === 'assignments' || view === 'exams'))
   useEffect(() => {
     if (user?.role !== 'TEACHER' || (view !== 'assignments' && view !== 'exams')) return
     const refresh = () => {
@@ -391,11 +423,10 @@ export function ClassDetailPage() {
     () =>
       subscribe((message) => {
         if (
-          message.action.startsWith('CLASS_') &&
-          message.action !== 'CLASS_OPEN' &&
-          message.action !== 'CLASS_LIST'
+          message.action === 'CLASS_UPDATE'
         )
           void reload()
+        if (message.action === 'CLASS_ERROR') setError((message.payload as { message: string }).message)
       }),
     [classId, view, subscribe],
   )
@@ -573,21 +604,17 @@ export function ClassDetailPage() {
   }
   return (
     <Layout title={detail.name}>
-      <div className="class-workspace">
-        {/* Hero: breadcrumb, tên lớp, metadata, thao tác, tab */}
+      <div className={`class-workspace${isOwner ? ' teacher-class-workspace' : ''}`}>
+        <div className="class-detail-top-row">
+        <Link to="/classes" className="button secondary class-back-link" aria-label="Quay lại lớp học" title="Quay lại lớp học">
+          <ArrowLeft size={16} />
+        </Link>
+        {/* Hero: quay lại danh sách, tên lớp, metadata, thao tác, tab */}
         <section className="class-hero with-tabs">
-          <div className="breadcrumb">
-            <Link to="/classes">
-              <Building2 size={15} /> Lớp học
-            </Link>
-            <span>/</span>
-            <span className="current">
-              <Rocket size={15} /> {detail.name}
-            </span>
-          </div>
           <div className="class-detail-header">
             <div>
               <div className="class-title-row">
+                <h1>{detail.name}</h1>
                 <span
                   className={`class-live-pill ${connected ? 'online' : 'offline'}`}
                   role="status"
@@ -616,7 +643,10 @@ export function ClassDetailPage() {
               </button>
               {isOwner && (
                 <form onSubmit={rename} className="class-rename-form">
+                  <label htmlFor="class-rename">Tên lớp học</label>
                   <input
+                    id="class-rename"
+                    required
                     aria-label="Tên lớp"
                     value={className}
                     maxLength={120}
@@ -624,7 +654,7 @@ export function ClassDetailPage() {
                   />
                   <button
                     className="button secondary"
-                    disabled={busy || className.trim() === detail.name}
+                    disabled={busy || !className.trim() || className.trim() === detail.name}
                   >
                     <Pencil size={15} /> Đổi tên
                   </button>
@@ -663,6 +693,7 @@ export function ClassDetailPage() {
             </nav>
           )}
         </section>
+        </div>
         {error && (
           <div className="error-banner" role="alert">
             {error}
@@ -1125,6 +1156,7 @@ function Members({
 }) {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
+  const [selectedStudent, setSelectedStudent] = useState<NonNullable<Classroom['members']>[number] | null>(null)
   const members = detail.members || []
   const filtered = members.filter((member) =>
     `${member.displayName} ${member.username}`
@@ -1182,7 +1214,19 @@ function Members({
           </thead>
           <tbody>
             {rows.map((member) => (
-              <tr key={member.id}>
+              <tr
+                key={member.id}
+                className={isOwner ? 'class-student-row' : undefined}
+                tabIndex={isOwner ? 0 : undefined}
+                aria-label={isOwner ? `Xem kết quả của ${member.displayName}` : undefined}
+                onClick={isOwner ? () => setSelectedStudent(member) : undefined}
+                onKeyDown={isOwner ? (event) => {
+                  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault()
+                    setSelectedStudent(member)
+                  }
+                } : undefined}
+              >
                 <td>
                   <span className="class-member-cell">
                     <span className="avatar">{member.displayName.slice(0, 1).toUpperCase()}</span>
@@ -1200,10 +1244,16 @@ function Members({
                   <td className="right">
                     {member.id !== userId && (
                       <button
-                        className="text-button"
-                        onClick={() => remove(member.id, member.displayName)}
+                        type="button"
+                        className="class-remove-student"
+                        aria-label={`Xóa ${member.displayName} khỏi lớp`}
+                        title="Xóa khỏi lớp"
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          remove(member.id, member.displayName)
+                        }}
                       >
-                        Xóa khỏi lớp
+                        <Trash2 size={18} />
                       </button>
                     )}
                   </td>
@@ -1225,6 +1275,7 @@ function Members({
         </div>
       )}
       <Pagination total={filtered.length} page={current} onPageChange={setPage} />
+      {isOwner && selectedStudent && <StudentClassResultsDialog classroom={detail} student={selectedStudent} onClose={() => setSelectedStudent(null)} />}
     </section>
   )
 }
@@ -1420,51 +1471,78 @@ function Chat({
   busy: boolean
   userId?: number
 }) {
+  const { connected } = useSystemSocket()
+  const list = useRef<HTMLDivElement>(null)
+  const followLatest = useRef(true)
+  const lastMessage = messages[messages.length - 1]
+  useEffect(() => {
+    const element = list.current
+    if (element && (followLatest.current || lastMessage?.userId === userId)) {
+      element.scrollTop = element.scrollHeight
+    }
+  }, [lastMessage?.id, userId])
   return (
     <section className="card feature-card chat-panel class-panel class-chat">
       <div className="class-panel-head">
-        <div>
+        <div className="class-chat-identity">
+          <span className="class-chat-group-avatar"><UsersRound size={24} /></span>
+          <div>
           <h2>
-            <MessageCircle size={24} /> Chat lớp
+            Trò chuyện lớp học
           </h2>
-          <p className="muted">Trao đổi với giáo viên và học viên trong lớp.</p>
+          <p className="muted"><span className={`class-chat-connection ${connected ? 'online' : ''}`} />{connected ? 'Đã kết nối · Trao đổi cùng cả lớp' : 'Đang kết nối lại…'}</p>
+          </div>
         </div>
+        <span className="class-chat-counter"><MessageCircle size={15} />{messages.length} tin nhắn</span>
       </div>
-      <div className="chat-list" aria-live="polite">
+      <div ref={list} className="chat-list" role="log" aria-label="Tin nhắn trong lớp" aria-relevant="additions" aria-live="polite" onScroll={() => {
+        const element = list.current
+        if (element) followLatest.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80
+      }}>
         {messages.length ? (
-          messages.map((item) => (
+          messages.map((item, index) => (
+            <div className="class-chat-message-group" key={item.id}>
+              {(index === 0 || new Date(messages[index - 1].createdAt).toDateString() !== new Date(item.createdAt).toDateString()) && <div className="class-chat-day"><span>{new Date(item.createdAt).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}</span></div>}
             <div className={`chat-message ${item.userId === userId ? 'mine' : ''}`} key={item.id}>
-              <span className="avatar">{item.displayName.slice(0, 1)}</span>
+              {item.userId !== userId && <span className="avatar" title={item.displayName}>{item.displayName.slice(0, 1).toUpperCase()}</span>}
+              <div className="class-chat-message-content">
+                {item.userId !== userId && <span className="class-chat-sender">{item.displayName}</span>}
               <div className="chat-bubble">
-                <div>
-                  <strong>{item.displayName}</strong>
-                  <time>{new Date(item.createdAt).toLocaleString('vi-VN')}</time>
-                </div>
                 <p>{item.body}</p>
+              </div>
+              <div className="class-chat-message-meta">
+                <time dateTime={item.createdAt} title={new Date(item.createdAt).toLocaleString('vi-VN')}>{new Date(item.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</time>
                 {item.userId !== userId && (
-                  <button className="text-button" onClick={() => report(item.id)}>
-                    Báo cáo
+                  <button type="button" className="class-chat-report" onClick={() => report(item.id)} aria-label={`Báo cáo tin nhắn của ${item.displayName}`} title="Báo cáo tin nhắn">
+                    <Flag size={12} />
                   </button>
                 )}
+                {item.userId === userId && <CheckCircle2 size={12} aria-label="Đã gửi" />}
+              </div>
+              </div>
               </div>
             </div>
           ))
         ) : (
-          <p className="muted">Chưa có tin nhắn.</p>
+          <div className="class-chat-empty">
+            <MessageCircle size={36} />
+            <strong>Bắt đầu cuộc trò chuyện</strong>
+            <p>Đặt câu hỏi, chia sẻ kiến thức hoặc gửi lời chào tới lớp.</p>
+          </div>
         )}
       </div>
       <form className="inline-form" onSubmit={send}>
+        <span className="class-chat-compose-icon" aria-hidden="true"><MessageCircle size={22} /></span>
         <input
           aria-label="Tin nhắn lớp"
           required
           maxLength={1000}
           value={message}
           onChange={(event) => setMessage(event.target.value)}
-          placeholder="Nhắn cho lớp..."
+          placeholder="Aa · Nhắn tin cho lớp…"
         />
-        <button className="button primary" disabled={busy}>
-          <Send size={17} />
-          Gửi
+        <button className="button primary" disabled={busy || !message.trim()} aria-label={busy ? 'Đang gửi tin nhắn' : 'Gửi tin nhắn'} title="Gửi tin nhắn">
+          <Send size={21} />
         </button>
       </form>
     </section>

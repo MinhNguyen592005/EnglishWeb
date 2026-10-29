@@ -35,6 +35,7 @@ import type {
 } from '../types'
 import './arena-refresh.css'
 import './pvp-leaderboard.css'
+import './arena-polish.css'
 import { api } from '../services/api'
 
 type QueueState = {
@@ -193,6 +194,11 @@ export function ArenaPage() {
       })
       .catch(() => {})
   }
+  useRealtimeRefresh(async () => {
+    refreshArenaMeta()
+    if (connected) await request<ArenaHistory[]>('ARENA_HISTORY', 'ARENA_DATA').then(setHistory)
+    await loadCosmetics()
+  })
 
   useEffect(
     () =>
@@ -616,7 +622,6 @@ export function ArenaPage() {
       <div className="pvp-page">
         <div className="page-heading">
           <div>
-            <span className="section-label">THỬ THÁCH HAI NGƯỜI</span>
             <h1>Đấu trường PvP</h1>
             <p>Thử sức cùng đối thủ, chinh phục thứ hạng của bạn.</p>
           </div>
@@ -748,7 +753,6 @@ export function ArenaPage() {
             <section className="card feature-card pvp-leaderboard">
               <div className="panel-heading">
                 <div>
-                  <span className="pvp-board-eyebrow">ĐẤU TRƯỜNG</span>
                   <h2>Bảng xếp hạng</h2>
                   <p className="muted">50 người chơi dẫn đầu theo ELO.</p>
                 </div>
@@ -779,6 +783,22 @@ export function ArenaPage() {
                   </button>
                 ))}
               </div>
+              {filteredLeaders.some((entry) => entry.rank <= 3) && (
+                <div className="pvp-podium" aria-label="Vinh danh ba người chơi dẫn đầu">
+                  {filteredLeaders.filter((entry) => entry.rank <= 3).map((entry) => (
+                    <article className={`pvp-podium-card place-${entry.rank}`} key={entry.userId}>
+                      <span className="pvp-podium-place"><Crown size={17} /> Hạng #{entry.rank}</span>
+                      <div className={`pvp-avatar ${FRAME_CLASS_MAP[entry.equippedFrame] || 'frame-default'}`}>
+                        <span>{entry.displayName.slice(0, 1).toUpperCase()}</span>
+                      </div>
+                      <strong>{entry.displayName}</strong>
+                      <span className="pvp-podium-tier">{entry.rankTitle}</span>
+                      <div className="pvp-podium-score">{entry.elo.toLocaleString('vi-VN')} <small>ELO</small></div>
+                      <div className="pvp-podium-step" aria-hidden="true">{entry.rank}</div>
+                    </article>
+                  ))}
+                </div>
+              )}
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -796,7 +816,7 @@ export function ArenaPage() {
                     {filteredLeaders.map((entry) => (
                       <tr
                         key={entry.userId}
-                        className={entry.userId === user?.id ? 'pvp-my-row' : ''}
+                        className={`${entry.userId === user?.id ? 'pvp-my-row' : ''} ${entry.rank <= 3 ? `pvp-top-row place-${entry.rank}` : ''}`}
                       >
                         <td>
                           <span
@@ -896,7 +916,7 @@ export function ArenaPage() {
               <>
                 <section className="card feature-card">
                   <h2>
-                    <Shield size={21} /> Khung Avatar Đấu Trường (Avatar Frames)
+                    <Shield size={21} /> Bộ sưu tập khung đấu trường
                   </h2>
                   <p className="muted">
                     Mở khóa khung avatar đặc biệt khi đạt mốc phân hạng ELO hoặc chuỗi thắng liên
@@ -909,6 +929,7 @@ export function ArenaPage() {
                         className={`pvp-cosmetic-card ${item.unlocked ? 'unlocked' : 'locked'} ${item.equipped ? 'equipped' : ''}`}
                       >
                         <div className="pvp-cosmetic-preview">
+                          <span className="pvp-reward-state">{item.equipped ? 'Đang trang bị' : item.unlocked ? 'Đã sở hữu' : 'Chờ chinh phục'}</span>
                           <div className={`pvp-avatar lg ${item.cssClass}`}>
                             <span>{user?.displayName.slice(0, 1).toUpperCase()}</span>
                           </div>
@@ -948,7 +969,7 @@ export function ArenaPage() {
 
                 <section className="card feature-card">
                   <h2>
-                    <Award size={21} /> Huy Hiệu Vinh Quang (PvP Badges)
+                    <Award size={21} /> Huy hiệu vinh quang
                   </h2>
                   <p className="muted">
                     Huy hiệu danh giá hiển thị cạnh tên của bạn trên bảng xếp hạng và trong trận
@@ -961,8 +982,9 @@ export function ArenaPage() {
                         className={`pvp-cosmetic-card ${item.unlocked ? 'unlocked' : 'locked'} ${item.equipped ? 'equipped' : ''}`}
                       >
                         <div className="pvp-cosmetic-preview">
+                          <span className="pvp-reward-state">{item.equipped ? 'Đang trang bị' : item.unlocked ? 'Đã sở hữu' : 'Chờ chinh phục'}</span>
                           <span className={`pvp-badge-showcase ${item.cssClass}`}>
-                            <CosmeticIcon name={item.icon} size={26} />
+                            <CosmeticIcon name={item.icon} size={38} />
                           </span>
                         </div>
                         <div className="pvp-cosmetic-body">
@@ -1592,3 +1614,4 @@ export function ArenaPage() {
     </Layout>
   )
 }
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

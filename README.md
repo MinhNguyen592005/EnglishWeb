@@ -71,6 +71,26 @@ EnglishWeb/
 
 Chi tiết về tài khoản demo, kiểm thử và xử lý lỗi nằm trong [INSTRUCTION.md](INSTRUCTION.md).
 
+### Chạy với 3 tài khoản mẫu
+
+Sau khi tạo database và cấu hình `source/server/.env.local.ps1` như trên, chạy từ thư mục gốc:
+
+```powershell
+.\scripts\start-demo.ps1
+```
+
+Lệnh khởi động backend, tự chạy migration và tạo các tài khoản còn thiếu:
+
+| Vai trò | Tên đăng nhập | Mật khẩu |
+| --- | --- | --- |
+| Admin | `admin1` | `12345678` |
+| Giáo viên | `teacher1` | `12345678` |
+| Sinh viên | `student1` | `12345678` |
+
+Chạy lại không tạo trùng và không đổi mật khẩu, vai trò hay tiến độ của tài khoản đã có. Sinh viên mẫu được miễn kiểm tra đầu vào. Chạy frontend ở terminal khác như hướng dẫn trên. Tài khoản mẫu chỉ được tạo khi chạy lệnh này ở profile `dev`.
+
+Có thể dùng [script SQL](scripts/seed-demo-accounts.sql) sau khi migration hoàn tất nếu muốn tạo tài khoản trực tiếp trong MySQL.
+
 ## Tài liệu dự án
 
 ## Dọn file sinh tự động

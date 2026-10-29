@@ -29,6 +29,11 @@ public class DailyQuestController {
         return dailyQuestService.claimQuestReward(auth.getName(), id);
     }
 
+    @PostMapping("/{id}/replace")
+    public DailyQuestService.DailyQuestOverview replace(Authentication auth, @PathVariable Long id) {
+        return dailyQuestService.replaceQuest(auth.getName(), id);
+    }
+
     @PostMapping("/claim-milestone")
     public DailyQuestService.MilestoneClaimResult claimMilestone(Authentication auth) {
         return dailyQuestService.claimDailyMilestone(auth.getName());

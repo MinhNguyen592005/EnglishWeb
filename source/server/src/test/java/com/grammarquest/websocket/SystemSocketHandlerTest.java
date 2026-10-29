@@ -15,6 +15,38 @@ import org.springframework.web.socket.*;
 class SystemSocketHandlerTest {
 
     @Test
+    void invalidationsAreCoalescedAndPersonalChangesStayWithinTheAccount() throws Exception {
+        var handler = new SystemSocketHandler(
+            new ObjectMapper(), users, learning, matchmaker, arenaSocket,
+            mock(com.grammarquest.service.LiveExamService.class),
+            mock(com.grammarquest.service.SocketClassroomService.class),
+            mock(com.grammarquest.service.LearnerReportService.class),
+            mock(com.grammarquest.security.AnswerRateLimiter.class),
+            mock(com.grammarquest.service.ArenaSnapshotStore.class)
+        );
+        var owner = socket("guest");
+        var other = socket("bystander");
+        handler.afterConnectionEstablished(owner);
+        handler.afterConnectionEstablished(other);
+        clearInvocations(owner, other);
+        var event = new com.grammarquest.config.RealtimeInvalidationConfig.Changed("guest");
+        handler.dataChanged(event);
+        handler.dataChanged(event);
+        handler.pushInvalidations();
+        var sent = ArgumentCaptor.forClass(TextMessage.class);
+        verify(owner, times(1)).sendMessage(sent.capture());
+        assertEquals("DATA_INVALIDATED", new ObjectMapper().readTree(sent.getValue().getPayload()).path("action").asText());
+        verify(other, never()).sendMessage(any());
+        clearInvocations(owner, other);
+        handler.pushInvalidations();
+        verify(owner, never()).sendMessage(any());
+        handler.dataChanged(new com.grammarquest.config.RealtimeInvalidationConfig.Changed("*"));
+        handler.pushInvalidations();
+        verify(owner).sendMessage(any());
+        verify(other).sendMessage(any());
+    }
+
+    @Test
     void reportReceiptAndEveryDecisionArePushedToBothPartiesWithoutLeakingIdentity()
         throws Exception {
         var handler = new SystemSocketHandler(

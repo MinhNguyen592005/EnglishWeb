@@ -172,7 +172,6 @@ export function PlacementPage() {
         {welcome.visible ? (
           <>
             <section className="card placement-welcome-background" aria-hidden="true">
-              <span className="section-label">KHỞI ĐẦU HÀNH TRÌNH</span>
               <h2>Kiểm tra đầu vào</h2>
               <p>10 câu hỏi để tìm level bắt đầu của bạn.</p>
             </section>
@@ -201,7 +200,6 @@ export function PlacementPage() {
         ) : (
           <section className="study-quiz" aria-label="Kiểm tra đầu vào">
             <div className="card study-quiz-heading">
-              <span className="section-label">KHỞI ĐẦU HÀNH TRÌNH</span>
               <h1>Kiểm tra đầu vào</h1>
               <p>
                 Trả lời 10 câu để xác định level bắt đầu. Bạn có thể sửa lựa chọn trước khi nộp bài.

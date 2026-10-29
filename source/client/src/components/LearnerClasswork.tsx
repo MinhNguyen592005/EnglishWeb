@@ -17,6 +17,7 @@ import { Pagination, PAGE_SIZE } from './Pagination'
 import type { Assignment, MyAssignmentResult } from '../types'
 import './LearnerClasswork.css'
 import { AssignmentAttemptHistory } from './AssignmentAttemptHistory'
+import { useRealtimeRefresh } from '../services/realtimeRefresh'
 
 export function LearnerClasswork({
   classId,
@@ -36,6 +37,7 @@ export function LearnerClasswork({
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
   const [revision, setRevision] = useState(0)
+  useRealtimeRefresh(() => setRevision((value) => value + 1))
   const [now, setNow] = useState(Date.now())
   const starting = useRef(false)
   useEffect(() => {

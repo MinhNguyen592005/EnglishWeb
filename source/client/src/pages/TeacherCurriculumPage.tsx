@@ -73,6 +73,7 @@ export function TeacherCurriculumPage() {
       .teacherCurriculum()
       .then(setData)
       .catch((e) => setError(e.message))
+  useRealtimeRefresh(reload)
   useEffect(() => {
     void reload()
   }, [])
@@ -164,7 +165,6 @@ export function TeacherCurriculumPage() {
     <Layout title="Biên tập lộ trình">
       <div className="page-heading">
         <div>
-          <span className="section-label">XƯỞNG THIẾT KẾ HÀNH TINH</span>
           <h1>Biên tập lộ trình</h1>
           <p>Tạo chủ đề, viết kiến thức và chuẩn bị câu hỏi trước khi mở cho học viên.</p>
         </div>
@@ -735,3 +735,4 @@ export function TeacherCurriculumPage() {
     </Layout>
   )
 }
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

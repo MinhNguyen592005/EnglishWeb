@@ -12,6 +12,7 @@ import { systemSocketUrl } from '../services/systemSocket'
 import { useLocation, useNavigate } from 'react-router-dom'
 import type { Profile } from '../types'
 import './AccountNotices.css'
+import { realtimeRefreshEvent } from '../services/realtimeRefresh'
 
 type Message = { action: string; requestId?: string; payload?: unknown; data?: unknown }
 type Pending = {
@@ -122,6 +123,7 @@ export function SystemSocketProvider({ children }: { children: ReactNode }) {
         current.send(JSON.stringify({ action: 'AUTH', payload: { role: 'GUEST' } }))
         current.send(JSON.stringify({ action: 'CLIENT_ACTIVITY', payload: route.current }))
         setConnected(true)
+        window.dispatchEvent(new Event(realtimeRefreshEvent))
         setSocketNotice('')
         setIdleReminder('')
         // Yêu cầu từ trang có thể đến trước handshake: gửi sau onopen.
@@ -141,6 +143,7 @@ export function SystemSocketProvider({ children }: { children: ReactNode }) {
           return
         }
         if (!message || typeof message.action !== 'string') return
+        if (message.action === 'DATA_INVALIDATED') window.dispatchEvent(new Event(realtimeRefreshEvent))
         if (message.action === 'ACCOUNT_UPDATE') {
           const profile = message.payload as Profile
           if (

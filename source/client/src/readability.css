@@ -78,3 +78,371 @@
     font-size: 0.8125rem;
   }
 }
+
+/* Light / Clean & Playful
+ * Shared presentation only: retain existing class names and interaction states.
+ * Blue = navigation; green = progress; orange/coral = challenges.
+ */
+:root {
+  color-scheme: light;
+  --page: #f9fafb;
+  --surface: #ffffff;
+  --text: #1f2937;
+  --muted: #4b5563;
+  --border: #e5e7eb;
+  --primary: #3b82f6;
+  --primary-strong: #2563eb;
+  --primary-soft: #eff6ff;
+  --success: #22c55e;
+  --success-text: #15803d;
+  --success-soft: #f0fdf4;
+  --danger: #dc2626;
+  --danger-soft: #fff1f2;
+  --warning: #f97316;
+  --focus: #2563eb;
+  --challenge: #c2410c;
+  --challenge-soft: #fff7ed;
+  --shadow-card: 0 2px 12px rgb(31 41 55 / 4%);
+  --shadow-hover: 0 10px 15px -3px rgb(0 0 0 / 10%);
+  font-family: Inter, Nunito, Poppins, 'Segoe UI', system-ui, sans-serif;
+  font-size: 16px;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+}
+
+body {
+  background: var(--page);
+  line-height: 1.65;
+}
+
+::selection {
+  background: #dbeafe;
+  color: #1e3a8a;
+}
+
+h1 {
+  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  letter-spacing: -0.035em;
+}
+
+h2 {
+  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  letter-spacing: -0.02em;
+}
+
+.app-layout :is(p, li, td, label, input, select, textarea) {
+  font-weight: 400;
+}
+
+.app-layout :is(h1, h2, h3) {
+  font-weight: 700;
+}
+
+input, select, textarea {
+  accent-color: var(--primary-strong);
+}
+
+input::placeholder, textarea::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+
+:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+}
+
+/* Search fields keep a single border instead of a second outer focus frame. */
+input:is(
+  [type='search'],
+  .search-input,
+  [placeholder*='Tìm'],
+  [placeholder*='tìm'],
+  [aria-label*='Tìm'],
+  [aria-label*='tìm']
+):is(:focus, :focus-visible),
+[class*='search']:has(input):focus-within,
+[class*='search'] input:is(:focus, :focus-visible) {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Subtle keyboard focus stays inside the existing search field. */
+[class*='search']:has(input:focus-visible) {
+  border-color: #94a3b8;
+}
+
+.sidebar, .topbar, .bottom-nav {
+  background: var(--surface);
+  border-color: var(--border);
+}
+
+.brand-mark {
+  background: var(--primary-strong);
+  color: #fff;
+  border-radius: 12px;
+}
+
+.nav-list { gap: 8px; }
+.nav-link {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: #4b5563;
+  transition: background .2s, color .2s, border-color .2s;
+}
+.nav-link:hover { background: #f3f4f6; color: var(--primary-strong); }
+.nav-link.active {
+  background: var(--primary-soft);
+  border-color: #dbeafe;
+  color: var(--primary-strong);
+}
+.nav-link.active:before { background: var(--primary); }
+.topbar { min-height: 76px; height: auto; padding-block: 12px; }
+.topbar-left .eyebrow, .app-layout .topbar-profile-copy small { color: var(--muted); }
+.topbar-profile:hover { background: #f3f4f6; }
+.topbar-exp {
+  background: var(--success-soft);
+  border-color: #bbf7d0;
+  color: #15803d;
+  border-radius: 99px;
+}
+.topbar-exp strong { font-weight: 800; }
+.page-content {
+  width: 100%;
+  padding: 36px clamp(20px, 3vw, 48px) 80px;
+}
+
+/* White cards keep dense teaching and administration screens calm. */
+.card, .pvp-page .card, .arena-page .card,
+.home-stats, .home-main > section, .home-quest-guide,
+.admin-hero, .admin-kpi-card, .teacher-metric-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+.card.feature-card { padding: 28px; }
+.admin-page, .teacher-dashboard { gap: 28px; }
+.admin-hero { padding: 32px; }
+.admin-kpi-card, .teacher-metric-card { padding: 24px; min-height: 160px; }
+.admin-kpi-card strong, .teacher-metric-card strong, .home-stats strong {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.035em;
+}
+.teacher-dashboard {
+  --teacher-primary: var(--primary-strong);
+  --teacher-ink: var(--text);
+  --teacher-border: var(--border);
+  --teacher-soft: var(--primary-soft);
+}
+:is(.admin-page, .teacher-dashboard) .form-grid { gap: 18px; }
+:is(.admin-page, .teacher-dashboard) .panel-heading { flex-wrap: wrap; gap: 16px; }
+.table-wrap { border: 1px solid var(--border); border-radius: 12px; overflow-x: auto; }
+th { background: #f9fafb; color: #374151; font-weight: 700; }
+td, th { padding: 16px 18px; border-color: var(--border); }
+tbody tr:hover { background: #eff6ff66; }
+
+/* Shared actions, with explicit disabled and keyboard focus behavior. */
+.button, .pvp-page .button, .arena-page .button {
+  min-height: 44px;
+  border-radius: 8px;
+  font-weight: 650;
+  transition: background .2s, box-shadow .2s, border-color .2s, transform .2s;
+}
+.button.primary, .pvp-page .button.primary, .arena-page .button.primary {
+  background: var(--primary-strong);
+  border-color: var(--primary-strong);
+  color: #fff;
+  box-shadow: 0 2px 4px rgb(37 99 235 / 12%);
+}
+.button:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+.button.primary:hover:not(:disabled) { background: #1d4ed8; }
+.button.secondary, .pvp-page .button.secondary, .arena-page .button.secondary {
+  background: #fff;
+  border-color: #bfdbfe;
+  color: var(--primary-strong);
+}
+.button.secondary:hover:not(:disabled) { background: var(--primary-soft); border-color: #93c5fd; }
+.button:active:not(:disabled) { transform: translateY(0); }
+.button:disabled { box-shadow: none; transform: none; }
+
+/* Progress and completion use green independently of navigation blue. */
+.progress-track { background: #e5e7eb; height: 10px; }
+.progress-track > div, .progress-track.xp > div {
+  background: var(--success);
+  box-shadow: none;
+}
+.progress-track.hp > div { background: #ff4d4f; }
+.success-banner { background: var(--success-soft); color: #166534; border-color: #bbf7d0; }
+.error-banner { background: #fff1f2; color: #9f1239; border-color: #fecdd3; }
+.dashboard-home { --home-ink: var(--text); --home-muted: var(--muted); --home-line: var(--border); }
+.home-main .home-next-lesson { background: #eff6ff; border-color: #dbeafe; padding: 28px; }
+.home-next-lesson h2 { color: #1e40af; }
+.home-stats strong { color: var(--text); font-size: 2rem; }
+.home-stats > div + div { border-color: var(--border); }
+.home-heading h1 { font-size: clamp(1.8rem, 3vw, 2.5rem); }
+
+/* Warm challenge surfaces stand out without reducing text contrast. */
+.pvp-page { --pvp-ink: var(--text); --pvp-muted: var(--muted); --pvp-line: var(--border); --pvp-primary: var(--primary-strong); }
+.boss-panel, .roadmap-capstone:not(.locked),
+.arena-page .matchmaking-card, .arena-page .arena-banner {
+  background: var(--challenge-soft);
+  border: 1px solid #fed7aa;
+  border-radius: 12px;
+  color: var(--text);
+}
+.boss-panel h3, .roadmap-capstone:not(.locked) h3 {
+  color: #9a3412;
+  font-weight: 800;
+}
+.roadmap-capstone:not(.locked) .roadmap-capstone-icon {
+  background: #ffedd5;
+  color: #c2410c;
+}
+.boss-panel .button.primary,
+.roadmap-capstone:not(.locked) .button.primary,
+.arena-page .matchmaking-card .button.primary,
+.arena-page .arena-banner .button.primary {
+  background: var(--challenge);
+  border-color: var(--challenge);
+  color: #fff;
+}
+.boss-panel .button.primary:hover:not(:disabled),
+.roadmap-capstone:not(.locked) .button.primary:hover:not(:disabled),
+.arena-page .matchmaking-card .button.primary:hover:not(:disabled),
+.arena-page .arena-banner .button.primary:hover:not(:disabled) { background: #9a3412; }
+.arena-page .matchmaking-card .card-icon { background: #ffedd5; color: #c2410c; }
+.arena-page .arena-option { background: #fff; color: var(--text); border-color: var(--border); }
+.arena-page .arena-option:hover:not(:disabled), .arena-page .arena-option.chosen {
+  background: var(--primary-soft);
+  border-color: var(--primary);
+}
+.modal-card { max-height: 90dvh; overflow-y: auto; }
+.bottom-nav { padding-bottom: env(safe-area-inset-bottom); }
+
+@media (max-width: 1100px) and (min-width: 651px) {
+  .home-columns { grid-template-columns: minmax(0, 1fr); }
+  .admin-kpi-grid, .teacher-dashboard-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+@media (max-width: 650px) {
+  .page-content { padding: 24px 16px calc(90px + env(safe-area-inset-bottom)); }
+  .topbar { padding: 12px 16px; min-height: 68px; }
+  .home-heading, .admin-hero { flex-wrap: wrap; }
+  .admin-hero { padding: 24px; }
+  .admin-hero-actions { justify-content: flex-start; }
+  .admin-kpi-grid, .teacher-dashboard-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .admin-kpi-card, .teacher-metric-card { padding: 16px; min-height: 140px; }
+  .home-columns { grid-template-columns: minmax(0, 1fr); }
+  .home-stats > div { padding-inline: 12px; }
+  .home-stats strong { font-size: 1.5rem; }
+  .home-stats > div > span, .home-lesson-footer { flex-wrap: wrap; }
+  .home-main > section, .home-quest-guide, .home-main .home-next-lesson, .card.feature-card { padding: 20px; }
+}
+@media (max-width: 380px) {
+  .admin-kpi-grid, .teacher-dashboard-metrics { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Playful accents and a consistent reading scale. */
+:root {
+  --gold: #facc15;
+  --gold-hover: #eab308;
+  --gold-ink: #422006;
+  --gold-soft: #fefce8;
+}
+
+body {
+  background: linear-gradient(135deg, #eff6ff66, transparent 45%, #f0fdf466), var(--page);
+}
+
+/* Keep body copy calm; reserve large, bold text for headings and scores. */
+.app-layout :is(p, li, td, label, input, select, textarea) {
+  font-size: 0.9375rem;
+  line-height: 1.7;
+}
+.app-layout :is(button, .button), .home-primary, .dq-button {
+  font-size: 0.9375rem;
+  line-height: 1.4;
+  font-weight: 650;
+}
+.app-layout h1, .home-heading h1 {
+  font-size: clamp(1.65rem, 2.4vw, 2.15rem);
+  line-height: 1.25;
+  letter-spacing: -0.025em;
+}
+.app-layout h2, .home-next-lesson h2 {
+  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  line-height: 1.4;
+}
+.app-layout h3 { font-size: 1.0625rem; line-height: 1.45; }
+.app-layout small { font-size: 0.8125rem; line-height: 1.5; }
+.home-stats strong, .teacher-metric-card strong {
+  font-size: clamp(1.5rem, 2.2vw, 1.875rem);
+}
+.home-xp-label strong { color: #15803d; font-weight: 750; }
+.home-progress-track { background: #dcfce7; }
+.home-progress-track > span, .home-progress-track > div { background: #22c55e; }
+
+/* Yellow identifies continue-learning, rewards, and unlocked Boss actions. */
+.home-primary,
+.home-next-lesson .button.primary,
+.dq-button.chest,
+.boss-panel .button.primary,
+.roadmap-capstone:not(.locked) .button.primary {
+  background: var(--gold);
+  color: var(--gold-ink);
+  border: 1px solid #eab308;
+  border-radius: 10px;
+  box-shadow: 0 3px 0 #ca8a0433;
+  min-height: 44px;
+  padding: 11px 18px;
+  font-weight: 700;
+  transition: background .2s, box-shadow .2s, transform .2s;
+}
+.home-primary:hover,
+.home-next-lesson .button.primary:hover:not(:disabled),
+.dq-button.chest:hover:not(:disabled),
+.boss-panel .button.primary:hover:not(:disabled),
+.roadmap-capstone:not(.locked) .button.primary:hover:not(:disabled) {
+  background: var(--gold-hover);
+  color: var(--gold-ink);
+  transform: translateY(-2px);
+  box-shadow: 0 10px 15px -3px rgb(161 98 7 / 18%);
+}
+.home-primary:active,
+.dq-button.chest:active:not(:disabled) { transform: translateY(0); }
+.dq-button.chest:disabled { box-shadow: none; transform: none; }
+
+.home-main .home-next-lesson {
+  background: linear-gradient(120deg, #eff6ff, #f5f3ff);
+  border-color: #c7d2fe;
+}
+.home-main .home-progress-card { background: #f0fdf4; border-color: #bbf7d0; }
+.home-quest-guide { background: #fffbeb; border-color: #fde68a; }
+.home-stats > div:nth-child(1) strong, .home-stats > div:nth-child(1) svg { color: #15803d; }
+.home-stats > div:nth-child(2) strong, .home-stats > div:nth-child(2) svg { color: #c2410c; }
+.home-stats > div:nth-child(3) strong, .home-stats > div:nth-child(3) svg { color: #6d28d9; }
+.card-icon.purple { background: #f3e8ff; color: #7e22ce; }
+.card-icon.mint { background: #ccfbf1; color: #0f766e; }
+.card-icon.amber { background: #fef3c7; color: #92400e; }
+.admin-kpi-card:not(.danger):nth-child(1), .teacher-metric-card:nth-child(1) { border-top: 3px solid #60a5fa; }
+.admin-kpi-card:not(.danger):nth-child(2), .teacher-metric-card:nth-child(2) { border-top: 3px solid #34d399; }
+.admin-kpi-card:not(.danger):nth-child(3), .teacher-metric-card:nth-child(3) { border-top: 3px solid #fbbf24; }
+.admin-kpi-card:not(.danger):nth-child(4), .teacher-metric-card:nth-child(4) { border-top: 3px solid #a78bfa; }
+.streak-pill { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
+
+@media (max-width: 650px) {
+  .app-layout :is(button, .button), .home-primary, .dq-button { font-size: 0.875rem; }
+  .home-primary { padding: 11px 14px; }
+}

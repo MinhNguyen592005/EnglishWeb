@@ -57,6 +57,7 @@ export function TeacherMaterialsPage() {
       setLoading(false)
     }
   }
+  useRealtimeRefresh(reload)
   useEffect(() => {
     void reload()
   }, [])
@@ -191,7 +192,6 @@ export function TeacherMaterialsPage() {
       <div className="tm-page">
         <header className="tm-header">
           <div>
-            <span className="tm-eyebrow">KHO HỌC LIỆU CÁ NHÂN</span>
             <h1>Kho bộ câu hỏi</h1>
             <p>Quản lý câu hỏi tại đây. Vào lớp học để giao bài tập hoặc tạo kiểm tra.</p>
           </div>
@@ -498,3 +498,4 @@ function MaterialDialog({
     </dialog>
   )
 }
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

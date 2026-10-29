@@ -81,6 +81,12 @@ export function LegacyTeacherQuestionsPage() {
     setQuestions(await api.teacherQuestions())
   }
 
+  useRealtimeRefresh(async () => {
+    await reload()
+    setLessons(await api.lessons())
+    setClasses(await api.classes())
+  })
+
   useEffect(() => {
     reload().catch((e) => setError(e.message))
     api
@@ -405,7 +411,6 @@ export function LegacyTeacherQuestionsPage() {
       <div className="teacher-question-workspace">
         <div className="page-heading">
           <div>
-            <span className="section-label">GÓC GIÁO VIÊN</span>
             <h1>Kho học liệu của tôi</h1>
             <p>Chuẩn bị câu hỏi, chọn nội dung và giao bài tập hoặc bài kiểm tra cho lớp học.</p>
           </div>
@@ -1152,3 +1157,4 @@ export function LegacyTeacherQuestionsPage() {
     </Layout>
   )
 }
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

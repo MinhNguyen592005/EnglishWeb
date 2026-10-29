@@ -3,6 +3,7 @@ import {
   CircleHelp,
   Compass,
   Flame,
+  Gift,
   FileWarning,
   House,
   LogOut,
@@ -21,6 +22,7 @@ import { useAuth } from '../app/AuthContext'
 import { useDailyQuests } from '../app/DailyQuestsContext'
 import './DailyQuestsWidget.css'
 import { api } from '../services/api'
+import { QuestsDialog } from '../pages/QuestsPage'
 
 const FRAME_CLASSES: Record<string, string> = {
   FRAME_DEFAULT: 'frame-default',
@@ -53,19 +55,20 @@ const adminLinks = [
   { to: '/admin?tab=audit', label: 'Nhật ký quản trị', icon: ScrollText },
 ]
 export function Layout({ children, title }: { children: ReactNode; title: string }) {
+  const location = useLocation()
   const { user, setUser } = useAuth()
   const isAdmin = user?.role === 'ADMIN'
   const isTeacher = user?.role === 'TEACHER'
   const home = isAdmin ? '/admin' : isTeacher ? '/teacher' : '/dashboard'
   const links = isAdmin ? adminLinks : isTeacher ? teacherLinks : learnerLinks
   const [menu, setMenu] = useState(false)
+  const [questsOpen, setQuestsOpen] = useState(Boolean(location.state?.openQuests))
   const [logoutError, setLogoutError] = useState('')
   const { data: dailyQuests } = useDailyQuests()
   const streak = dailyQuests?.streak.currentStreak ?? null
   const frameClass =
     !isAdmin && !isTeacher && user?.equippedFrame ? FRAME_CLASSES[user.equippedFrame] || '' : ''
   const navigate = useNavigate()
-  const location = useLocation()
   function isLinkActive(to: string) {
     const target = new URL(to, window.location.origin)
     if (target.pathname === '/admin')
@@ -134,14 +137,13 @@ export function Layout({ children, title }: { children: ReactNode; title: string
             >
               {menu ? <X /> : <Menu />}
             </button>
-            <span className="eyebrow">
-              {isAdmin
-                ? 'QUẢN TRỊ ỨNG DỤNG'
-                : isTeacher
-                  ? 'KHÔNG GIAN GIẢNG DẠY'
-                  : 'TRẠM KHÔNG GIAN'}
-            </span>
             <strong>{title}</strong>
+            {!isAdmin && !isTeacher && (
+              <button type="button" className="topbar-quests" onClick={() => setQuestsOpen(true)} aria-haspopup="dialog">
+                <Gift size={17} />
+                <span>Nhiệm vụ</span>
+              </button>
+            )}
           </div>
           <div className="topbar-actions">
             {!isAdmin && !isTeacher && streak !== null && (
@@ -210,6 +212,7 @@ export function Layout({ children, title }: { children: ReactNode; title: string
           </nav>
         )}
       </div>
+      {questsOpen && <QuestsDialog onClose={() => setQuestsOpen(false)} />}
       <span className="sr-only">
         <CircleHelp />
       </span>

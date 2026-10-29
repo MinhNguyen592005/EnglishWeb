@@ -47,7 +47,7 @@ function questDestination(quest: DailyQuest, bossHref: string | null) {
 
 export function DailyQuestsWidget({ bossHref = null }: { bossHref?: string | null }) {
   const { user } = useAuth()
-  const { data, loading, refreshing, error, actionError, pending, refresh, claim } =
+  const { data, loading, refreshing, error, actionError, pending, refresh, claim, replace } =
     useDailyQuests()
   const [toast, setToast] = useState('')
   const mounted = useRef(true)
@@ -239,6 +239,23 @@ export function DailyQuestsWidget({ bossHref = null }: { bossHref?: string | nul
                       <span style={{ width: `${percent}%` }} />
                     </div>
                     <div className="dq-task-footer">
+                      {!quest.completed && !quest.claimed && (
+                        <button
+                          type="button"
+                          className="dq-button secondary dq-replace"
+                          disabled={pending !== null || refreshing}
+                          title="Đổi sang nhiệm vụ cùng độ khó; tiến độ bắt đầu lại từ 0"
+                          onClick={async () => {
+                            setToast('')
+                            if (await replace(quest.id)) {
+                              if (mounted.current) setToast('Đã đổi nhiệm vụ mới. Tiến độ bắt đầu từ 0.')
+                            }
+                          }}
+                        >
+                          <RefreshCw size={15} className={receiving ? 'dq-spin' : ''} />
+                          {receiving ? 'Đang đổi…' : 'Đổi nhiệm vụ'}
+                        </button>
+                      )}
                       {quest.claimed ? (
                         <span className="dq-claimed">
                           <CheckCircle2 size={15} /> Đã nhận
@@ -270,7 +287,21 @@ export function DailyQuestsWidget({ bossHref = null }: { bossHref?: string | nul
               })}
             </div>
 
-            {milestone && (
+
+          </>
+        )}
+        <div className="dq-toast" role="status" aria-live="polite" aria-atomic="true">
+          {toast && (
+            <>
+              <Sparkles size={17} />
+              <span>{toast}</span>
+            </>
+          )}
+        </div>
+      </section>
+
+      <aside className="dq-rewards-column" aria-label="Ph?n th??ng v? chu?i h?c t?p">
+            {!loading && quests.length > 0 && milestone && (
               <div
                 className={`dq-chest ${milestone.claimed ? 'is-claimed' : milestone.allCompleted ? 'is-ready' : ''}`}
               >
@@ -336,17 +367,6 @@ export function DailyQuestsWidget({ bossHref = null }: { bossHref?: string | nul
                 )}
               </div>
             )}
-          </>
-        )}
-        <div className="dq-toast" role="status" aria-live="polite" aria-atomic="true">
-          {toast && (
-            <>
-              <Sparkles size={17} />
-              <span>{toast}</span>
-            </>
-          )}
-        </div>
-      </section>
 
       {streak && (
         <section
@@ -391,6 +411,7 @@ export function DailyQuestsWidget({ bossHref = null }: { bossHref?: string | nul
           </p>
         </section>
       )}
+      </aside>
     </div>
   )
 }

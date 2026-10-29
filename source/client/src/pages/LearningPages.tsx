@@ -9,10 +9,11 @@ import { ErrorState, Loading } from '../components/States'
 import { difficultyName, topicName } from './RoadmapPage'
 import type { Lesson, Attempt } from '../types'
 
-function useLessons() {
+export function useLessons() {
   const { user } = useAuth()
   const { request, connected, subscribe } = useSystemSocket()
   const [revision, setRevision] = useState(0)
+  useRealtimeRefresh(() => setRevision((value) => value + 1), connected)
   useEffect(
     () =>
       subscribe((message) => {
@@ -53,6 +54,7 @@ export function LessonPage() {
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState('')
   const navigate = useNavigate()
+  useRealtimeRefresh(() => request<Lesson>('VIEW_LESSON_THEORY', 'LESSON_THEORY_DATA', { lessonId: Number(id) }).then(setLesson).catch((e) => setError(e.message)), connected)
   useEffect(() => {
     if (!connected) return
     let active = true
@@ -172,3 +174,4 @@ export function LessonPage() {
 }
 
 export { PracticePage as PracticeSelect } from './PracticePage'
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

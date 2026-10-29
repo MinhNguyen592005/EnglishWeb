@@ -10,13 +10,14 @@ import {
   Trophy,
 } from 'lucide-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useSearchParams } from 'react-router-dom'
 import { useSystemSocket } from '../../app/SystemSocketContext'
 import { Layout } from '../../components/Layout'
 import { ErrorState, Loading } from '../../components/States'
 import { StudyQuiz } from './StudyQuiz'
 import type { StudyAttempt, StudyCourse, StudyKind, StudyLessonDetail } from './types'
 import './study.css'
+import './roadmap-refresh.css'
 
 export function StudyRoadmap() {
   const { request, connected, subscribe } = useSystemSocket()
@@ -26,6 +27,7 @@ export function StudyRoadmap() {
   const [busy, setBusy] = useState(false)
   const [revision, setRevision] = useState(0)
   const reload = useCallback(() => setRevision((n) => n + 1), [])
+  useRealtimeRefresh(reload, connected)
   const startKeys = useRef(new Map<string, string>())
   useEffect(
     () =>
@@ -117,16 +119,10 @@ export function StudyRoadmap() {
   }
   return (
     <Layout title="Lộ trình">
-      <div className="study-course">
-        <div className="breadcrumb">
-          <Link to="/dashboard">Tổng quan</Link>
-          <ChevronRight size={16} />
-          Lộ trình
-        </div>
-        <div className="page-heading">
+      <div className="study-course roadmap-explorer">
+        <div className="page-heading roadmap-hero">
           <div>
-            <span className="section-label">HỆ MẶT TRỜI TRI THỨC</span>
-            <h1>Khám phá 5 hành tinh ngữ pháp</h1>
+            <h1>Từng bước nhỏ, vươn xa hơn.</h1>
             <p>
               Mỗi hành tinh là một level. Hoàn thành bài học, đạt 8/10 câu kiểm tra để mở hành tinh
               tiếp theo.
@@ -135,6 +131,11 @@ export function StudyRoadmap() {
           <div className="heading-icon">
             <Target size={35} />
           </div>
+        </div>
+        <div className="roadmap-overview" aria-label="Tổng quan hành trình">
+          <span><BookOpen size={17} /><strong>{total}</strong> bài học</span>
+          <span><Trophy size={17} /><strong>{levels.filter((level) => level.passed).length}/{levels.length}</strong> hành tinh đã vượt qua</span>
+          <span><Target size={17} /><strong>{total ? Math.round(done / total * 100) : 0}%</strong> hoàn thành</span>
         </div>
         <section className="card roadmap-summary">
           <div className="roadmap-summary-main">
@@ -180,6 +181,7 @@ export function StudyRoadmap() {
             <span className="section-label">BẢN ĐỒ KHÁM PHÁ</span>
             <h2>Chọn hành tinh của bạn</h2>
             <p>Từ nền tảng câu và từ đến các cấu trúc ngữ pháp chuyên sâu.</p>
+
           </div>
           <div className="planet-path">
             {levels.map((level, index) => (
@@ -263,12 +265,17 @@ export function StudyRoadmap() {
                 <button
                   key={m.id}
                   className={`study-module-tab ${module?.id === m.id ? 'active' : ''} ${m.unlocked ? '' : 'locked'}`}
+                  aria-pressed={module?.id === m.id}
                   disabled={!m.unlocked}
                   onClick={() => open({ planet: `level-${selected.id}`, module: m.id }, false)}
                 >
-                  <span>
-                    MODULE {m.ordinalNo} {!m.unlocked && <LockKeyhole size={14} />}
-                  </span>
+                  <div className="module-card-top">
+                    <span className="module-card-number">{String(m.ordinalNo).padStart(2, '0')}</span>
+                    <span className="module-card-status">
+                      {!m.unlocked ? <LockKeyhole size={15} /> : m.lessonCount > 0 && m.completedCount === m.lessonCount ? <Check size={15} /> : <BookOpen size={15} />}
+                    </span>
+                  </div>
+                  <span>MODULE {m.ordinalNo}</span>
                   <strong>{m.title}</strong>
                   <small>
                     {m.unlocked
@@ -276,7 +283,11 @@ export function StudyRoadmap() {
                       : m.lockReason}
                   </small>
                   <div className="progress-track">
-                    <div style={{ width: `${(m.completedCount / m.lessonCount) * 100}%` }} />
+                    <div style={{ width: `${m.lessonCount ? (m.completedCount / m.lessonCount) * 100 : 0}%` }} />
+                  </div>
+                  <div className="module-card-footer">
+                    <span>{module?.id === m.id ? 'Đang xem' : m.unlocked ? 'Xem bài học' : 'Chưa mở khóa'}</span>
+                    {m.unlocked && <ArrowRight size={16} />}
                   </div>
                 </button>
               ))}
@@ -473,7 +484,7 @@ function LessonScreen({
   }
   return (
     <Layout title="Bài học lộ trình">
-      <div className="study-course">
+      <div className="study-course lesson-reading">
         <button className="text-button study-back" onClick={() => onBack()}>
           <ArrowLeft size={16} />
           Quay lại module
@@ -510,7 +521,7 @@ function LessonScreen({
                     Đến luyện tập <ArrowRight size={14} />
                   </a>
                 </div>
-                <p>{lesson.content.objective}</p>
+                <p className="lesson-objective"><strong>Mục tiêu bài học</strong>{lesson.content.objective}</p>
                 {lesson.content.prerequisites.length > 0 && (
                   <div className="study-prerequisites">
                     <span>Cần biết:</span>
@@ -529,7 +540,10 @@ function LessonScreen({
               </header>
               <div className="study-theory-core">
                 {lesson.content.sections.map((section, i) => (
-                  <section key={i}>
+                  <section
+                    key={i}
+                    className={/công thức|cấu trúc|ghi nhớ|quy tắc|lưu ý/i.test(section.title) ? 'lesson-key-concept' : ''}
+                  >
                     <h2>{section.title}</h2>
                     <p className="study-multiline">{section.body}</p>
                   </section>
@@ -560,10 +574,10 @@ function LessonScreen({
                   {lesson.content.mistakes.map((mistake, i) => (
                     <div className="study-mistake" key={i}>
                       <p>
-                        <span>Sai:</span> {mistake.wrong}
+                        <span>Sai:</span> <span className="lesson-incorrect">{mistake.wrong}</span>
                       </p>
                       <p>
-                        <strong>Đúng:</strong> {mistake.right}
+                        <strong>Đúng:</strong> <strong className="lesson-correction">{mistake.right}</strong>
                       </p>
                       <p>{mistake.explanation}</p>
                     </div>
@@ -590,7 +604,7 @@ function LessonScreen({
                 <summary>
                   Tổng kết <ChevronRight size={16} />
                 </summary>
-                <p>{lesson.content.summary}</p>
+                <p className="lesson-takeaway">{lesson.content.summary}</p>
               </details>
             </article>
             <div id="lesson-practice" className="study-practice-anchor">
@@ -671,3 +685,4 @@ function AttemptScreen({ id, onBack }: { id: number; onBack: () => void }) {
     </Layout>
   )
 }
+import { useRealtimeRefresh } from '../../services/realtimeRefresh'

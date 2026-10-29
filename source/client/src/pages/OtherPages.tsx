@@ -37,6 +37,7 @@ function TeacherProfilePage() {
     null,
   )
   const [error, setError] = useState('')
+  useRealtimeRefresh(() => api.teacherOverview().then(setOverview).catch((e) => setError(e.message)))
   useEffect(() => {
     api
       .teacherOverview()
@@ -54,7 +55,6 @@ function TeacherProfilePage() {
               {initial}
             </div>
             <div>
-              <span className="section-label">HỒ SƠ GIÁO VIÊN</span>
               <h1>{user?.displayName}</h1>
               <p>
                 <strong>@{user?.username}</strong>
@@ -132,7 +132,6 @@ function TeacherProfilePage() {
             <section className="card teacher-profile-card">
               <div className="teacher-profile-card-heading">
                 <div>
-                  <span className="section-label">KHÔNG GIAN GIẢNG DẠY</span>
                   <h2>Công cụ nhanh</h2>
                   <p className="muted">Đi tới đúng khu vực để tiếp tục công việc.</p>
                 </div>
@@ -246,6 +245,7 @@ function LearnerProfilePage() {
   const streak = dailyQuests?.streak
   const { user } = useAuth()
   const [history, setHistory] = useState<Attempt[] | null>(null)
+  useRealtimeRefresh(() => api.history().then(setHistory).catch((e) => setError(e.message)))
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState('Tân binh không gian')
@@ -292,7 +292,6 @@ function LearnerProfilePage() {
             <Gem size={16} />
           </div>
           <div className="profile-hero-copy">
-            <span className="section-label">HỒ SƠ PHI HÀNH GIA</span>
             <h1>{user?.displayName}</h1>
             <p>
               @{user?.username} · <strong>{title}</strong>
@@ -561,3 +560,4 @@ export function Forbidden() {
     </Layout>
   )
 }
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

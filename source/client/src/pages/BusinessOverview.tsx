@@ -1,6 +1,7 @@
 import { useEffect, useState, type CSSProperties } from 'react'
 import { api } from '../services/api'
 import './BusinessOverview.css'
+import { useRealtimeRefresh } from '../services/realtimeRefresh'
 
 type Day = { date: string; registrations: number; classes: number; matches: number }
 const CHARTS = [
@@ -17,6 +18,7 @@ const shortDate = (value: string) => {
 export function BusinessOverview() {
   const [data, setData] = useState<{ days: Day[]; finishedMatches: number } | null>(null)
   const [error, setError] = useState('')
+  useRealtimeRefresh(() => api.adminBusiness().then((value) => { setData(value); setError('') }).catch((e) => setError(e.message)))
   useEffect(() => {
     api
       .adminBusiness()
@@ -37,8 +39,8 @@ export function BusinessOverview() {
       <div className="panel-heading">
         <div>
           <span className="section-label">HOẠT ĐỘNG ỨNG DỤNG</span>
-          <h2>Hoạt động ứng dụng · 14 ngày</h2>
-          <p className="muted">Ngày theo database; trận được nhóm theo ngày tạo phòng.</p>
+          <h2>Xu hướng trong 14 ngày</h2>
+          <p className="muted">Đăng ký mới, lớp học và hoạt động thi đấu.</p>
         </div>
         <span className="tag">Tổng trận hoàn tất: {data.finishedMatches}</span>
       </div>
@@ -79,6 +81,7 @@ export function BusinessOverview() {
       </div>
       <details className="biz-details">
         <summary>Bảng số liệu</summary>
+        <p className="muted">Ngày theo database; trận được nhóm theo ngày tạo phòng.</p>
         <div className="table-wrap">
           <table>
             <thead>

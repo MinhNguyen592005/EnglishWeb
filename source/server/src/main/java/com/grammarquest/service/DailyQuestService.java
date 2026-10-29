@@ -318,6 +318,40 @@ public class DailyQuestService {
         );
     }
 
+    @Transactional
+    public DailyQuestOverview replaceQuest(String username, Long userQuestId) {
+        User user = users.findByUsernameIgnoreCase(username).orElseThrow(() ->
+            new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "Không tìm thấy người dùng")
+        );
+        UserDailyQuest quest = userQuests.findWithLockById(userQuestId).orElseThrow(() ->
+            new ApiException(HttpStatus.NOT_FOUND, "QUEST_NOT_FOUND", "Không tìm thấy nhiệm vụ")
+        );
+        if (!quest.userId.equals(user.id)) throw new ApiException(
+            HttpStatus.FORBIDDEN, "FORBIDDEN", "Không có quyền đổi nhiệm vụ này"
+        );
+        LocalDate today = LocalDate.now();
+        if (!today.equals(quest.questDate) || quest.completed || quest.claimed) throw new ApiException(
+            HttpStatus.CONFLICT, "QUEST_NOT_REPLACEABLE", "Chỉ có thể đổi nhiệm vụ hôm nay chưa hoàn thành"
+        );
+        DailyQuest definition = dailyQuests.findById(quest.questId).orElseThrow(() ->
+            new ApiException(HttpStatus.NOT_FOUND, "QUEST_NOT_FOUND", "Không tìm thấy nhiệm vụ")
+        );
+        Set<Integer> assigned = new HashSet<>();
+        userQuests.findByUserIdAndQuestDate(user.id, today).forEach(q -> assigned.add(q.questId));
+        List<DailyQuest> candidates = new ArrayList<>(
+            dailyQuests.findByTierAndActiveTrue(definition.tier).stream()
+                .filter(q -> available(q) && !assigned.contains(q.id)).toList()
+        );
+        if (candidates.isEmpty()) throw new ApiException(
+            HttpStatus.CONFLICT, "NO_REPLACEMENT", "Chưa có nhiệm vụ khác cùng độ khó để đổi"
+        );
+        Collections.shuffle(candidates);
+        quest.questId = candidates.get(0).id;
+        quest.currentProgress = 0;
+        userQuests.saveAndFlush(quest);
+        return getOverview(username);
+    }
+
     private UserQuestStreak getOrInitStreak(Long userId, LocalDate today) {
         UserQuestStreak streak = streaks
             .findById(userId)

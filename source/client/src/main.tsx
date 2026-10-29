@@ -11,6 +11,7 @@ import { ErrorState, Loading } from './components/States'
 import { AuthPage } from './pages/AuthPage'
 import { AttemptPage, ResultRoute } from './pages/AttemptPage'
 import { Dashboard, LessonPage, PracticeSelect } from './pages/LearningPages'
+import { QuestsPage } from './pages/QuestsPage'
 import { Roadmap } from './pages/RoadmapPage'
 import { Forbidden, NotFound, ProfilePage } from './pages/OtherPages'
 import { ClassesPage, ClassDetailPage } from './pages/ClassroomPages'
@@ -22,6 +23,7 @@ import { TeacherCurriculumPage } from './pages/TeacherCurriculumPage'
 import { SupportChatWidget } from './components/SupportChat'
 import './styles.css'
 import './readability.css'
+import './ui-refresh.css'
 
 function Protected({
   children,
@@ -109,6 +111,14 @@ function AppRoutes() {
         element={
           <Protected learnerOnly>
             <Dashboard />
+          </Protected>
+        }
+      />
+      <Route
+        path="/quests"
+        element={
+          <Protected learnerOnly>
+            <QuestsPage />
           </Protected>
         }
       />

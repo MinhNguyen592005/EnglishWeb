@@ -336,6 +336,8 @@ export const api = {
       }[]
     >('/admin/audit'),
   dailyQuests: () => request<DailyQuestOverview>('/daily-quests'),
+  replaceDailyQuest: (id: number) =>
+    request<DailyQuestOverview>(`/daily-quests/${id}/replace`, { method: 'POST' }),
   claimDailyQuest: (id: number) =>
     request<QuestClaimResponse>(`/daily-quests/${id}/claim`, { method: 'POST' }),
   claimDailyMilestone: () =>

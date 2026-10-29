@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import {
   Bot,
-  CircleUserRound,
+  ArrowLeft,
+  Info,
   MessageCircle,
   RefreshCw,
   Search,
@@ -13,6 +14,7 @@ import {
 import { useAuth } from '../app/AuthContext'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import './SupportChat.css'
+import './SupportInbox.css'
 
 type Message = {
   id: number
@@ -285,6 +287,7 @@ export function SupportChatWidget() {
 }
 
 export function SupportInbox() {
+  const [showDetails, setShowDetails] = useState(false)
   const { request, subscribe, connected } = useSystemSocket()
   const [threads, setThreads] = useState<Thread[]>([]),
     [selected, setSelected] = useState<number | null>(null),
@@ -372,10 +375,7 @@ export function SupportInbox() {
     <section className="card feature-card support-inbox-panel">
       <div className="support-desk-heading">
         <div>
-          <span className="section-label">TRUNG TÂM HỖ TRỢ</span>
-          <h2>
-            <MessageCircle size={21} /> Hỗ trợ người dùng
-          </h2>
+          <h1>Hỗ trợ người dùng</h1>
           <p className="muted">Theo dõi và phản hồi các yêu cầu từ người dùng.</p>
         </div>
         <div className="support-inbox-header-actions">
@@ -396,7 +396,7 @@ export function SupportInbox() {
           {error}
         </p>
       )}
-      <div className="support-inbox">
+      <div className={`support-inbox ${selected ? 'has-selection' : ''} ${showDetails && selected ? 'show-details' : ''}`}>
         <nav className="support-thread-list" aria-label="Hội thoại hỗ trợ">
           <div className="support-thread-heading">
             <strong>Hội thoại</strong>
@@ -432,12 +432,14 @@ export function SupportInbox() {
               </button>
             ))}
           </div>
+          <div className="support-thread-items">
           {visibleThreads.map((thread) => (
             <button
               type="button"
               key={thread.id}
-              className={selected === thread.id ? 'selected' : ''}
-              onClick={() => setSelected(thread.id)}
+              className={`support-thread-item ${selected === thread.id ? 'selected' : ''}`}
+              aria-pressed={selected === thread.id}
+              onClick={() => { setSelected(thread.id); setShowDetails(false) }}
             >
               <span className="support-thread-avatar">
                 {thread.displayName.slice(0, 1).toUpperCase()}
@@ -456,7 +458,7 @@ export function SupportInbox() {
                       : thread.lastSenderType === 'ADMIN'
                         ? 'Đã trả lời'
                         : 'Chờ xử lý'}{' '}
-                  · Hoạt động {new Date(thread.updatedAt).toLocaleString('vi-VN')}
+                  · {new Date(thread.updatedAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} {new Date(thread.updatedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
                 </small>
               </span>
             </button>
@@ -465,8 +467,15 @@ export function SupportInbox() {
           {threads.length > 0 && !visibleThreads.length && (
             <p className="support-empty-list">Không tìm thấy hội thoại phù hợp.</p>
           )}
+          </div>
         </nav>
         <div className="support-inbox-chat">
+          {selectedThread && <header className="support-chat-toolbar">
+            <button type="button" className="support-inbox-back" aria-label="Quay lại danh sách hội thoại" onClick={() => { setSelected(null); setShowDetails(false) }}><ArrowLeft size={20} /></button>
+            <span className="support-thread-avatar">{selectedThread.displayName.slice(0, 1).toUpperCase()}</span>
+            <div><strong>{selectedThread.displayName}</strong><small>@{selectedThread.username} · Hội thoại #{selectedThread.id}</small></div>
+            <button type="button" className={`support-details-toggle ${showDetails ? 'active' : ''}`} aria-label="Thông tin hội thoại" aria-expanded={showDetails} aria-controls="support-conversation-details" onClick={() => setShowDetails((value) => !value)}><Info size={20} /></button>
+          </header>}
           {selected ? (
             <ConversationPanel key={selected} threadId={selected} />
           ) : (
@@ -477,7 +486,8 @@ export function SupportInbox() {
             </p>
           )}
         </div>
-        <aside className="support-user-panel">
+        <aside className="support-user-panel" id="support-conversation-details" aria-label="Thông tin hội thoại" hidden={!showDetails || !selected}>
+          <div className="support-details-heading"><strong>Thông tin hội thoại</strong><button type="button" aria-label="Đóng thông tin hội thoại" onClick={() => setShowDetails(false)}><X size={18} /></button></div>
           {selectedThread ? (
             <>
               <div className="support-user-profile">
@@ -486,9 +496,6 @@ export function SupportInbox() {
                 </span>
                 <strong>{selectedThread.displayName}</strong>
                 <small>{selectedThread.username}</small>
-                <span className="support-user-online">
-                  <i /> Hoạt động gần đây
-                </span>
               </div>
               <div className="support-user-section">
                 <small>THÔNG TIN HỘI THOẠI</small>
@@ -501,6 +508,8 @@ export function SupportInbox() {
                   <dd>
                     <select
                       className="support-status-select"
+                      aria-label="Trạng thái hội thoại"
+                      disabled={!connected}
                       value={selectedThread.status}
                       onChange={(event) =>
                         void updateStatus(selectedThread.id, event.target.value as Thread['status'])
@@ -513,13 +522,6 @@ export function SupportInbox() {
                   </dd>
                 </dl>
               </div>
-              <button
-                className="button secondary support-profile-button"
-                disabled
-                title="Backend chưa có API hồ sơ người dùng"
-              >
-                <CircleUserRound size={16} /> Hồ sơ chưa khả dụng
-              </button>
             </>
           ) : (
             <div className="support-user-empty">

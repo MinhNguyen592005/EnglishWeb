@@ -77,7 +77,6 @@ export function TeacherDashboardPage() {
       <div className="teacher-dashboard">
         <div className="page-heading teacher-dashboard-heading">
           <div>
-            <span className="section-label">GÓC GIÁO VIÊN</span>
             <h1>Chào {user?.displayName}!</h1>
             <p>Quản lý lớp học, giao bài và theo dõi kết quả của học viên.</p>
           </div>

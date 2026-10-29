@@ -19,6 +19,7 @@ import { StudyQuiz } from './roadmap/StudyQuiz'
 import type { StudyAttempt, StudyCourse, StudyKind } from './roadmap/types'
 import './roadmap/study.css'
 import './practice-page.css'
+import './practice-refresh.css'
 
 export function PracticePage() {
   const { request, subscribe, connected } = useSystemSocket()
@@ -35,6 +36,7 @@ export function PracticePage() {
   const keys = useRef(new Map<string, string>())
   const attemptId = Number(params.get('attempt')) || 0
   const reload = useCallback(() => setRevision((value) => value + 1), [])
+  useRealtimeRefresh(reload, connected)
 
   useEffect(
     () =>
@@ -161,8 +163,7 @@ export function PracticePage() {
           <>
             <header className="practice-heading">
               <div>
-                <span className="practice-eyebrow">KHÔNG GIAN ÔN TẬP</span>
-                <h1>Luyện theo lộ trình của bạn</h1>
+                <h1>Luyện một chút, vững hơn mỗi ngày.</h1>
                 <p>Chọn nội dung đã mở, luyện câu hỏi ngẫu nhiên và xem lại lời giải.</p>
               </div>
               <Link to="/roadmap">
@@ -199,6 +200,7 @@ export function PracticePage() {
                         setActionError('')
                       }}
                     >
+                      <span className="practice-level-number">{String(item.id).padStart(2, '0')}</span>
                       <span>Level {item.id}</span>
                       {!item.unlocked ? (
                         <LockKeyhole size={13} />
@@ -287,6 +289,16 @@ export function PracticePage() {
                                 ? `${module.lessonCount} bài học · ${module.completedCount} bài đã hoàn thành`
                                 : module.lockReason || 'Tiếp tục lộ trình để mở module này.'}
                             </p>
+                            <div
+                              className="practice-module-progress"
+                              role="progressbar"
+                              aria-label={`Tiến độ học ${module.title}`}
+                              aria-valuemin={0}
+                              aria-valuemax={module.lessonCount || 1}
+                              aria-valuenow={module.completedCount}
+                            >
+                              <span style={{ width: `${module.lessonCount ? Math.min(100, module.completedCount / module.lessonCount * 100) : 0}%` }} />
+                            </div>
                           </div>
                           <button
                             type="button"
@@ -330,3 +342,4 @@ export function PracticePage() {
     </Layout>
   )
 }
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

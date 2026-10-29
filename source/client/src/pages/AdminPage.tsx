@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo } from 'react'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import {
   AlertTriangle,
   ArrowRight,
@@ -24,6 +24,8 @@ import { BusinessOverview } from './BusinessOverview'
 import { ServerDashboardPage } from './ServerDashboardPage'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import './admin.css'
+import './admin-overview.css'
+import './admin-management.css'
 type Audit = {
   id: number
   actor: string
@@ -43,7 +45,7 @@ const reportLabels: { key: ReportFilter; label: string; icon: typeof ShieldAlert
   { key: 'resolved', label: 'Đã xử lý', icon: FileCheck2 },
 ]
 function reportSource(source: AdminReport['source']) {
-  return source === 'CLASS' ? 'Chat lớp' : 'Người dùng'
+  return source === 'CLASS' ? 'Chat lớp' : source === 'ARENA' ? 'Đấu trường' : 'Người dùng'
 }
 function reportReason(reason: string) {
   const labels: Record<string, string> = {
@@ -114,10 +116,9 @@ function UsersPanel({
     <section className="card feature-card users-board">
       <div className="users-board-head">
         <div>
-          <span className="section-label">QUẢN LÝ TÀI KHOẢN</span>
-          <h2>Tài khoản hệ thống</h2>
+          <h1>Quản lý tài khoản</h1>
           <p className="muted">
-            Vai trò chỉ được hiển thị. Trạng thái online dựa trên phiên kết nối thực tế.
+            Theo dõi người dùng, vai trò và trạng thái truy cập.
           </p>
         </div>
         <span className="users-total">{visible.length} tài khoản</span>
@@ -144,6 +145,10 @@ function UsersPanel({
             <b>{counts[key]}</b>
           </button>
         ))}
+      </div>
+      <div className="account-list-toolbar">
+        <label className="account-search"><Search size={18} /><input type="search" aria-label="Tìm tài khoản" placeholder="Tìm tên hoặc tài khoản…" value={filter} onChange={(event) => setFilter(event.target.value)} />{filter && <button type="button" aria-label="Xóa tìm kiếm tài khoản" onClick={() => setFilter('')}><X size={16} /></button>}</label>
+        <span>{visible.length} kết quả</span>
       </div>
       <div className="table-wrap">
         <table className="users-table">
@@ -201,12 +206,6 @@ function UsersPanel({
                       {user.locked ? <Unlock size={15} /> : <Lock size={15} />}{' '}
                       {user.locked ? 'Mở khóa' : 'Khóa'}
                     </button>
-                    <span
-                      className="reset-password-disabled"
-                      title="Backend chưa hỗ trợ reset mật khẩu"
-                    >
-                      Reset MK
-                    </span>
                   </div>
                 </td>
               </tr>
@@ -354,10 +353,8 @@ function ReportsPanel({
   setSearch,
   sort,
   setSort,
-  busy,
   connected,
   onView,
-  onDecide,
 }: {
   reports: AdminReport[]
   visibleReports: AdminReport[]
@@ -373,8 +370,13 @@ function ReportsPanel({
   onView: (report: AdminReport) => void
   onDecide: (report: AdminReport, action: string) => void
 }) {
+  const [page, setPage] = useState(1)
+  useEffect(() => setPage(1), [filter, search, sort])
+  const currentPage = Math.min(page, Math.max(1, Math.ceil(visibleReports.length / PAGE_SIZE)))
+  const rows = visibleReports.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   return (
     <section className="admin-reports">
+      <header className="management-page-heading"><div><h1>Báo cáo vi phạm</h1><p>Xem xét báo cáo và giữ môi trường học tập an toàn.</p></div><span className={`report-live ${connected ? 'online' : ''}`}><i />{connected ? 'Đang cập nhật trực tiếp' : 'Đang kết nối lại'}</span></header>
       <div className="report-kpi-grid">
         <article>
           <ShieldAlert />
@@ -395,20 +397,14 @@ function ReportsPanel({
       <section className="card feature-card report-board">
         <div className="report-board-head">
           <div>
-            <span className="section-label">BÁO CÁO & AN TOÀN CỘNG ĐỒNG</span>
-            <h2>Xử lý vi phạm</h2>
-            <p className="muted">
-              Tiếp nhận, phân loại và xử lý báo cáo được đồng bộ qua WebSocket.
-            </p>
+            <h2>Danh sách báo cáo</h2>
+            <p className="muted">Chọn báo cáo để xem nội dung và đưa ra quyết định.</p>
           </div>
-          <span className={`report-live ${connected ? 'online' : ''}`}>
-            <i />
-            {connected ? 'Realtime ổn định' : 'Đang kết nối lại'}
-          </span>
+          <span className="users-total">{visibleReports.length} kết quả</span>
         </div>
         <div className="report-toolbar">
           <div className="report-search">
-            <Eye size={16} />
+            <Search size={18} />
             <input
               aria-label="Tìm báo cáo"
               value={search}
@@ -458,7 +454,7 @@ function ReportsPanel({
           </div>
         ) : (
           <div className="report-list">
-            {visibleReports.map((report) => (
+            {rows.map((report) => (
               <article
                 className={`report-card ${report.status !== 'OPEN' ? 'resolved' : ''}`}
                 key={`${report.source}-${report.id}`}
@@ -472,7 +468,7 @@ function ReportsPanel({
                       #{report.id} · {report.accusedName}
                     </strong>
                     <span
-                      className={`report-badge ${report.status === 'OPEN' ? 'open' : 'resolved'}`}
+                      className={`report-badge ${report.status === 'OPEN' ? 'open' : report.status === 'IN_PROGRESS' ? 'review' : 'resolved'}`}
                     >
                       {reportStatus(report.status)}
                     </span>
@@ -492,33 +488,14 @@ function ReportsPanel({
                 </div>
                 <div className="report-card-actions">
                   <button type="button" className="button secondary" onClick={() => onView(report)}>
-                    <Eye size={15} /> Chi tiết
+                    <Eye size={15} /> {report.status === 'OPEN' ? 'Xem xét' : 'Chi tiết'}
                   </button>
-                  {report.status === 'OPEN' && (
-                    <div className="report-action-row">
-                      {[
-                        ['DISMISS', 'Bỏ qua'],
-                        ['WARN', 'Cảnh báo'],
-                        ['MUTE_24H', 'Cấm chat 24h'],
-                        ['LOCK', 'Khóa tài khoản'],
-                      ].map(([key, label]) => (
-                        <button
-                          type="button"
-                          className="button secondary"
-                          key={key}
-                          disabled={busy || !connected}
-                          onClick={() => onDecide(report, key)}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  )}
                 </div>
               </article>
             ))}
           </div>
         )}
+        <Pagination total={visibleReports.length} page={currentPage} onPageChange={setPage} />
       </section>
     </section>
   )
@@ -641,6 +618,7 @@ export function AdminPage() {
     if (tab === 'users') setUsers(await api.adminUsers())
     else if (tab === 'audit') setAudit(await api.adminAudit())
   }
+  useRealtimeRefresh(reload)
   useEffect(() => {
     reload().catch((e) => setError(e.message))
   }, [tab])
@@ -805,12 +783,7 @@ export function AdminPage() {
               : 'Tổng quan quản trị'
   return (
     <Layout title={tabTitle}>
-      <div className="admin-page">
-        <div className="admin-breadcrumb">
-          <span>Hệ thống</span>
-          <ArrowRight size={14} />
-          <strong>{tabTitle}</strong>
-        </div>
+      <div className={`admin-page${tab === 'users' || tab === 'reports' ? ' admin-management' : ''}`}>
         {error && (
           <p className="error-banner" role="alert">
             {error}
@@ -822,7 +795,14 @@ export function AdminPage() {
           </p>
         )}
         {tab === 'overview' && (
-          <>
+          <div className="admin-overview-layout">
+            <header className="admin-overview-heading">
+              <div>
+                <h1>Tổng quan hệ thống</h1>
+                <p>Theo dõi người dùng, hoạt động ứng dụng và tình trạng máy chủ.</p>
+              </div>
+              <span className={`admin-overview-status ${connected ? 'online' : ''}`} role="status"><i />{connected ? 'Đang cập nhật trực tiếp' : 'Đang kết nối lại'}</span>
+            </header>
             <div className="admin-kpi-grid">
               {dashboardCards.map(({ label, value, detail, icon: Icon, tone }) => (
                 <article className={`admin-kpi-card ${tone}`} key={label}>
@@ -834,21 +814,13 @@ export function AdminPage() {
                   </div>
                   <strong>{value}</strong>
                   <small>{detail}</small>
+                  <Link to={tone === 'danger' ? '/admin?tab=reports' : '/admin?tab=users'}>{tone === 'danger' ? 'Xem báo cáo' : 'Quản lý tài khoản'}<ArrowRight size={14} /></Link>
                 </article>
               ))}
             </div>
-            <ServerDashboardPage />
             <BusinessOverview />
-          </>
-        )}
-        {tab === 'users' && (
-          <input
-            className="search-input"
-            aria-label="Tìm kiếm"
-            placeholder="Tìm theo tên hoặc tài khoản…"
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          />
+            <ServerDashboardPage />
+          </div>
         )}
         {tab === 'users' && (
           <UsersPanel
@@ -892,3 +864,4 @@ export function AdminPage() {
     </Layout>
   )
 }
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

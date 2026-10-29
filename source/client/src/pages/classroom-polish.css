@@ -1,0 +1,71 @@
+﻿.class-page { padding: 8px 0 40px; }
+.class-page .page-heading { padding: 30px; border: 1px solid #ddd6fe; border-radius: 24px; background: radial-gradient(ellipse at 100% 0%,#ddd6fe,transparent 65%),linear-gradient(120deg,#f5f3ff,#eff6ff); }
+.class-page .page-heading h1 { font-size: clamp(27px,3vw,36px); line-height: 1.35; margin: 0 0 10px; letter-spacing: -1px; }
+.class-page .page-heading p { font-size: 15px; line-height: 1.8; }
+.class-page .class-create-banner,.class-page .class-join-banner { border-color: #a7f3d0; background: linear-gradient(110deg,#ecfdf5,#f0fdfa); padding: 26px; border-radius: 20px; }
+.class-page .class-join-icon { background: #d1fae5; color: #047857; border-radius: 14px; width: 52px; height: 52px; flex-shrink: 0; }
+.class-page .class-join-form .button.primary,.class-page .class-create-form .button.primary { background: #d1fae5; border-color: #6ee7b7; color: #065f46; border-radius: 12px; }
+.class-page .class-list-heading { padding-top: 8px; margin-bottom: 22px; }
+.class-page .class-card-grid { gap: 20px; }
+.class-page .class-card { --class-accent: #6d28d9; --class-soft: #f5f3ff; --class-line: #ddd6fe; padding: 26px; border: 1px solid var(--class-line); border-top: 5px solid var(--class-line); border-radius: 20px; background: linear-gradient(145deg,var(--class-soft),#fff 65%); box-shadow: 0 5px 18px #33415505; min-width: 0; }
+.class-page .class-card:nth-child(3n+2) { --class-accent: #0369a1; --class-soft: #f0f9ff; --class-line: #bae6fd; }
+.class-page .class-card:nth-child(3n) { --class-accent: #b45309; --class-soft: #fffbeb; --class-line: #fde68a; }
+.class-page .class-card:hover { border-color: var(--class-accent); box-shadow: 0 8px 24px #3341550a; }
+.class-page .class-card h3 { font-size: 22px; line-height: 1.5; margin-top: 22px; color: #24324b; }
+.class-page .class-sector,.class-page .class-view-link { color: var(--class-accent); }
+.class-page .class-status { padding: 5px 9px; border-radius: 20px; background: #ecfdf5; font-size: 11px; }
+.class-page .class-teacher { font-size: 14px; line-height: 1.7; }
+.class-page .class-card-metrics span { background: #fff; border: 1px solid #e2e8f0; padding: 7px 10px; border-radius: 9px; font-size: 12px; }
+.class-page .class-card-footer { flex-wrap: wrap; line-height: 1.7; gap: 10px; }
+.class-workspace .class-hero { border: 1px solid #ddd6fe; border-radius: 22px; background: linear-gradient(115deg,#f5f3ff,#eff6ff); padding: 28px; overflow: hidden; }
+.class-workspace .class-detail-header { gap: 24px; }
+.class-workspace .class-title-row h1 { line-height: 1.4; overflow-wrap: anywhere; }
+.class-workspace .class-meta-ribbon { gap: 12px; line-height: 1.8; font-size: 14px; }
+.class-workspace .class-code-chip { padding: 5px 10px; border-radius: 8px; background: #fff; border: 1px solid #ddd6fe; color: #6d28d9; }
+.class-workspace .class-tabs { display: flex; gap: 7px; padding: 8px; margin: 24px 0 0; border: 1px solid #e2e8f0; background: #ffffffc9; border-radius: 14px; overflow-x: auto; }
+.class-workspace .class-tabs button { padding: 11px 15px; border: 1px solid transparent; border-radius: 10px; color: #64748b; white-space: nowrap; font-size: 13px; }
+.class-workspace .class-tabs button.active { background: #ede9fe; border-color: #c4b5fd; color: #6d28d9; }
+.class-workspace .class-tabs button:hover:not(.active) { background: #f1f5f9; }
+.class-workspace .class-panel { border-radius: 20px; border-color: #e2e8f0; }
+.class-workspace .class-panel-head { gap: 20px; flex-wrap: wrap; }
+.class-workspace .class-overview-metric { border-radius: 18px; padding: 22px; }
+.class-workspace .class-assignment-card { border-radius: 16px; padding: 22px; }
+.class-workspace .class-assignment-desc { font-size: 15px; line-height: 1.8; }
+.class-workspace .class-chat { padding: 0; overflow: hidden; }
+.class-workspace .class-chat > .class-panel-head { padding: 24px; margin: 0; border-bottom: 1px solid #e2e8f0; background: linear-gradient(110deg,#f5f3ff,#fff); align-items: center; }
+.class-workspace .class-chat h2 { display: flex; align-items: center; gap: 10px; font-size: 22px; margin: 0 0 8px; }
+.class-workspace .class-chat h2 svg { color: #7c3aed; }
+.class-workspace .class-chat .class-panel-head .muted { font-size: 14px; line-height: 1.7; margin: 0; }
+.class-chat-counter { display: inline-flex; align-items: center; gap: 7px; padding: 8px 12px; background: #ede9fe; color: #6d28d9; border-radius: 20px; font-size: 12px; font-weight: 650; }
+.class-workspace .class-chat .chat-list { min-height: 340px; max-height: min(560px,60dvh); padding: 28px; gap: 22px; margin: 0; border-radius: 0; background: radial-gradient(#cbd5e166 1px,transparent 1px) 0 0 / 20px 20px,#f8fafc; overscroll-behavior: contain; }
+.class-workspace .class-chat .chat-message { gap: 12px; align-items: flex-end; width: 100%; }
+.class-workspace .class-chat .chat-message > .avatar { width: 36px; height: 36px; flex: 0 0 36px; border-radius: 12px; background: #e0e7ff; color: #4338ca; border: 1px solid #c7d2fe; font-size: 14px; }
+.class-workspace .class-chat .chat-bubble { max-width: min(80%,680px); min-width: 0; padding: 16px 20px; border: 1px solid #e2e8f0; border-radius: 18px 18px 18px 5px; background: #fff; box-shadow: 0 3px 8px #33415504; }
+.class-workspace .class-chat .chat-message.mine .chat-bubble { border-color: #c4b5fd; background: #ede9fe; border-radius: 18px 18px 5px 18px; }
+.class-workspace .class-chat .chat-message.mine > .avatar { background: #ddd6fe; border-color: #c4b5fd; color: #6d28d9; }
+.class-workspace .class-chat .chat-bubble > div { display: flex; gap: 8px 18px; align-items: center; flex-wrap: wrap; }
+.class-workspace .class-chat .chat-bubble strong { margin: 0; font-size: 13px; color: #4338ca; overflow-wrap: anywhere; }
+.class-workspace .class-chat .chat-bubble time { font-size: 11px; color: #64748b; }
+.class-workspace .class-chat .chat-bubble p { font-size: 15px; line-height: 1.85; margin: 8px 0 0; color: #26344d; white-space: pre-wrap; overflow-wrap: anywhere; }
+.class-workspace .class-chat .chat-bubble .text-button { margin-top: 10px; font-size: 11px; color: #64748b; padding: 2px 0; }
+.class-workspace .class-chat .chat-bubble .text-button:hover { color: #be123c; }
+.class-workspace .class-chat .inline-form { display: flex; align-items: center; gap: 12px; margin: 0; padding: 20px 24px; border-top: 1px solid #e2e8f0; background: #fff; }
+.class-workspace .class-chat .inline-form input { flex: 1; min-width: 0; height: 50px; border-radius: 13px; border: 1px solid #d8deeb; background: #f8fafc; padding: 0 16px; font-size: 15px; }
+.class-workspace .class-chat .inline-form .button { height: 50px; border-radius: 13px; padding: 12px 20px; background: #ede9fe; border: 1px solid #c4b5fd; color: #6d28d9; font-size: 14px; }
+.class-workspace .class-chat .inline-form .button:hover:not(:disabled) { background: #ddd6fe; }
+.class-workspace .class-chat .inline-form .button:disabled { background: #f1f5f9; color: #94a3b8; border-color: #e2e8f0; }
+.class-chat-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; flex: 1; gap: 16px; text-align: center; padding: 32px; color: #64748b; }
+.class-chat-empty > svg { color: #8b5cf6; background: #ede9fe; box-sizing: content-box; padding: 20px; border-radius: 24px; }
+.class-chat-empty strong { font-size: 18px; color: #475569; }
+.class-chat-empty p { margin: 0; font-size: 14px; line-height: 1.8; }
+@media(max-width:700px) {
+ .class-page .page-heading,.class-workspace .class-hero { padding: 22px; }
+ .class-page .class-join-banner,.class-page .class-create-banner { padding: 22px; flex-direction: column; align-items: stretch; }
+ .class-page .class-join-form,.class-page .class-create-form { width: 100%; }
+ .class-page .class-card { padding: 22px; }
+ .class-workspace .class-chat .chat-list { padding: 18px 12px; min-height: 300px; }
+ .class-workspace .class-chat .chat-bubble { max-width: calc(100% - 48px); padding: 14px 16px; }
+ .class-workspace .class-chat > .class-panel-head { padding: 20px; }
+ .class-workspace .class-chat .inline-form { padding: 16px 12px; gap: 8px; }
+ .class-workspace .class-chat .inline-form .button { padding: 10px 14px; }
+}

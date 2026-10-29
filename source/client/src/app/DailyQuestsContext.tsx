@@ -11,6 +11,7 @@ import { useLocation } from 'react-router-dom'
 import { useAuth } from './AuthContext'
 import { api } from '../services/api'
 import type { DailyQuestOverview } from '../types'
+import { useRealtimeRefresh } from '../services/realtimeRefresh'
 
 type QuestState = {
   data: DailyQuestOverview | null
@@ -21,6 +22,7 @@ type QuestState = {
   pending: number | 'milestone' | null
   refresh: () => Promise<void>
   claim: (id: number | 'milestone') => Promise<boolean>
+  replace: (id: number) => Promise<boolean>
 }
 const DailyQuestsContext = createContext<QuestState | null>(null)
 
@@ -60,6 +62,8 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
         setRefreshing(false)
     }
   }, [userId])
+
+  useRealtimeRefresh(refresh, userId !== null)
 
   useEffect(() => {
     setSnapshot(null)
@@ -158,6 +162,35 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
     return success
   }
 
+  async function replace(id: number) {
+    if (userId === null || operation.current || !data ||
+        !data.quests.some((quest) => quest.id === id && !quest.completed && !quest.claimed)) return false
+    operation.current = true
+    const requestRevision = ++revision.current
+    setPending(id)
+    setActionError('')
+    setRefreshing(false)
+    try {
+      const overview = await api.replaceDailyQuest(id)
+      if (currentUser.current !== userId || revision.current !== requestRevision) return false
+      setSnapshot({ userId, data: overview })
+      try {
+        localStorage.setItem(`grammarquest:quests:${userId}`, crypto.randomUUID())
+      } catch { /* Storage may be unavailable. */ }
+      return true
+    } catch (e) {
+      if (currentUser.current === userId && revision.current === requestRevision)
+        setActionError((e as Error).message || 'Không thể đổi nhiệm vụ. Vui lòng thử lại.')
+      return false
+    } finally {
+      if (currentUser.current === userId && revision.current === requestRevision) {
+        operation.current = false
+        setPending(null)
+        await refresh()
+      }
+    }
+  }
+
   return (
     <DailyQuestsContext.Provider
       value={{
@@ -169,6 +202,7 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
         pending,
         refresh,
         claim,
+        replace,
       }}
     >
       {children}

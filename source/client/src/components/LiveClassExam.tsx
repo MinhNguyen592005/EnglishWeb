@@ -197,6 +197,7 @@ export function LiveClassExam({
       }),
     [classId, request],
   )
+  useRealtimeRefresh(load, connected)
 
   useEffect(() => {
     mounted.current = true
@@ -1163,3 +1164,4 @@ export function LiveClassExam({
     </section>
   )
 }
+import { useRealtimeRefresh } from '../services/realtimeRefresh'

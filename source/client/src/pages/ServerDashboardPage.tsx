@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Activity, CheckCircle2, Database, MemoryStick, Pause, Play, Swords } from 'lucide-react'
+import { Activity, CheckCircle2, Database, MemoryStick, Pause, Play, Swords, X } from 'lucide-react'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import './ServerDashboardPage.css'
 
@@ -111,7 +111,7 @@ export function ServerDashboardPage() {
   const consoleRef = useRef<HTMLDivElement>(null)
   const detailRef = useRef<HTMLElement>(null)
   useEffect(() => {
-    if (selectedId) detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (selectedId && window.matchMedia('(max-width: 900px)').matches) detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [selectedId])
   const selected = stats?.clients.find((c) => c.sessionId === selectedId)
   async function manage(client: Client, disconnect: boolean) {
@@ -258,112 +258,51 @@ export function ServerDashboardPage() {
           <div className="panel-heading">
             <div>
               <h2>Quản lý Client</h2>
-              <p className="muted">
-                Mỗi dòng là một tab đang kết nối. Tài nguyên được thu hồi khi hoàn thành hoặc ngắt
-                kết nối.
-              </p>
+              <p className="muted">Chọn một kết nối để xem chi tiết.</p>
             </div>
             <span className="tag">{stats?.clients.length ?? 0} kết nối</span>
           </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Tài khoản</th>
-                  <th>Hoạt động hiện tại</th>
-                  <th>Gói học tập đang giữ</th>
-                  <th>Trạng thái nhịp tim (Ping / AFK)</th>
-                </tr>
-              </thead>
-              <tbody>
-                {stats?.clients.map((c) => (
-                  <tr key={c.sessionId} className={c.idleSeconds >= 60 ? 'monitor-afk' : ''}>
-                    <td>
-                      <button
-                        className="button secondary"
-                        onClick={() => setSelectedId(c.sessionId)}
-                      >
-                        {c.username}
-                      </button>
-                      <small>
-                        ID: {c.userId} · Tab: {c.sessionId.slice(0, 8)}
-                      </small>
-                    </td>
-                    <td>
-                      <strong>{activity(c.currentActivity)}</strong>
-                      <small>{[c.topic, c.lesson].filter(Boolean).join(' · ') || c.page}</small>
-                    </td>
-                    <td>
-                      {c.activeArenaId ? (
-                        <>
-                          <span className="monitor-resource">
-                            Gói PvP #{c.activeArenaId} ({c.allocatedArenaQuestions} câu)
-                          </span>
-                          <small>RAM · dùng chung theo phòng</small>
-                        </>
-                      ) : c.activeExamId ? (
-                        <>
-                          <span className="monitor-resource">
-                            Kiểm tra #{c.activeExamId} ({c.allocatedExamQuestions} câu)
-                          </span>
-                          <small>Snapshot kiểm tra · RAM</small>
-                        </>
-                      ) : c.activeAttemptId ? (
-                        <>
-                          <span className="monitor-resource">
-                            {c.lesson || `Gói lượt #${c.activeAttemptId}`} ({c.allocatedQuestions}{' '}
-                            câu)
-                          </span>
-                          <small>Snapshot #{c.activeAttemptId} · RAM</small>
-                        </>
-                      ) : (
-                        <>
-                          <span className="muted">{emptyLearningPacket(c)}</span>
-                          <small>Socket và trạng thái client vẫn sử dụng RAM</small>
-                        </>
-                      )}
-                    </td>
-                    <td>
-                      <span className={`presence-pill ${c.idleSeconds >= 60 ? 'idle' : 'active'}`}>
-                        {c.idleSeconds >= 60
-                          ? `🟡 Không thao tác ${duration(c.idleSeconds)}`
-                          : '🟢 Hoạt động'}
-                      </span>
-                      <small>Pong: {new Date(c.lastPongAt).toLocaleTimeString('vi-VN')}</small>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="monitor-client-list" role="group" aria-label="Client">
+            {stats?.clients.map((c) => (
+              <button type="button" key={c.sessionId}
+                className={`monitor-client-row ${selectedId === c.sessionId ? 'selected' : ''}`}
+                aria-pressed={selectedId === c.sessionId}
+                aria-controls="monitor-selected-client"
+                onClick={() => setSelectedId(c.sessionId)}>
+                <span className="monitor-client-avatar" aria-hidden="true">{c.username.slice(0, 1).toUpperCase()}</span>
+                <span className="monitor-client-copy">
+                  <strong>{c.username} <span className="monitor-client-id">#{c.userId}</span></strong>
+                  <small>{activity(c.currentActivity)}</small>
+                  <span className="monitor-client-location">{[c.topic, c.lesson].filter(Boolean).join(' · ') || c.page}</span>
+                  <span className="monitor-client-tags">
+                    <span>Tab {c.sessionId.slice(0, 8)}</span>
+                    <span className={c.activeArenaId || c.activeExamId || c.activeAttemptId ? 'has-resource' : ''}>{c.activeArenaId ? `PvP #${c.activeArenaId}` : c.activeExamId ? `Kiểm tra #${c.activeExamId}` : c.activeAttemptId ? `Lượt làm #${c.activeAttemptId}` : 'Không giữ gói đề'}</span>
+                    <span title="Nhịp tim cuối">Pong {new Date(c.lastPongAt).toLocaleTimeString('vi-VN')}</span>
+                  </span>
+                </span>
+                <span className={`monitor-client-presence ${c.idleSeconds >= 60 ? 'idle' : ''}`}><i />{c.idleSeconds >= 60 ? 'Vắng mặt' : 'Online'}</span>
+                <span className="monitor-client-chevron" aria-hidden="true">›</span>
+              </button>
+            ))}
           </div>
           {!stats && <p className="monitor-empty">Đang chờ dữ liệu máy chủ…</p>}
           {stats?.clients.length === 0 && <p className="monitor-empty">Chưa có client kết nối.</p>}
         </section>
 
-        <section className="card feature-card monitor-detail" ref={detailRef}>
-          <div className="panel-heading">
-            <div>
-              <h2>Chi tiết và điều khiển Client</h2>
-              <p className="muted">
-                Chọn socket để xem thời gian cấp phát, lưu lượng và gửi lệnh quản lý.
-              </p>
-            </div>
-            <select
-              aria-label="Chọn client"
-              value={selectedId || ''}
-              onChange={(e) => setSelectedId(e.target.value || null)}
-            >
-              <option value="">Chọn một kết nối…</option>
-              {stats?.clients.map((c) => (
-                <option key={c.sessionId} value={c.sessionId}>
-                  {c.username} · {c.sessionId.slice(0, 8)}
-                </option>
-              ))}
-            </select>
+        <section className="card feature-card monitor-detail" id="monitor-selected-client" ref={detailRef} aria-label="Chi tiết client">
+          <div className="panel-heading"><div>
+            <h2>{selected ? selected.username : 'Chi tiết client'}</h2>
+            {selected && <p className="muted">{activity(selected.currentActivity)}</p>}
           </div>
+            {selectedId && <button type="button" className="monitor-clear-client" aria-label="Bỏ chọn client" title="Bỏ chọn client" onClick={() => { setSelectedId(null); setFeedback('') }}><X size={18} /></button>}
+          </div>
+          {!selectedId && <div className="monitor-select-placeholder"><Activity size={28} /><strong>Chưa chọn client</strong><span>Chọn một dòng bên trái để xem thông tin.</span></div>}
           {selectedId && !selected && <p className="monitor-empty">Client đã ngắt kết nối.</p>}
           {selected && (
             <>
+              <div className={`monitor-selected-status ${selected.idleSeconds >= 60 ? 'idle' : ''}`}><span>{selected.idleSeconds >= 60 ? 'Vắng mặt' : 'Đang hoạt động'}</span><strong>Không thao tác {duration(selected.idleSeconds)}</strong></div>
+              <details className="monitor-connection-details" key={selected.sessionId}>
+                <summary>Thông tin kết nối</summary>
               <dl className="client-detail-grid">
                 <div>
                   <dt>Tài khoản / Socket</dt>
@@ -400,6 +339,7 @@ export function ServerDashboardPage() {
                   </dd>
                 </div>
               </dl>
+              </details>
               <h3>Gói học tập đang giữ</h3>
               {[
                 {
@@ -432,7 +372,6 @@ export function ServerDashboardPage() {
               {!selected.activeAttemptId && !selected.activeExamId && !selected.activeArenaId && (
                 <>
                   <p>{emptyLearningPacket(selected)}</p>
-                  <p className="muted">Socket và trạng thái client vẫn sử dụng RAM.</p>
                 </>
               )}
               <div className="button-row">

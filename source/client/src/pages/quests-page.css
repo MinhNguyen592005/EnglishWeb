@@ -1,0 +1,75 @@
+﻿.quests-dialog { width:min(1080px,calc(100vw - 48px)); max-width:none; max-height:min(860px,calc(100dvh - 48px)); margin:auto; padding:0; border:1px solid #dce3f1; border-radius:24px; background:#f6f8fc; color:#17233d; box-shadow:0 28px 100px #0f172a40; overflow:auto; overscroll-behavior:contain; }
+.quests-dialog::backdrop { background:#0f172a80; backdrop-filter:blur(5px); }
+.quests-dialog-header { display:flex; align-items:center; gap:16px; position:sticky; top:0; z-index:2; padding:24px 28px; border-bottom:1px solid #e2e8f0; background:#fffffffa; }
+.quests-dialog-icon { display:grid; place-items:center; width:54px; height:54px; flex-shrink:0; border:1px solid #ddd6fe; border-radius:17px; color:#6d28d9; background:#f5f3ff; }
+.quests-dialog-eyebrow { color:#6d28d9; font-size:10px; letter-spacing:1.5px; font-weight:800; }
+.quests-dialog-header h1 { margin:5px 0; font-size:25px; line-height:1.25; letter-spacing:-0.6px; }
+.quests-dialog-header p { margin:0; color:#64748b; font-size:13px; line-height:1.6; }
+.quests-dialog-close { display:grid; place-items:center; align-self:flex-start; flex-shrink:0; margin-left:auto; width:36px; height:36px; border:1px solid #e2e8f0; border-radius:12px; background:#f8fafc; color:#64748b; cursor:pointer; }
+.quests-dialog-close:hover { background:#e2e8f0; color:#0f172a; }
+.quests-dialog-close:focus-visible { outline:3px solid #a5b4fc; outline-offset:2px; }
+.quests-dialog-content { padding:24px; }
+.quests-dialog .daily-quests-area { grid-template-columns:minmax(0,1.7fr) minmax(260px,1fr); align-items:start; gap:20px; }
+.quests-dialog .dq-panel,.quests-dialog .dq-streak { border-radius:18px; border-color:#e2e8f0; box-shadow:0 3px 12px #17233d04; padding:20px; }
+.quests-dialog .dq-heading-row h2 { font-size:20px; }
+.quests-dialog .dq-eyebrow { font-size:10px; letter-spacing:1px; }
+.quests-dialog .dq-task { border-radius:14px; box-shadow:none; padding:16px; }
+.quests-dialog .dq-task-copy h3 { font-size:15px; }
+.quests-dialog .dq-task-copy p { font-size:13px; }
+.quests-dialog .dq-button { border-radius:10px; }
+.quests-dialog .dq-chest { border-radius:14px; background:#f5f3ff; border-color:#ddd6fe; }
+.quests-dialog .dq-streak { background:linear-gradient(150deg,#fff7ed,#fff 65%); }
+.quests-dialog .dq-streak h2 { font-size:18px; }
+.quests-dialog-guide { margin-top:20px; border:1px solid #e2e8f0; border-radius:14px; padding:16px 20px; background:#fff; color:#64748b; font-size:13px; line-height:1.7; }
+.quests-dialog-guide summary { cursor:pointer; color:#475569; font-weight:650; }
+.quests-dialog-guide summary svg { vertical-align:middle; margin-right:6px; }
+.quests-dialog-guide p { margin:12px 0 0; }
+.topbar-quests { cursor:pointer; font-family:inherit; }
+@media(max-width:800px) { .quests-dialog .daily-quests-area { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:550px) {
+ .quests-dialog { width:calc(100vw - 20px); max-height:calc(100dvh - 24px); border-radius:18px; }
+ .quests-dialog-header { padding:18px 16px; gap:10px; }
+ .quests-dialog-icon { width:40px; height:44px; border-radius:12px; }
+ .quests-dialog-header h1 { font-size:20px; }
+ .quests-dialog-eyebrow { font-size:8px; letter-spacing:0.8px; }
+ .quests-dialog-header p { font-size:12px; }
+ .quests-dialog-content { padding:12px; }
+ .quests-dialog .dq-panel,.quests-dialog .dq-streak { padding:16px; }
+}
+
+/* Keep the tinted heading clear of its text and separate the reward column. */
+.quests-dialog .dq-header {
+  padding: 18px 20px;
+  border: 1px solid #f3e8bb;
+  border-radius: 14px;
+  background: linear-gradient(110deg, #fffbea, #fff7ed);
+}
+.quests-dialog .dq-heading-row {
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+.quests-dialog .dq-heading-row h2 {
+  line-height: 1.5;
+  margin: 0;
+}
+.quests-dialog .dq-count { padding: 6px 10px; }
+.quests-dialog .dq-reward-summary { gap: 10px 18px; line-height: 1.7; }
+.dq-rewards-column { display: grid; gap: 20px; min-width: 0; }
+.quests-dialog .dq-rewards-column .dq-chest {
+  margin: 0;
+  padding: 22px;
+  border: 1px solid #ddd6fe;
+  background: linear-gradient(145deg, #f5f3ff, #fff);
+  box-shadow: 0 4px 16px #6d28d908;
+}
+.quests-dialog .dq-rewards-column .dq-chest-intro { flex-wrap: wrap; gap: 14px; }
+.quests-dialog .dq-rewards-column .dq-chest h3 { margin-top: 8px; font-size: 22px; }
+.quests-dialog .dq-rewards-column .dq-chest-reward { flex-wrap: wrap; line-height: 1.7; }
+.quests-dialog .dq-rewards-column .dq-button.chest { width: 100%; }
+@media (max-width: 550px) {
+  .quests-dialog .dq-header { padding: 16px; }
+  .quests-dialog .dq-heading-row { gap: 12px; }
+}
+.quests-dialog .dq-task-footer { gap: 10px; flex-wrap: wrap; }
+.quests-dialog .dq-replace { margin-right: auto; }

@@ -1,8 +1,6 @@
 import {
   ArrowRight,
   BookOpen,
-  CheckCircle2,
-  ChevronDown,
   Compass,
   Flame,
   Swords,
@@ -11,7 +9,6 @@ import {
 import { Link } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { Layout } from '../components/Layout'
-import { DailyQuestsWidget } from '../components/DailyQuestsWidget'
 import { sortLessons, topicName } from './RoadmapPage'
 import type { Lesson } from '../types'
 import './dashboard-home.css'
@@ -22,7 +19,6 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
   const done = lessons.filter((lesson) => lesson.status === 'COMPLETED').length
   const percent = lessons.length ? Math.round((done / lessons.length) * 100) : 0
   const current = ordered.find((lesson) => lesson.status === 'AVAILABLE')
-  const bossLesson = current ?? ordered.find((lesson) => lesson.status !== 'LOCKED')
   const pendingTopic = [...new Set(ordered.map((lesson) => lesson.topicSlug))].find((slug) => {
     const chapter = ordered.filter((lesson) => lesson.topicSlug === slug)
     return chapter.every((lesson) => lesson.status === 'COMPLETED') && !chapter[0].chapterCompleted
@@ -44,7 +40,6 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
       <div className="dashboard-home">
         <header className="home-heading">
           <div>
-            <span className="home-eyebrow">KHÔNG GIAN HỌC TẬP</span>
             <h1>Chào {user?.displayName || user?.username}!</h1>
             <p>Tiếp tục bài học, hoàn thành mục tiêu của hôm nay.</p>
           </div>
@@ -86,8 +81,7 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
           </div>
         </section>
 
-        <div className="home-columns">
-          <div className="home-main">
+        <div className="home-main home-overview-grid">
             <section className="home-next-lesson">
               <div className="home-section-top">
                 <span className="home-eyebrow">{current ? 'TIẾP TỤC HỌC' : 'BƯỚC TIẾP THEO'}</span>
@@ -179,55 +173,7 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
               </div>
             </section>
 
-            <details className="home-quest-guide" open>
-              <summary>
-                <span>
-                  <CheckCircle2 size={18} />
-                  Nhiệm vụ hằng ngày hoạt động thế nào?
-                </span>
-                <ChevronDown size={16} />
-              </summary>
-              <ol>
-                <li>
-                  <span>01</span>
-                  <div>
-                    <strong>Nhận 3 mục tiêu mỗi ngày</strong>
-                    <p>
-                      Mỗi người có một nhiệm vụ dễ, vừa và khó, chọn từ luyện tập, Boss hoặc PvP.
-                      Nhiệm vụ không yêu cầu tham gia lớp học.
-                    </p>
-                  </div>
-                </li>
-                <li>
-                  <span>02</span>
-                  <div>
-                    <strong>Thực hiện và nhận XP</strong>
-                    <p>
-                      Tiến độ tự ghi nhận khi bạn học hoặc thi đấu. Hoàn thành rồi bấm nhận thưởng:
-                      30, 50 hoặc 70 XP theo độ khó.
-                    </p>
-                  </div>
-                </li>
-                <li>
-                  <span>03</span>
-                  <div>
-                    <strong>Mở rương để giữ chuỗi</strong>
-                    <p>
-                      Hoàn thành cả 3 nhiệm vụ để mở rương +100 XP. Mở rương mỗi ngày giúp nối dài
-                      chuỗi; chỉ đăng nhập chưa được tính.
-                    </p>
-                  </div>
-                </li>
-              </ol>
-              <p className="home-guide-note">
-                Nhiệm vụ đổi khi sang ngày mới theo giờ máy chủ. Nhận thưởng nhiệm vụ và mở rương là
-                hai thao tác riêng.
-              </p>
-            </details>
-          </div>
-          <aside className="home-daily">
-            <DailyQuestsWidget bossHref={bossLesson ? `/lessons/${bossLesson.id}` : null} />
-          </aside>
+
         </div>
       </div>
     </Layout>
