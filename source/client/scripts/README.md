@@ -7,6 +7,7 @@ Chạy từ `source/client`. Các script dùng Playwright và Microsoft Edge; sc
 | `check-role-views.mjs` | Giao diện theo vai trò, dùng API/socket giả lập |
 | `check-support-chat.mjs` | Bong bóng chat, bot, Admin trả lời trực tiếp, badge tin mới, lịch sử và mobile; API/socket giả lập |
 | `check-classroom-socket.mjs`, `check-arena-socket.mjs` | Luồng lớp học/PvP, dùng socket giả lập |
+| `check-arena-report.mjs` | Pop-up báo cáo đối thủ: nhiều lý do, mô tả tùy chọn, giới hạn ký tự, gửi lại sau lỗi và mobile; socket giả lập tại cổng 5173 (đổi bằng `ARENA_UI_URL`) |
 | `check-live-exam.mjs` | Giáo viên/học sinh làm kiểm tra, sửa đề và nhận cập nhật giả lập |
 | `check-account-realtime.mjs` | Đồng bộ tài khoản và thông báo báo cáo giả lập |
 | `check-notifications.mjs` | Chuông, trạng thái đã đọc, mở đúng bài trước khi làm, đồng bộ nhiều tab và mobile; dùng API/socket giả lập tại cổng 5173 (đổi bằng `NOTIFICATION_UI_URL`) |

@@ -25,6 +25,7 @@ import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { useAuth } from '../app/AuthContext'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import { Layout } from '../components/Layout'
+import { ArenaReportDialog } from '../components/ArenaReportDialog'
 import type {
   ArenaHistory,
   ArenaMessage,
@@ -158,6 +159,12 @@ export function ArenaPage() {
   const [cosmeticsError, setCosmeticsError] = useState('')
   const cosmeticsRequest = useRef(0)
   const [notice, setNotice] = useState('')
+  const [reportTarget, setReportTarget] = useState<{
+    targetId: number
+    opponentName: string
+    roomId: number
+    roomCode: string
+  } | null>(null)
   const chatList = useRef<HTMLDivElement>(null)
   const roomRef = useRef(room)
   roomRef.current = room
@@ -498,23 +505,27 @@ export function ArenaPage() {
       setError((e as Error).message)
     }
   }
-  async function reportOpponent() {
+  function reportOpponent() {
     if (!room) return
     const targetId = room.isHost ? room.guestId : room.hostId
     if (!targetId) return
-    const reason = window.prompt('Lý do báo cáo đối thủ (tối đa 500 ký tự):')
-    if (!reason?.trim()) return
-    try {
-      await request('REPORT_USER', 'REPORT_DATA', {
-        targetId,
-        contextType: 'ARENA',
-        contextId: room.id,
-        reason,
-      })
-      setNotice('Đã gửi báo cáo đối thủ cho quản trị viên.')
-    } catch (e) {
-      setError((e as Error).message)
-    }
+    setReportTarget({
+      targetId,
+      opponentName: (room.isHost ? room.guestName : room.hostName) || 'Đối thủ',
+      roomId: room.id,
+      roomCode: room.code,
+    })
+    setNotice('')
+  }
+  async function submitOpponentReport(reason: string) {
+    if (!reportTarget) return
+    await request('REPORT_USER', 'REPORT_DATA', {
+      targetId: reportTarget.targetId,
+      contextType: 'ARENA',
+      contextId: reportTarget.roomId,
+      reason,
+    })
+    setNotice('Đã gửi báo cáo đối thủ cho quản trị viên.')
   }
 
   const seconds = room?.deadlineAt
@@ -1611,6 +1622,15 @@ export function ArenaPage() {
           </section>
         )}
       </div>
+      {reportTarget && (
+        <ArenaReportDialog
+          opponentName={reportTarget.opponentName}
+          roomCode={reportTarget.roomCode}
+          connected={connected}
+          onSubmit={submitOpponentReport}
+          onClose={() => setReportTarget(null)}
+        />
+      )}
     </Layout>
   )
 }
