@@ -88,12 +88,12 @@
 }
 .teacher-metric-card strong {
   margin-top: 0.5rem;
-  font-size: 1.9rem;
+  font-size: 1.5rem;
   line-height: 1;
 }
 .teacher-metric-card > span:not(.teacher-metric-icon) {
   color: #334155;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 .teacher-metric-card small {
@@ -127,7 +127,7 @@
   align-items: center;
   gap: 0.25rem;
   color: var(--teacher-primary);
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 .teacher-action-grid {
@@ -161,7 +161,7 @@
 .teacher-action-card p {
   margin: 0.25rem 0 0;
   color: #64748b;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
 }
 .teacher-action-card .button {
   margin-top: auto;

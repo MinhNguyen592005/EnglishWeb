@@ -62,13 +62,13 @@
 }
 .dq-heading-row h2 {
   margin: 0;
-  font-size: 23px;
+  font-size: 21px;
   line-height: 1.4;
   letter-spacing: -0.6px;
 }
 .dq-header > p {
   margin: 8px 0 0;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
   color: #566076;
 }
@@ -81,7 +81,7 @@
   border-radius: 8px;
   background: #edf0ff;
   color: #2f3a9d;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 800;
 }
 .dq-count.is-complete {
@@ -179,7 +179,7 @@
 }
 .dq-task-copy h3 {
   margin: 7px 0 0;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 750;
   line-height: 1.6;
   overflow-wrap: anywhere;
@@ -187,7 +187,7 @@
 .dq-task-copy p {
   margin: 4px 0 0;
   color: #586174;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.65;
 }
 .dq-progress-label {
@@ -317,7 +317,7 @@
 }
 .dq-chest h3 {
   margin: 4px 0 5px;
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: -0.4px;
 }
 .dq-chest-reward {
@@ -400,7 +400,7 @@
   color: #187b59;
   background: #e5f5ed;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 750;
 }
 .dq-streak {
@@ -427,7 +427,7 @@
   font-size: 13px;
 }
 .dq-streak h2 {
-  font-size: 17px;
+  font-size: 15px;
   margin: 5px 0 0;
   letter-spacing: -0.3px;
 }
@@ -449,13 +449,13 @@
   align-items: baseline;
   gap: 5px;
   color: #bc7519;
-  font-size: 30px;
+  font-size: 24px;
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
 .dq-streak-metrics > div + div strong {
   color: #3b4691;
-  font-size: 27px;
+  font-size: 23px;
 }
 .dq-streak-metrics strong svg {
   align-self: center;
@@ -532,10 +532,10 @@
   color: #414e8b;
 }
 .dq-empty strong {
-  font-size: 16px;
+  font-size: 15px;
 }
 .dq-empty p {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
   color: #576175;
   margin: 0;
@@ -549,7 +549,7 @@
   margin-top: 15px;
   padding: 12px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .dq-message.error {
@@ -574,7 +574,7 @@
   border: 1px solid #cdebd8;
   color: #24754d;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .dq-toast svg {
@@ -598,7 +598,7 @@
   background: #fff2dc;
   border: 1px solid #f3dfbd;
   border-radius: 999px;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 750;
   white-space: nowrap;
 }
@@ -619,7 +619,7 @@
     border-radius: 19px;
   }
   .dq-heading-row h2 {
-    font-size: 18px;
+    font-size: 16px;
   }
   .dq-task {
     padding: 14px;
@@ -631,7 +631,7 @@
     gap: 9px;
   }
   .dq-chest h3 {
-    font-size: 18px;
+    font-size: 16px;
   }
   .dq-chest-icon {
     flex-basis: 44px;

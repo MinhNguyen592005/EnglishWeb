@@ -9,23 +9,23 @@
 
 /* Consistent text sizing, including pages with their own legacy styles. */
 .app-layout .page-content :is(p, li, td, label, input, select, textarea) {
-  font-size: .9375rem;
+  font-size: 0.875rem;
   line-height: 1.7;
 }
 .app-layout .page-content :is(button, .button, .practice-primary, .home-primary) {
-  font-size: .9375rem;
+  font-size: 0.875rem;
   line-height: 1.4;
 }
 .app-layout .page-content h1 {
-  font-size: clamp(1.7rem, 2.5vw, 2.2rem);
+  font-size: clamp(1.4375rem, 2.025vw, 1.8125rem);
   line-height: 1.25;
   letter-spacing: -.03em;
 }
 .app-layout .page-content h2 {
-  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+  font-size: clamp(1rem, 1.377vw, 1.3125rem);
   line-height: 1.4;
 }
-.app-layout .page-content h3 { font-size: 1.0625rem; line-height: 1.45; }
+.app-layout .page-content h3 { font-size: 0.9375rem; line-height: 1.45; }
 .page-content > :is(.dashboard-home, .practice-home, .pvp-page, .profile-page,
   .teacher-profile-page, .class-page, .class-workspace, .teacher-dashboard,
   .admin-page, .tm-page, .study-course) {
@@ -153,7 +153,7 @@ main:has(form input[autocomplete='username']) { background: #f8fafc; }
 main:has(form input[autocomplete='username']) > div > section:first-child {
   background: linear-gradient(135deg, #eff6ff, #ede9fe 55%, #fef9c3);
 }
-main:has(form input[autocomplete='username']) form :is(input, label, button[type='submit']) { font-size: .9375rem; }
+main:has(form input[autocomplete='username']) form :is(input, label, button[type='submit']) { font-size: 0.875rem; }
 
 @media (max-width: 1000px) {
   .teacher-action-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -169,7 +169,7 @@ main:has(form input[autocomplete='username']) form :is(input, label, button[type
   .teacher-dashboard-section { padding: 20px; }
   .profile-mini-stat { padding: 16px; }
   .profile-rewards { padding: 20px; }
-  .app-layout .page-content :is(button, .button, .practice-primary, .home-primary) { font-size: .875rem; }
+  .app-layout .page-content :is(button, .button, .practice-primary, .home-primary) { font-size: 0.8125rem; }
 }
 @media (prefers-reduced-motion: reduce) {
   .practice-primary { transition: none; }

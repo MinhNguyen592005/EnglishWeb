@@ -26,6 +26,7 @@ import { useSystemSocket } from '../app/SystemSocketContext'
 import './admin.css'
 import './admin-overview.css'
 import './admin-management.css'
+import './admin-overview-refresh.css'
 type Audit = {
   id: number
   actor: string
@@ -783,7 +784,7 @@ export function AdminPage() {
               : 'Tổng quan quản trị'
   return (
     <Layout title={tabTitle}>
-      <div className={`admin-page${tab === 'users' || tab === 'reports' ? ' admin-management' : ''}`}>
+      <div className={`admin-page${tab === 'overview' ? ' admin-overview-refresh' : ''}${tab === 'users' || tab === 'reports' ? ' admin-management' : ''}`}>
         {error && (
           <p className="error-banner" role="alert">
             {error}

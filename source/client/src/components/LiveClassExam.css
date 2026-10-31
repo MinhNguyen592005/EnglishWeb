@@ -89,7 +89,7 @@
   flex-direction: column;
   gap: 8px;
   font-weight: 600;
-  font-size: 0.92rem;
+  font-size: 0.875rem;
   color: #334155;
 }
 .live-exam-text-answer input {
@@ -97,7 +97,7 @@
   padding: 12px 14px;
   border: 1.5px solid #cbd5e1;
   border-radius: 10px;
-  font-size: 0.98rem;
+  font-size: 0.9375rem;
   background: #ffffff;
   transition:
     border-color 0.2s,
@@ -148,7 +148,7 @@
   margin-bottom: 8px;
 }
 .editor-q-type-select {
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   font-weight: 600;
   padding: 6px 12px;
   border-radius: 8px;
@@ -179,7 +179,7 @@
   box-shadow: 0 5px 20px #293c6210;
 }
 .live-exam .panel-heading h2 {
-  font-size: 20px;
+  font-size: 18px;
   margin: 6px 0 8px;
 }
 .live-exam .panel-heading p {
@@ -238,7 +238,7 @@
 }
 .exam-list-info strong {
   color: #243759;
-  font-size: 14px;
+  font-size: 13px;
   overflow-wrap: anywhere;
 }
 .exam-list-info small {
@@ -276,7 +276,7 @@
 }
 .exam-list-empty h3 {
   margin: 0;
-  font-size: 16px;
+  font-size: 15px;
   color: #354567;
 }
 .exam-list-empty p {
