@@ -7,7 +7,7 @@
   align-items: center;
   gap: 8px;
   color: #7a8aa4;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   margin-bottom: 2px;
 }
 .admin-breadcrumb strong {
@@ -48,7 +48,7 @@
 }
 .admin-hero h1 {
   margin: 14px 0 7px;
-  font-size: clamp(1.8rem, 3vw, 2.35rem);
+  font-size: clamp(1.4375rem, 2.43vw, 1.9375rem);
 }
 .admin-hero p {
   margin: 0;
@@ -159,7 +159,7 @@
   background: #ffebe9;
 }
 .admin-kpi-card strong {
-  font-size: 2rem;
+  font-size: 1.625rem;
   line-height: 1.1;
   color: #14213d;
 }
@@ -486,7 +486,7 @@
   background: #e8faf6;
 }
 .report-kpi-grid strong {
-  font-size: 1.55rem;
+  font-size: 1.375rem;
   line-height: 1;
 }
 .report-kpi-grid span {
@@ -555,7 +555,7 @@
   outline: 0;
   background: transparent;
   font: inherit;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 .report-filters {
   display: flex;
@@ -622,7 +622,7 @@
   outline: 0;
   background: transparent;
   font: inherit;
-  font-size: 0.83rem;
+  font-size: 0.75rem;
   font-weight: 650;
   color: #14213d;
   cursor: pointer;
@@ -679,7 +679,7 @@
   flex-wrap: wrap;
 }
 .report-card-top strong {
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 .report-badge {
   display: inline-flex;
@@ -812,7 +812,7 @@
   text-transform: uppercase;
 }
 .report-detail-grid strong {
-  font-size: 0.86rem;
+  font-size: 0.8125rem;
 }
 .report-detail-grid span {
   color: #7a8396;
@@ -824,7 +824,7 @@
 .report-detail-section p {
   margin: 0;
   color: #4a5365;
-  font-size: 0.83rem;
+  font-size: 0.75rem;
   line-height: 1.55;
   overflow-wrap: anywhere;
 }
@@ -862,7 +862,7 @@
   min-width: 0;
 }
 .admin-brand strong {
-  font-size: 1.05rem;
+  font-size: 0.9375rem;
 }
 .admin-brand small {
   color: #7a8aa4;
@@ -921,7 +921,7 @@
   white-space: nowrap;
 }
 .audit-time strong {
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: #14213d;
 }
 .audit-time small {

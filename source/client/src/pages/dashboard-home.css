@@ -20,13 +20,13 @@
   color: #596373;
 }
 .home-heading h1 {
-  font-size: 31px;
+  font-size: 25px;
   letter-spacing: -0.8px;
   line-height: 1.3;
   margin: 9px 0;
 }
 .home-heading p {
-  font-size: 15px;
+  font-size: 14px;
   margin: 0;
   color: var(--home-muted);
   line-height: 1.8;
@@ -36,7 +36,7 @@
   align-items: center;
   gap: 8px;
   color: #65718d;
-  font-size: 14px;
+  font-size: 13px;
   white-space: nowrap;
 }
 .home-stats {
@@ -67,14 +67,14 @@
 }
 .home-stats strong {
   display: block;
-  font-size: 29px;
+  font-size: 23px;
   letter-spacing: -0.8px;
   margin: 13px 0 7px;
   line-height: 1.2;
   font-weight: 650;
 }
 .home-stats small {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 550;
   color: #5a6472;
   letter-spacing: 0;
@@ -124,7 +124,7 @@
 }
 .home-next-lesson h2 {
   margin: 24px 0 12px;
-  font-size: 27px;
+  font-size: 23px;
   letter-spacing: -0.65px;
   line-height: 1.45;
   max-width: 440px;
@@ -133,7 +133,7 @@
 .home-next-lesson > p {
   margin: 0;
   color: #546178;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.9;
   max-width: 460px;
 }
@@ -159,7 +159,7 @@
   border-radius: 9px;
   background: #3f48b1;
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   min-height: 41px;
 }
@@ -169,7 +169,7 @@
 }
 .home-progress-card h2,
 .home-quick-section h2 {
-  font-size: 17px;
+  font-size: 15px;
   font-weight: 650;
   margin: 0;
   letter-spacing: -0.2px;
@@ -185,12 +185,12 @@
   margin: 23px 0 12px;
 }
 .home-xp-label strong {
-  font-size: 23px;
+  font-size: 21px;
   letter-spacing: -0.4px;
   font-weight: 650;
 }
 .home-xp-label small {
-  font-size: 14px;
+  font-size: 13px;
   color: #586474;
   font-weight: 550;
 }
@@ -241,7 +241,7 @@
   flex: 1;
 }
 .home-quick-links strong {
-  font-size: 15px;
+  font-size: 14px;
   color: #46556d;
   font-weight: 600;
 }
@@ -263,7 +263,7 @@
   padding: 20px 24px;
   list-style: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   color: #65738a;
   font-weight: 600;
 }
@@ -305,7 +305,7 @@
   height: 28px;
 }
 .home-quest-guide strong {
-  font-size: 14px;
+  font-size: 13px;
   color: #56647a;
   font-weight: 600;
 }
@@ -337,7 +337,7 @@
   padding: 22px;
 }
 .dashboard-home .dq-heading-row h2 {
-  font-size: 21px;
+  font-size: 19px;
   letter-spacing: -0.4px;
 }
 .dashboard-home .dq-eyebrow {
@@ -402,7 +402,7 @@
   width: 17px;
 }
 .dashboard-home .dq-task-copy h3 {
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 650;
   margin-top: 5px;
   color: #3c4d68;
@@ -498,7 +498,7 @@
   width: 23px;
 }
 .dashboard-home .dq-chest h3 {
-  font-size: 18px;
+  font-size: 16px;
   color: #59698c;
 }
 .dashboard-home .dq-chest-reward {
@@ -537,7 +537,7 @@
   background: #fff;
 }
 .dashboard-home .dq-streak h2 {
-  font-size: 16px;
+  font-size: 15px;
   color: #56647a;
 }
 .dashboard-home .dq-flame {
@@ -555,7 +555,7 @@
 }
 .dashboard-home .dq-streak-metrics strong,
 .dashboard-home .dq-streak-metrics > div + div strong {
-  font-size: 26px;
+  font-size: 22px;
   font-weight: 600;
   color: #515f7b;
 }
@@ -591,7 +591,7 @@
     padding: 23px;
   }
   .home-next-lesson h2 {
-    font-size: 24px;
+    font-size: 21px;
   }
   .home-lesson-footer {
     align-items: flex-start;
@@ -606,7 +606,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
   .home-heading h1 {
-    font-size: 26px;
+    font-size: 22px;
   }
   .home-heading > .home-text-link {
     display: none;
@@ -627,7 +627,7 @@
     display: none;
   }
   .home-stats strong {
-    font-size: 25px;
+    font-size: 22px;
     margin: 12px 0 8px;
   }
   .home-stats small {

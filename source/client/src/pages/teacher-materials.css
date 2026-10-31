@@ -16,7 +16,7 @@
   font-weight: 800;
 }
 .tm-header h1 {
-  font-size: 28px;
+  font-size: 23px;
   margin: 10px 0;
   letter-spacing: -0.7px;
 }
@@ -147,7 +147,7 @@
 }
 .tm-card h2 {
   margin: 0;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
   letter-spacing: -0.2px;
   overflow-wrap: anywhere;
@@ -221,7 +221,7 @@
 }
 .tm-empty h2 {
   margin: 0;
-  font-size: 19px;
+  font-size: 17px;
   line-height: 1.6;
 }
 .tm-empty p {
@@ -257,7 +257,7 @@
 }
 .tm-editor-title h2 {
   margin: 0 0 7px;
-  font-size: 20px;
+  font-size: 18px;
   letter-spacing: -0.4px;
 }
 .tm-editor-title p {
@@ -354,7 +354,7 @@
 }
 .tm-dialog > header h2 {
   margin: 0;
-  font-size: 21px;
+  font-size: 19px;
   line-height: 1.5;
 }
 .tm-dialog > header button {
@@ -438,7 +438,7 @@
     padding: 16px;
   }
   .tm-header h1 {
-    font-size: 24px;
+    font-size: 21px;
   }
   .tm-empty {
     padding: 40px 18px;

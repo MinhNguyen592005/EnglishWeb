@@ -16,7 +16,7 @@
   --warning: #f4b544;
   --focus: #3643bd;
   font-family: 'Segoe UI', system-ui, Arial, sans-serif;
-  font-size: 17px;
+  font-size: 16px;
   font-weight: 500;
   color: var(--text);
   background: var(--page);
@@ -51,18 +51,18 @@ p {
   margin-top: 0;
 }
 h1 {
-  font-size: clamp(1.65rem, 2.5vw, 2rem);
+  font-size: clamp(1.375rem, 2.025vw, 1.625rem);
   line-height: 1.3;
   font-weight: 700;
   letter-spacing: -0.012em;
 }
 h2 {
-  font-size: 1.3rem;
+  font-size: 1.1875rem;
   font-weight: 700;
   letter-spacing: -0.01em;
 }
 h3 {
-  font-size: 1.08rem;
+  font-size: 0.9375rem;
   font-weight: 700;
 }
 p {
@@ -96,7 +96,7 @@ p {
   border-radius: 9px;
   border: 1px solid transparent;
   font-weight: 700;
-  font-size: 0.92rem;
+  font-size: 0.875rem;
   transition:
     background 0.15s,
     transform 0.15s;
@@ -228,7 +228,7 @@ p {
   gap: 10px;
   padding: 0 20px;
   border-bottom: 1px solid var(--border);
-  font-size: 1.13rem;
+  font-size: 1rem;
   font-weight: 700;
   white-space: nowrap;
   color: #11204a;
@@ -281,7 +281,7 @@ p {
 }
 .sidebar-bottom strong {
   display: block;
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 .sidebar-bottom small {
   display: block;
@@ -319,7 +319,7 @@ p {
   padding-left: 12px;
 }
 .topbar-left strong {
-  font-size: 1rem;
+  font-size: 0.9375rem;
 }
 .topbar-left .eyebrow {
   color: #9aa5bd;
@@ -368,7 +368,7 @@ p {
   align-items: center;
   gap: 10px;
   color: #7a8aa4;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   margin-bottom: 25px;
 }
 .breadcrumb a {
@@ -459,7 +459,7 @@ p {
   color: #e5e8ff;
 }
 .hero-card h2 {
-  font-size: 1.65rem;
+  font-size: 1.375rem;
   margin: 12px 0 8px;
 }
 .hero-card p {
@@ -469,7 +469,7 @@ p {
 .hero-progress {
   display: flex;
   justify-content: space-between;
-  font-size: 0.86rem;
+  font-size: 0.8125rem;
   margin-bottom: 8px;
   font-weight: 600;
 }
@@ -524,7 +524,7 @@ p {
   padding: 24px;
 }
 .current-card h3 {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   margin: 16px 0 7px;
 }
 .current-card p,
@@ -536,11 +536,11 @@ p {
   margin-top: 8px;
 }
 .stat-card h3 {
-  font-size: 1.8rem;
+  font-size: 1.4375rem;
   margin: 20px 0 4px;
 }
 .stat-card p {
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 .stat-split {
   display: flex;
@@ -548,7 +548,7 @@ p {
   border-top: 1px solid var(--border);
   padding-top: 18px;
   margin-top: 20px;
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 .stat-split span {
   color: var(--muted);
@@ -610,7 +610,7 @@ p {
   place-items: center;
   background: var(--primary);
   color: #fff;
-  font-size: 1.1rem;
+  font-size: 1rem;
   font-weight: 700;
   flex: none;
 }
@@ -648,7 +648,7 @@ p {
   margin: 0 0 5px;
 }
 .lesson-copy p {
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   color: var(--muted);
   margin: 0;
 }
@@ -660,7 +660,7 @@ p {
 }
 .status-label,
 .locked-label {
-  font-size: 0.86rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   white-space: nowrap;
   color: var(--primary-strong);
@@ -689,7 +689,7 @@ p {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.15rem;
+  font-size: 1rem;
   color: #162349;
   margin-bottom: 25px;
 }
@@ -702,10 +702,10 @@ p {
   margin: 21px 0;
 }
 .benefit strong {
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 .benefit p {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   color: var(--muted);
   margin: 4px 0;
 }
@@ -723,12 +723,12 @@ p {
   color: #e7a314;
 }
 .reward-card > div strong {
-  font-size: 1.6rem;
+  font-size: 1.375rem;
 }
 .reward-card > div p {
   grid-column: 2;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   margin: 0;
 }
 .lesson-page-grid {
@@ -750,7 +750,7 @@ p {
   margin: 0;
 }
 .theory-card > p {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   line-height: 1.8;
   color: #34415e;
   padding: 12px 0;
@@ -805,7 +805,7 @@ p {
 }
 .practice-footer span {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
 }
 .quiz-heading {
   display: flex;
@@ -829,7 +829,7 @@ p {
   border-radius: 100px;
   padding: 11px 15px;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 .quiz-progress {
   background: #fff;
@@ -839,7 +839,7 @@ p {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 10px;
-  font-size: 0.87rem;
+  font-size: 0.8125rem;
 }
 .quiz-progress span {
   color: var(--muted);
@@ -855,10 +855,10 @@ p {
   align-items: center;
   justify-content: space-between;
   color: var(--muted);
-  font-size: 0.83rem;
+  font-size: 0.75rem;
 }
 .question-card h2 {
-  font-size: 1.5rem;
+  font-size: 1.3125rem;
   margin: 28px 0 25px;
   line-height: 1.45;
 }
@@ -960,7 +960,7 @@ p {
 .boss-panel p,
 .boss-panel small {
   color: var(--muted);
-  font-size: 0.87rem;
+  font-size: 0.8125rem;
 }
 .boss-art {
   height: 185px;
@@ -1000,7 +1000,7 @@ p {
   right: -17px;
 }
 .boss-head span {
-  font-size: 21px;
+  font-size: 19px;
   letter-spacing: 8px;
   white-space: nowrap;
 }
@@ -1020,7 +1020,7 @@ p {
   align-items: center;
   gap: 7px;
   color: #8e3650;
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   margin: 23px 0 10px;
 }
 .hp-label strong {
@@ -1071,11 +1071,11 @@ p {
 }
 .result-stats strong {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1.3125rem;
   color: var(--primary-strong);
 }
 .result-stats span {
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .result-actions {
@@ -1111,7 +1111,7 @@ p {
 }
 .profile-stat strong {
   display: block;
-  font-size: 1.5rem;
+  font-size: 1.3125rem;
   margin: 12px 0 0;
 }
 .profile-stat p,
@@ -1140,7 +1140,7 @@ p {
   display: block;
 }
 .history-row span {
-  font-size: 0.84rem;
+  font-size: 0.75rem;
   color: var(--muted);
   margin-top: 4px;
 }
@@ -1249,7 +1249,7 @@ p {
 }
 .auth-star {
   position: absolute;
-  font-size: 36px;
+  font-size: 29px;
   color: #ffe6a0;
 }
 .star-a {
@@ -1269,18 +1269,18 @@ p {
   display: flex;
   align-items: center;
   gap: 10px;
-  font-size: 1.2rem;
+  font-size: 1.0625rem;
   font-weight: 700;
   margin-bottom: 35px;
 }
 .auth-copy h1 {
-  font-size: clamp(2.3rem, 4vw, 3.6rem);
+  font-size: clamp(1.875rem, 3.24vw, 2.9375rem);
   line-height: 1.12;
   margin-bottom: 20px;
 }
 .auth-copy p {
   color: #edf0ff;
-  font-size: 1rem;
+  font-size: 0.9375rem;
 }
 .art-chip {
   display: inline-flex;
@@ -1291,7 +1291,7 @@ p {
   padding: 11px 14px;
   border-radius: 100px;
   margin-top: 25px;
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
 }
 .auth-form-wrap {
   display: grid;
@@ -1302,7 +1302,7 @@ p {
   width: min(100%, 410px);
 }
 .auth-form-card h2 {
-  font-size: 2rem;
+  font-size: 1.625rem;
   margin: 10px 0 5px;
 }
 .auth-form-card .muted {
@@ -1310,7 +1310,7 @@ p {
 }
 .auth-form-card label {
   display: block;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   margin: 17px 0 8px;
 }
@@ -1355,7 +1355,7 @@ p {
 .auth-switch {
   text-align: center;
   margin-top: 25px;
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
 }
 .auth-switch a {
   color: var(--primary-strong);
@@ -1468,7 +1468,7 @@ p {
     margin: 0;
   }
   .page-heading p {
-    font-size: 0.9rem;
+    font-size: 0.8125rem;
   }
   .secondary-column,
   .practice-grid,
@@ -1488,7 +1488,7 @@ p {
     top: 0;
   }
   .hero-card h2 {
-    font-size: 1.4rem;
+    font-size: 1.25rem;
   }
   .lesson-row {
     padding: 16px;
@@ -1540,7 +1540,7 @@ p {
     padding: 18px;
   }
   .question-card h2 {
-    font-size: 1.25rem;
+    font-size: 1.125rem;
   }
   .question-actions .button {
     width: 100%;
@@ -1549,7 +1549,7 @@ p {
     gap: 5px;
   }
   .result-stats strong {
-    font-size: 1.2rem;
+    font-size: 1.0625rem;
   }
   .result-stats span {
     font-size: 0.7rem;
@@ -1574,7 +1574,7 @@ p {
     align-items: center;
     gap: 8px;
     color: var(--primary-strong);
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
     margin-bottom: 60px;
   }
@@ -1655,7 +1655,7 @@ table select {
 .form-grid label {
   display: grid;
   gap: 6px;
-  font-size: 0.87rem;
+  font-size: 0.8125rem;
   font-weight: 700;
 }
 .form-grid textarea {
@@ -1682,7 +1682,7 @@ table select {
 .assignment-row p,
 .assignment-row small {
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   margin: 5px 0;
 }
 .assignment-row .button {
@@ -1780,10 +1780,10 @@ table select {
   color: var(--primary-strong);
 }
 .metric-card strong {
-  font-size: 1.8rem;
+  font-size: 1.4375rem;
 }
 .metric-card span {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .tab-bar {
@@ -1903,7 +1903,7 @@ td small {
   gap: 5px;
 }
 .arena-score span {
-  font-size: 1.5rem;
+  font-size: 1.3125rem;
   color: var(--primary-strong);
   font-weight: 700;
 }
@@ -1931,7 +1931,7 @@ td small {
   color: var(--danger);
 }
 .arena-question {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   line-height: 1.5;
   margin: 20px 0;
 }
@@ -2077,7 +2077,7 @@ td small {
   white-space: nowrap;
 }
 .arena-chat-message p {
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
   margin: 5px 0 0;
 }
@@ -2098,7 +2098,7 @@ td small {
   padding: 9px;
 }
 .arena-chat-closed {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   margin: 0;
 }
 .search-input {
@@ -2174,13 +2174,13 @@ td small {
 }
 .roadmap-summary-main strong {
   display: block;
-  font-size: 3rem;
+  font-size: 2.4375rem;
   line-height: 1.1;
   margin: 12px 0 2px;
   color: var(--primary-strong);
 }
 .roadmap-summary-main strong span {
-  font-size: 1.7rem;
+  font-size: 1.4375rem;
   color: #8b98b4;
 }
 .roadmap-summary-main p {
@@ -2201,13 +2201,13 @@ td small {
   justify-content: center;
 }
 .roadmap-next h2 {
-  font-size: 1.35rem;
+  font-size: 1.25rem;
   line-height: 1.35;
   margin: 12px 0 5px;
 }
 .roadmap-next p {
   color: var(--muted);
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
   margin: 0 0 20px;
 }
 .roadmap-difficulty-heading {
@@ -2219,7 +2219,7 @@ td small {
 }
 .roadmap-difficulty-heading h2 {
   margin: 6px 0 0;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
 }
 .roadmap-filter {
   border: 1px solid var(--border);
@@ -2266,7 +2266,7 @@ td small {
   font-weight: 800;
 }
 .roadmap-difficulty-top strong {
-  font-size: 1.2rem;
+  font-size: 1.0625rem;
   color: var(--primary-strong);
 }
 .roadmap-difficulty small {
@@ -2319,12 +2319,12 @@ td small {
   color: #fff;
   display: grid;
   place-items: center;
-  font-size: 1.3rem;
+  font-size: 1.1875rem;
   font-weight: 800;
 }
 .roadmap-chapter-copy h2 {
   margin: 5px 0;
-  font-size: 1.45rem;
+  font-size: 1.3125rem;
 }
 .roadmap-chapter-copy p {
   color: var(--muted);
@@ -2347,7 +2347,7 @@ td small {
 }
 .roadmap-chapter-progress strong {
   display: block;
-  font-size: 1.4rem;
+  font-size: 1.25rem;
   color: var(--primary-strong);
 }
 .roadmap-chapter-progress span {
@@ -2433,12 +2433,12 @@ td small {
   color: #16765e;
 }
 .roadmap-level h3 {
-  font-size: 1.12rem;
+  font-size: 1rem;
   margin: 9px 0 5px;
 }
 .roadmap-level p {
   color: var(--muted);
-  font-size: 0.89rem;
+  font-size: 0.8125rem;
   line-height: 1.5;
   margin: 0;
 }
@@ -2498,11 +2498,11 @@ td small {
 }
 .roadmap-capstone h3 {
   margin: 5px 0;
-  font-size: 1.03rem;
+  font-size: 0.875rem;
 }
 .roadmap-capstone p {
   margin: 0 0 5px;
-  font-size: 0.84rem;
+  font-size: 0.75rem;
   color: var(--muted);
 }
 .roadmap-capstone small {
@@ -2556,10 +2556,10 @@ td small {
   .roadmap-chapter-number {
     width: 42px;
     height: 42px;
-    font-size: 1rem;
+    font-size: 0.9375rem;
   }
   .roadmap-chapter-copy h2 {
-    font-size: 1.2rem;
+    font-size: 1.0625rem;
   }
   .roadmap-levels {
     padding: 0 18px;
@@ -2572,7 +2572,7 @@ td small {
   .roadmap-level-index {
     width: 36px;
     height: 36px;
-    font-size: 0.85rem;
+    font-size: 0.8125rem;
   }
   .roadmap-level-action {
     grid-column: 2;
@@ -2639,7 +2639,7 @@ td small {
 }
 .planet-map-heading h2 {
   margin: 8px 0 5px;
-  font-size: 1.5rem;
+  font-size: 1.3125rem;
 }
 .planet-map-heading p {
   margin: 0;
@@ -2799,7 +2799,7 @@ td small {
   font-weight: 800;
 }
 .planet-caption strong {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   line-height: 1.25;
 }
 .planet-caption small {
@@ -3030,10 +3030,10 @@ td small {
   color: #26324b;
 }
 .idle-reminder-icon {
-  font-size: 24px;
+  font-size: 21px;
 }
 .idle-reminder strong {
-  font-size: 14px;
+  font-size: 13px;
 }
 .idle-reminder p {
   font-size: 13px;
@@ -3044,7 +3044,7 @@ td small {
 .idle-reminder button {
   border: 0;
   background: transparent;
-  font-size: 24px;
+  font-size: 21px;
   color: #78849b;
   cursor: pointer;
   padding: 0 4px;
@@ -3087,7 +3087,7 @@ td small {
   margin-bottom: 28px;
 }
 .arena-page .page-heading h1 {
-  font-size: clamp(2rem, 4vw, 2.6rem);
+  font-size: clamp(1.625rem, 3.24vw, 2.0625rem);
   color: var(--arena-ink);
   letter-spacing: -0.03em;
 }
@@ -3112,7 +3112,7 @@ td small {
 }
 .arena-page .feature-card h2 {
   color: var(--arena-ink);
-  font-size: 1.25rem;
+  font-size: 1.125rem;
 }
 .arena-page .feature-card h2 svg {
   color: var(--arena-primary);
@@ -3197,12 +3197,12 @@ td small {
 .arena-page .arena-section-heading p {
   margin: 0;
   color: var(--arena-muted);
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
 }
 .arena-page .section-heading {
   margin: 0;
   color: var(--arena-ink);
-  font-size: 1.35rem;
+  font-size: 1.25rem;
 }
 .arena-page .feature-grid {
   gap: 24px;
@@ -3336,7 +3336,7 @@ td small {
   color: var(--arena-ink);
 }
 .arena-page .arena-score span {
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: var(--arena-muted);
 }
 .arena-page .arena-score > svg {
@@ -3468,7 +3468,7 @@ td small {
     align-items: flex-start;
   }
   .arena-page .page-heading h1 {
-    font-size: 2rem;
+    font-size: 1.625rem;
   }
   .arena-page .heading-icon {
     width: 54px;
@@ -3597,7 +3597,7 @@ td small {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 .topbar-profile-copy small {
   color: var(--muted);
@@ -3653,7 +3653,7 @@ td small {
   background: #fff;
   color: var(--muted);
   font-weight: 700;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   transition: all 0.15s;
 }
 .pvp-tab-btn:hover {
@@ -3674,7 +3674,7 @@ td small {
   display: grid;
   place-items: center;
   font-weight: 800;
-  font-size: 1.05rem;
+  font-size: 0.9375rem;
   background: var(--primary-soft);
   color: var(--primary-strong);
   position: relative;
@@ -3683,12 +3683,12 @@ td small {
 .pvp-avatar.sm {
   width: 36px;
   height: 36px;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
 }
 .pvp-avatar.lg {
   width: 64px;
   height: 64px;
-  font-size: 1.35rem;
+  font-size: 1.25rem;
 }
 .frame-default {
   border: 2px solid #cbd5e1;
@@ -3860,7 +3860,7 @@ td small {
 .pvp-filter-btn {
   min-height: 36px;
   padding: 6px 12px;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
 }
 .pvp-leader-cell {
   display: flex;
@@ -3912,7 +3912,7 @@ td small {
   gap: 6px;
 }
 .pvp-cosmetic-body p {
-  font-size: 0.84rem;
+  font-size: 0.75rem;
   margin: 0;
   flex: 1;
 }
@@ -3935,12 +3935,12 @@ td small {
   background: #fffbeb;
   border: 1px solid #fde68a;
   color: #92400e;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   margin: 10px 0;
 }
 .pvp-ban-banner p {
   margin: 4px 0 0;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
 }
 .pvp-confirm-card {
   border-color: #a5b4fc;
@@ -3968,7 +3968,7 @@ td small {
   align-items: center;
   gap: 6px;
   font-weight: 700;
-  font-size: 0.86rem;
+  font-size: 0.8125rem;
   color: var(--primary-strong);
 }
 .pvp-confirm-slot.confirmed span {
@@ -3985,11 +3985,11 @@ td small {
 }
 .pvp-countdown-banner strong {
   display: block;
-  font-size: 1.15rem;
+  font-size: 1rem;
 }
 .pvp-countdown-banner p {
   margin: 4px 0 0;
-  font-size: 0.86rem;
+  font-size: 0.8125rem;
   color: #e0e7ff;
 }
 .pvp-timers-wrap {
@@ -3999,7 +3999,7 @@ td small {
   flex-wrap: wrap;
 }
 .pvp-match-timer {
-  font-size: 0.84rem;
+  font-size: 0.75rem;
   background: #f1f5f9;
   padding: 5px 10px;
   border-radius: 99px;
@@ -4027,20 +4027,20 @@ td small {
   gap: 4px;
 }
 .pvp-elo-box span {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   color: var(--muted);
 }
 .elo-up {
   color: var(--success-text);
-  font-size: 1.05rem;
+  font-size: 0.9375rem;
 }
 .elo-down {
   color: var(--danger);
-  font-size: 1.05rem;
+  font-size: 0.9375rem;
 }
 .elo-even {
   color: var(--muted);
-  font-size: 1.05rem;
+  font-size: 0.9375rem;
 }
 .pvp-elo-pill {
   font-size: 0.78rem;

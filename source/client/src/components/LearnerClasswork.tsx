@@ -115,27 +115,55 @@ export function LearnerClasswork({
     <section className="card learner-classwork">
       <header className="learner-work-heading">
         <div>
-          <span className="learner-work-eyebrow">KHÔNG GIAN HỌC VIÊN</span>
-          <h2>{showResults ? 'Kết quả học tập của bạn' : 'Bài tập được giao'}</h2>
+          <h2>
+            {showResults ? 'Kết quả học tập của bạn' : 'Bài tập được giao'}
+            <span className="learner-work-count">{assignments.length} bài tập</span>
+          </h2>
           <p>
             {showResults
               ? 'Điểm tốt nhất đúng hạn là điểm chính thức. Bạn có thể xem lại mọi lượt làm.'
               : 'Xem yêu cầu của giáo viên và hoàn thành bài trước hạn.'}
           </p>
         </div>
-        <span className="learner-work-count">{assignments.length} bài tập</span>
+        <label className="learner-work-search">
+          <Search size={18} />
+          <input
+            type="search"
+            aria-label="Tìm bài tập của tôi"
+            placeholder="Tìm tên bài tập…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+          />
+        </label>
       </header>
       <div className="learner-work-summary">
-        <span>
-          <strong>{available.length}</strong>Bài đang mở
-        </span>
-        <span>
-          <strong>{loading ? '—' : submitted.length}</strong>Đã nộp bài
-        </span>
-        <span>
-          <strong>{loading ? '—' : results.filter((result) => result.passed).length}</strong>Bài đạt
-          yêu cầu
-        </span>
+        <div>
+          <span className="learner-summary-icon">
+            <ClipboardList size={22} />
+          </span>
+          <div>
+            <strong>{available.length}</strong>
+            <span>Bài đang mở</span>
+          </div>
+        </div>
+        <div>
+          <span className="learner-summary-icon">
+            <CheckCircle2 size={22} />
+          </span>
+          <div>
+            <strong>{loading ? '—' : submitted.length}</strong>
+            <span>Đã nộp bài</span>
+          </div>
+        </div>
+        <div>
+          <span className="learner-summary-icon">
+            <Target size={22} />
+          </span>
+          <div>
+            <strong>{loading ? '—' : results.filter((result) => result.passed).length}</strong>
+            <span>Bài đạt yêu cầu</span>
+          </div>
+        </div>
       </div>
       {targetId > 0 && !showResults && (
         <div className="classwork-notification-target" ref={targetRef}>
@@ -160,16 +188,6 @@ export function LearnerClasswork({
           </button>
         </div>
       )}
-      <label className="learner-work-search">
-        <Search size={16} />
-        <input
-          type="search"
-          aria-label="Tìm bài tập của tôi"
-          placeholder="Tìm tên bài tập…"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-        />
-      </label>
       {loadError && (
         <div className="error-banner" role="alert">
           {loadError}
@@ -276,23 +294,37 @@ export function LearnerClasswork({
                 </>
               )}
               {completed && (
-                <div className="learner-work-result">
-                  <span>
-                    <CheckCircle2 size={15} />
-                    Đúng{' '}
-                    <strong>
-                      {result.correctCount}/{result.totalQuestions}
-                    </strong>{' '}
-                    câu ·{' '}
-                    {result.totalQuestions
-                      ? Math.round((result.correctCount / result.totalQuestions) * 100)
-                      : 0}
-                    %
-                  </span>
-                  {result.completedAt && (
-                    <small>Nộp {new Date(result.completedAt).toLocaleString('vi-VN')}</small>
-                  )}
-                </div>
+                <>
+                  <div
+                    className={`learner-work-result ${result.passed ? 'is-passed' : 'needs-review'}`}
+                  >
+                    <span>
+                      <CheckCircle2 size={15} />
+                      Đúng{' '}
+                      <strong>
+                        {result.correctCount}/{result.totalQuestions}
+                      </strong>{' '}
+                      câu ·{' '}
+                      {result.totalQuestions
+                        ? Math.round((result.correctCount / result.totalQuestions) * 100)
+                        : 0}
+                      %
+                    </span>
+                    {result.completedAt && (
+                      <small>Nộp {new Date(result.completedAt).toLocaleString('vi-VN')}</small>
+                    )}
+                  </div>
+                  <div
+                    className={`learner-score-track ${result.passed ? 'is-passed' : 'needs-review'}`}
+                    aria-hidden="true"
+                  >
+                    <span
+                      style={{
+                        width: `${result.totalQuestions ? Math.min(100, Math.max(0, (result.correctCount / result.totalQuestions) * 100)) : 0}%`,
+                      }}
+                    />
+                  </div>
+                </>
               )}
               {result?.status === 'IN_PROGRESS' && !resume && (
                 <p className="learner-work-expired">
@@ -323,6 +355,8 @@ export function LearnerClasswork({
                     >
                       {startingId === item.id ? (
                         <LoaderCircle size={15} />
+                      ) : completed ? (
+                        <RefreshCw size={15} />
                       ) : (
                         <ClipboardList size={15} />
                       )}{' '}

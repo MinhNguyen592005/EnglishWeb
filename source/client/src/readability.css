@@ -1,6 +1,6 @@
 /* Shared reading sizes and contrast across learner, teacher and admin screens. */
 .app-layout :is(p, li, td, label, input, select, textarea) {
-  font-size: max(0.875rem, 1em);
+  font-size: max(0.8125rem, 1em);
   font-weight: 500;
 }
 
@@ -9,7 +9,7 @@
 }
 
 .app-layout :is(button, .button) {
-  font-size: max(0.875rem, 1em);
+  font-size: max(0.8125rem, 1em);
   font-weight: 650;
 }
 
@@ -28,7 +28,7 @@
   background: #f0f2ff;
   color: #373f9f;
   white-space: nowrap;
-  font-size: 0.875rem;
+  font-size: 0.8125rem;
   font-variant-numeric: tabular-nums;
 }
 
@@ -42,7 +42,7 @@
 }
 
 .topbar-profile-copy strong {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
 }
 
 .app-layout .topbar-profile-copy small {
@@ -121,12 +121,12 @@ body {
 }
 
 h1 {
-  font-size: clamp(1.8rem, 3vw, 2.5rem);
+  font-size: clamp(1.4375rem, 2.43vw, 2rem);
   letter-spacing: -0.035em;
 }
 
 h2 {
-  font-size: clamp(1.2rem, 2vw, 1.55rem);
+  font-size: clamp(1.0625rem, 1.62vw, 1.375rem);
   letter-spacing: -0.02em;
 }
 
@@ -282,9 +282,9 @@ tbody tr:hover { background: #eff6ff66; }
 .dashboard-home { --home-ink: var(--text); --home-muted: var(--muted); --home-line: var(--border); }
 .home-main .home-next-lesson { background: #eff6ff; border-color: #dbeafe; padding: 28px; }
 .home-next-lesson h2 { color: #1e40af; }
-.home-stats strong { color: var(--text); font-size: 2rem; }
+.home-stats strong { color: var(--text); font-size: 1.625rem; }
 .home-stats > div + div { border-color: var(--border); }
-.home-heading h1 { font-size: clamp(1.8rem, 3vw, 2.5rem); }
+.home-heading h1 { font-size: clamp(1.4375rem, 2.43vw, 2rem); }
 
 /* Warm challenge surfaces stand out without reducing text contrast. */
 .pvp-page { --pvp-ink: var(--text); --pvp-muted: var(--muted); --pvp-line: var(--border); --pvp-primary: var(--primary-strong); }
@@ -338,7 +338,7 @@ tbody tr:hover { background: #eff6ff66; }
   .admin-kpi-card, .teacher-metric-card { padding: 16px; min-height: 140px; }
   .home-columns { grid-template-columns: minmax(0, 1fr); }
   .home-stats > div { padding-inline: 12px; }
-  .home-stats strong { font-size: 1.5rem; }
+  .home-stats strong { font-size: 1.3125rem; }
   .home-stats > div > span, .home-lesson-footer { flex-wrap: wrap; }
   .home-main > section, .home-quest-guide, .home-main .home-next-lesson, .card.feature-card { padding: 20px; }
 }
@@ -368,27 +368,27 @@ body {
 
 /* Keep body copy calm; reserve large, bold text for headings and scores. */
 .app-layout :is(p, li, td, label, input, select, textarea) {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.7;
 }
 .app-layout :is(button, .button), .home-primary, .dq-button {
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   line-height: 1.4;
   font-weight: 650;
 }
 .app-layout h1, .home-heading h1 {
-  font-size: clamp(1.65rem, 2.4vw, 2.15rem);
+  font-size: clamp(1.375rem, 1.944vw, 1.75rem);
   line-height: 1.25;
   letter-spacing: -0.025em;
 }
 .app-layout h2, .home-next-lesson h2 {
-  font-size: clamp(1.2rem, 1.8vw, 1.5rem);
+  font-size: clamp(1.0625rem, 1.458vw, 1.3125rem);
   line-height: 1.4;
 }
-.app-layout h3 { font-size: 1.0625rem; line-height: 1.45; }
+.app-layout h3 { font-size: 0.9375rem; line-height: 1.45; }
 .app-layout small { font-size: 0.8125rem; line-height: 1.5; }
 .home-stats strong, .teacher-metric-card strong {
-  font-size: clamp(1.5rem, 2.2vw, 1.875rem);
+  font-size: clamp(1.3125rem, 1.782vw, 1.5rem);
 }
 .home-xp-label strong { color: #15803d; font-weight: 750; }
 .home-progress-track { background: #dcfce7; }
@@ -443,6 +443,6 @@ body {
 .streak-pill { background: #fff7ed; color: #c2410c; border: 1px solid #fed7aa; }
 
 @media (max-width: 650px) {
-  .app-layout :is(button, .button), .home-primary, .dq-button { font-size: 0.875rem; }
+  .app-layout :is(button, .button), .home-primary, .dq-button { font-size: 0.8125rem; }
   .home-primary { padding: 11px 14px; }
 }

@@ -38,7 +38,7 @@
 }
 .arena-report-heading h2 {
   margin: 0 0 6px;
-  font-size: 22px;
+  font-size: 20px;
 }
 .arena-report-heading p {
   margin: 0;
@@ -57,7 +57,7 @@
 .arena-report-form > p {
   margin: 0;
   color: #64748b;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.6;
 }
 .arena-report-form fieldset {
@@ -90,7 +90,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 10px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
 }
 .arena-report-options label:has(input:checked) {
   background: #f5f3ff;
@@ -117,7 +117,7 @@
   border-radius: 10px;
   resize: vertical;
   font: inherit;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
 }
 .arena-report-limit {
@@ -141,7 +141,7 @@
     padding: 18px;
   }
   .arena-report-heading h2 {
-    font-size: 19px;
+    font-size: 17px;
   }
   .arena-report-actions .button {
     flex: 1;
