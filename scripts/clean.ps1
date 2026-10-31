@@ -13,6 +13,8 @@ $generatedPaths = @(
     'source/client/dist',
     'source/client/tsconfig.app.tsbuildinfo',
     'source/server/target',
+    'source/client/format-review.log',
+    'source/server/startup-check.log',
     'source/server/review-tests.log',
     'source/server/capacity-roadmap-tests.log',
     'source/server/capacity-roadmap-full.log',

@@ -15,7 +15,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** The STUDY.md course owns its tables and rules; legacy learning is untouched. */
+/** The study course owns its tables and rules; legacy learning is untouched. */
 @Service
 public class RoadmapCourseService {
 
@@ -138,7 +138,7 @@ public class RoadmapCourseService {
     private ModuleBarrier firstUnfinishedModule(long userId, int level) {
         if (level < Math.max(1, placement.startingLevel(userId))) return null;
         var rows = db.queryForList(
-            "select m.ordinal_no,m.title from study_modules m left join study_lessons l on l.module_id=m.id left join study_progress p on p.lesson_id=l.id and p.user_id=? where m.level_id=? group by m.id,m.ordinal_no,m.title having count(l.id)=0 or count(p.completed_at)<count(l.id) order by m.ordinal_no limit 1",
+            "select m.ordinal_no,m.title from study_modules m left join study_lessons l on l.module_id=m.id and l.archived=false left join study_progress p on p.lesson_id=l.id and p.user_id=? where m.level_id=? and m.archived=false group by m.id,m.ordinal_no,m.title having count(l.id)=0 or count(p.completed_at)<count(l.id) order by m.ordinal_no limit 1",
             userId,
             level
         );
@@ -154,6 +154,14 @@ public class RoadmapCourseService {
         var module = moduleRow(moduleId);
         int level = ((Number) module.get("level_id")).intValue();
         unlocked(userId, level);
+        if (
+            db.queryForObject(
+                "select count(*) from study_module_access where user_id=? and module_id=?",
+                Integer.class,
+                userId,
+                moduleId
+            ) > 0
+        ) return;
         var barrier = firstUnfinishedModule(userId, level);
         if (
             barrier != null && ((Number) module.get("ordinal_no")).intValue() > barrier.ordinal()
@@ -208,7 +216,28 @@ public class RoadmapCourseService {
         };
     }
 
+    /** Capture existing access before a publication can change the sequential barriers. */
+    public void preserveModuleAccess() {
+        for (long userId : db.queryForList(
+            "select distinct user_id from study_progress union select distinct user_id from study_attempts union select distinct user_id from study_enrollments",
+            Long.class
+        ))
+            overview(userId, true);
+    }
+
     private Object overview(long userId) {
+        db.update("insert ignore into study_enrollments(user_id) values(?)", userId);
+        return overview(userId, false);
+    }
+
+    private Object overview(long userId, boolean preserve) {
+        var savedAccess = new HashSet<>(
+            db.queryForList(
+                "select module_id from study_module_access where user_id=?",
+                String.class,
+                userId
+            )
+        );
         var passed = new HashSet<>(
             db.queryForList(
                 "select distinct reference_id from study_attempts where user_id=? and kind='LEVEL_TEST' and status='PASSED'",
@@ -217,10 +246,10 @@ public class RoadmapCourseService {
             )
         );
         var modules = db.queryForList(
-            "select id,level_id as levelId,ordinal_no as ordinalNo,title from study_modules order by level_id,ordinal_no"
+            "select id,level_id as levelId,ordinal_no as ordinalNo,title from study_modules where archived=false order by level_id,ordinal_no"
         );
         var lessons = db.queryForList(
-            "select l.id,l.module_id as moduleId,l.ordinal_no as ordinalNo,l.title,p.opened_at as openedAt,p.completed_at as completedAt from study_lessons l left join study_progress p on p.lesson_id=l.id and p.user_id=? order by l.module_id,l.ordinal_no",
+            "select l.id,l.module_id as moduleId,l.ordinal_no as ordinalNo,l.title,p.opened_at as openedAt,p.completed_at as completedAt from study_lessons l left join study_progress p on p.lesson_id=l.id and p.user_id=? where l.archived=false order by l.module_id,l.ordinal_no",
             userId
         );
         var levels = db.queryForList(
@@ -262,10 +291,17 @@ public class RoadmapCourseService {
                     item.put("lessons", moduleLessons);
                     item.put("completedCount", moduleDone);
                     item.put("lessonCount", moduleLessons.size());
-                    item.put("unlocked", moduleOpen);
+                    boolean accessible =
+                        open && (moduleOpen || savedAccess.contains(module.get("id").toString()));
+                    if (accessible && preserve) db.update(
+                        "insert ignore into study_module_access(user_id,module_id) values(?,?)",
+                        userId,
+                        module.get("id")
+                    );
+                    item.put("unlocked", accessible);
                     item.put(
                         "lockReason",
-                        moduleOpen
+                        accessible
                             ? null
                             : !open
                               ? "Vượt bài kiểm tra level trước để mở level này"
@@ -307,6 +343,13 @@ public class RoadmapCourseService {
 
     private Object openLesson(User u, String id) {
         var lesson = lessonRow(id);
+        require(
+            !Boolean.parseBoolean(lesson.get("archived").toString()) &&
+                !Boolean.parseBoolean(
+                    moduleRow(lesson.get("module_id").toString()).get("archived").toString()
+                ),
+            "Bài học đã được lưu trữ"
+        );
         moduleUnlocked(u.id, lesson.get("module_id").toString());
         lockEnrollment(u.id);
         db.update("insert ignore into study_progress(user_id,lesson_id) values(?,?)", u.id, id);
@@ -322,7 +365,7 @@ public class RoadmapCourseService {
             : view(u, latest.getFirst());
         var barrier = firstUnfinishedModule(u.id, ((Number) lesson.get("level_id")).intValue());
         var next = db.queryForList(
-            "select l.id from study_lessons l join study_modules m on m.id=l.module_id join study_modules current_module on current_module.id=? where m.level_id=current_module.level_id and m.ordinal_no<=? and (m.ordinal_no>current_module.ordinal_no or (m.id=current_module.id and l.ordinal_no>?)) order by m.ordinal_no,l.ordinal_no limit 1",
+            "select l.id from study_lessons l join study_modules m on m.id=l.module_id join study_modules current_module on current_module.id=? where l.archived=false and m.archived=false and m.level_id=current_module.level_id and m.ordinal_no<=? and (m.ordinal_no>current_module.ordinal_no or (m.id=current_module.id and l.ordinal_no>?)) order by m.ordinal_no,l.ordinal_no limit 1",
             String.class,
             lesson.get("module_id"),
             barrier == null ? Integer.MAX_VALUE : barrier.ordinal(),
@@ -334,7 +377,19 @@ public class RoadmapCourseService {
         out.put("moduleId", lesson.get("module_id"));
         out.put("moduleTitle", lesson.get("module_title"));
         out.put("levelId", lesson.get("level_id"));
-        out.put("content", parse(lesson.get("content_json")));
+        var content = (ObjectNode) parse(lesson.get("content_json"));
+        var related = content.path("prerequisites");
+        var visibleRelated = json.createArrayNode();
+        for (var prerequisite : related)
+            if (
+                db.queryForObject(
+                    "select count(*) from study_lessons l join study_modules m on m.id=l.module_id where l.id=? and l.archived=false and m.archived=false",
+                    Integer.class,
+                    prerequisite.path("id").asText()
+                ) > 0
+            ) visibleRelated.add(prerequisite);
+        content.set("prerequisites", visibleRelated);
+        out.put("content", content);
         out.put("attempt", attempt);
         out.put("nextLessonId", next.isEmpty() ? null : next.getFirst());
         out.put(
@@ -374,10 +429,23 @@ public class RoadmapCourseService {
             );
             return view(u, ((Number) old.get("id")).longValue());
         }
+        if (kind.equals("LESSON")) {
+            var lesson = lessonRow(reference);
+            require(
+                !Boolean.parseBoolean(lesson.get("archived").toString()) &&
+                    !Boolean.parseBoolean(
+                        moduleRow(lesson.get("module_id").toString()).get("archived").toString()
+                    ),
+                "Bài học đã được lưu trữ"
+            );
+        } else if (kind.startsWith("MODULE_")) require(
+            !Boolean.parseBoolean(moduleRow(reference).get("archived").toString()),
+            "Module đã được lưu trữ"
+        );
         if (kind.endsWith("TEST")) {
             String condition = kind.equals("LEVEL_TEST") ? "m.level_id=?" : "m.id=?";
             var counts = db.queryForMap(
-                "select count(*) as total,count(p.completed_at) as completed from study_lessons l join study_modules m on m.id=l.module_id left join study_progress p on p.lesson_id=l.id and p.user_id=? where " +
+                "select count(*) as total,count(p.completed_at) as completed from study_lessons l join study_modules m on m.id=l.module_id left join study_progress p on p.lesson_id=l.id and p.user_id=? where l.archived=false and m.archived=false and " +
                     condition,
                 u.id,
                 reference
@@ -404,7 +472,7 @@ public class RoadmapCourseService {
               ? "m.id=?"
               : "m.level_id=?";
         var rows = db.queryForList(
-            "select l.id,l.title,l.questions_json,m.id as module_id,m.title as module_title,m.ordinal_no as module_ordinal from study_lessons l join study_modules m on m.id=l.module_id where " +
+            "select l.id,l.title,l.questions_json,m.id as module_id,m.title as module_title,m.ordinal_no as module_ordinal from study_lessons l join study_modules m on m.id=l.module_id where l.archived=false and m.archived=false and " +
                 condition +
                 " order by m.ordinal_no,l.ordinal_no",
             reference
@@ -500,10 +568,11 @@ public class RoadmapCourseService {
             if (barrier != null) {
                 var allowed = new HashSet<>(
                     db.queryForList(
-                        "select l.id from study_lessons l join study_modules m on m.id=l.module_id where m.level_id=? and m.ordinal_no<=?",
+                        "select l.id from study_lessons l join study_modules m on m.id=l.module_id where m.level_id=? and (m.ordinal_no<=? or exists (select 1 from study_module_access a where a.module_id=m.id and a.user_id=?))",
                         String.class,
                         Integer.parseInt(reference),
-                        barrier.ordinal()
+                        barrier.ordinal(),
+                        u.id
                     )
                 );
                 for (var question : parse(row.get("questions_json")))

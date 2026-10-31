@@ -54,6 +54,8 @@ export function MaterialDeliveryForm({
   const [busy, setBusy] = useState(false)
   const [loading, setLoading] = useState(false)
   const submitting = useRef(false)
+  const titleEdited = useRef(false)
+  const [sourceChanged, setSourceChanged] = useState(false)
   const assignment = kind === 'assignment'
   const targetClassId = fixedClassId ?? classId
   const options = materials.filter((item) => !item.archived)
@@ -81,7 +83,8 @@ export function MaterialDeliveryForm({
       .then((result) => {
         if (active) {
           setMaterial(result)
-          setTitle(result.name)
+          if (!titleEdited.current) setTitle(result.name)
+          else setSourceChanged(true)
         }
       })
       .catch((e) => {
@@ -138,6 +141,7 @@ export function MaterialDeliveryForm({
           : 'Đã tạo bài kiểm tra cho lớp thành công.',
       )
       setMaterialId(0)
+      setSourceChanged(false)
       setMaterial(null)
       setTitle('')
       setInstructions('')
@@ -153,6 +157,11 @@ export function MaterialDeliveryForm({
 
   return (
     <form className="material-delivery-form" onSubmit={submit}>
+      {sourceChanged && (
+        <div className="notice" role="status">
+          Học liệu nguồn đã cập nhật. Tên bài đang soạn được giữ nguyên.
+        </div>
+      )}
       {success && (
         <div className="success-banner" role="status">
           {success}
@@ -227,6 +236,8 @@ export function MaterialDeliveryForm({
                     value={item.id}
                     checked={materialId === item.id}
                     onChange={() => {
+                      titleEdited.current = false
+                      setSourceChanged(false)
                       setMaterialId(item.id)
                       setTitle('')
                       setError('')
@@ -286,7 +297,10 @@ export function MaterialDeliveryForm({
                     required
                     maxLength={160}
                     value={title}
-                    onChange={(e) => setTitle(e.target.value)}
+                    onChange={(e) => {
+                      titleEdited.current = true
+                      setTitle(e.target.value)
+                    }}
                     placeholder="Tên bài được điền từ bộ bạn chọn"
                     disabled={busy}
                   />

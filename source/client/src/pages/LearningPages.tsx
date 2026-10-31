@@ -54,7 +54,13 @@ export function LessonPage() {
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState('')
   const navigate = useNavigate()
-  useRealtimeRefresh(() => request<Lesson>('VIEW_LESSON_THEORY', 'LESSON_THEORY_DATA', { lessonId: Number(id) }).then(setLesson).catch((e) => setError(e.message)), connected)
+  useRealtimeRefresh(
+    () =>
+      request<Lesson>('VIEW_LESSON_THEORY', 'LESSON_THEORY_DATA', { lessonId: Number(id) })
+        .then(setLesson)
+        .catch((e) => setError(e.message)),
+    connected,
+  )
   useEffect(() => {
     if (!connected) return
     let active = true

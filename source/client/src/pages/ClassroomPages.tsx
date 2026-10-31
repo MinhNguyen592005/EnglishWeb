@@ -122,13 +122,24 @@ export function ClassesPage() {
   useEffect(() => {
     if (!connected) return
     let active = true
-    const apply = (data: { classes: Classroom[] }) => { if (active) setClasses(data.classes) }
+    const apply = (data: { classes: Classroom[] }) => {
+      if (active) setClasses(data.classes)
+    }
     const stop = subscribe((message) => {
       if (message.action === 'CLASS_UPDATE') apply(message.payload as { classes: Classroom[] })
-      if (message.action === 'CLASS_ERROR') setError((message.payload as { message: string }).message)
+      if (message.action === 'CLASS_ERROR')
+        setError((message.payload as { message: string }).message)
     })
-    void request<{ classes: Classroom[] }>('CLASS_LIST', 'CLASS_SNAPSHOT').then(apply).catch((e) => { if (active) setError(e.message) })
-    return () => { active = false; stop(); void request('CLASS_UNWATCH', 'CLASS_DATA').catch(() => {}) }
+    void request<{ classes: Classroom[] }>('CLASS_LIST', 'CLASS_SNAPSHOT')
+      .then(apply)
+      .catch((e) => {
+        if (active) setError(e.message)
+      })
+    return () => {
+      active = false
+      stop()
+      void request('CLASS_UNWATCH', 'CLASS_DATA').catch(() => {})
+    }
   }, [connected, request, subscribe])
   async function reload() {
     try {
@@ -203,22 +214,26 @@ export function ClassesPage() {
         {teacher ? (
           <section className="class-create-banner">
             <div>
-              <span className="class-eyebrow"><School size={16} /> KHÔNG GIAN GIẢNG DẠY</span>
+              <span className="class-eyebrow">
+                <School size={16} /> KHÔNG GIAN GIẢNG DẠY
+              </span>
               <h2>Tạo lớp học mới</h2>
               <p>Mã tham gia sẽ được tạo tự động.</p>
             </div>
             <form className="class-create-form" onSubmit={create}>
               <label className="class-create-field" htmlFor="new-class-name">
-                <span>Tên lớp học <span className="class-required-note">Bắt buộc</span></span>
-              <input
-                id="new-class-name"
-                required
-                maxLength={120}
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ví dụ: Tiếng Anh 10A · Năm học 2026"
-                aria-describedby="new-class-help"
-              />
+                <span>
+                  Tên lớp học <span className="class-required-note">Bắt buộc</span>
+                </span>
+                <input
+                  id="new-class-name"
+                  required
+                  maxLength={120}
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Ví dụ: Tiếng Anh 10A · Năm học 2026"
+                  aria-describedby="new-class-help"
+                />
                 <small id="new-class-help">Đặt tên dễ nhận biết để học viên tìm đúng lớp.</small>
               </label>
               <button className="button primary" disabled={busy || !name.trim()}>
@@ -363,15 +378,20 @@ export function ClassDetailPage() {
   useEffect(() => {
     if (!connected) return
     let active = true
-    void request('CLASS_OPEN', 'CLASS_SNAPSHOT', { classId }).catch((e) => { if (active) setError(e.message) })
-    return () => { active = false; void request('CLASS_UNWATCH', 'CLASS_DATA').catch(() => {}) }
+    void request('CLASS_OPEN', 'CLASS_SNAPSHOT', { classId }).catch((e) => {
+      if (active) setError(e.message)
+    })
+    return () => {
+      active = false
+      void request('CLASS_UNWATCH', 'CLASS_DATA').catch(() => {})
+    }
   }, [connected, classId, request])
   async function reload() {
     try {
       setError('')
       const next = await api.classroom(classId)
       setDetail(next)
-      setClassName((current) => current === detail?.name || !detail ? next.name : current)
+      setClassName((current) => (current === detail?.name || !detail ? next.name : current))
       if (user?.role === 'TEACHER' && next.teacherId === user.id)
         setOverview(await api.classroomOverview(classId))
       else setOverview(null)
@@ -422,11 +442,9 @@ export function ClassDetailPage() {
   useEffect(
     () =>
       subscribe((message) => {
-        if (
-          message.action === 'CLASS_UPDATE'
-        )
-          void reload()
-        if (message.action === 'CLASS_ERROR') setError((message.payload as { message: string }).message)
+        if (message.action === 'CLASS_UPDATE') void reload()
+        if (message.action === 'CLASS_ERROR')
+          setError((message.payload as { message: string }).message)
       }),
     [classId, view, subscribe],
   )
@@ -606,93 +624,98 @@ export function ClassDetailPage() {
     <Layout title={detail.name}>
       <div className={`class-workspace${isOwner ? ' teacher-class-workspace' : ''}`}>
         <div className="class-detail-top-row">
-        <Link to="/classes" className="button secondary class-back-link" aria-label="Quay lại lớp học" title="Quay lại lớp học">
-          <ArrowLeft size={16} />
-        </Link>
-        {/* Hero: quay lại danh sách, tên lớp, metadata, thao tác, tab */}
-        <section className="class-hero with-tabs">
-          <div className="class-detail-header">
-            <div>
-              <div className="class-title-row">
-                <h1>{detail.name}</h1>
-                <span
-                  className={`class-live-pill ${connected ? 'online' : 'offline'}`}
-                  role="status"
+          <Link
+            to="/classes"
+            className="button secondary class-back-link"
+            aria-label="Quay lại lớp học"
+            title="Quay lại lớp học"
+          >
+            <ArrowLeft size={16} />
+          </Link>
+          {/* Hero: quay lại danh sách, tên lớp, metadata, thao tác, tab */}
+          <section className="class-hero with-tabs">
+            <div className="class-detail-header">
+              <div>
+                <div className="class-title-row">
+                  <h1>{detail.name}</h1>
+                  <span
+                    className={`class-live-pill ${connected ? 'online' : 'offline'}`}
+                    role="status"
+                  >
+                    <span className="class-live-dot" />{' '}
+                    {connected ? 'Đang cập nhật realtime' : 'Đang offline'}
+                  </span>
+                </div>
+                <div className="class-meta-ribbon">
+                  <span>
+                    <UserRound size={16} /> Giảng viên: <strong>{detail.teacherName}</strong>
+                  </span>
+                  <span className="sep">•</span>
+                  <span>
+                    <UsersRound size={16} /> <strong>{memberTotal} học viên</strong>
+                  </span>
+                  <span className="sep">•</span>
+                  <span className="class-code-chip">
+                    <Hash size={16} /> Mã lớp: <code>{detail.joinCode}</code>
+                  </span>
+                </div>
+              </div>
+              <div className="class-header-actions">
+                <button type="button" className="button secondary" onClick={() => void copyCode()}>
+                  <Copy size={16} /> Sao chép mã
+                </button>
+                {isOwner && (
+                  <form onSubmit={rename} className="class-rename-form">
+                    <label htmlFor="class-rename">Tên lớp học</label>
+                    <input
+                      id="class-rename"
+                      required
+                      aria-label="Tên lớp"
+                      value={className}
+                      maxLength={120}
+                      onChange={(e) => setClassName(e.target.value)}
+                    />
+                    <button
+                      className="button secondary"
+                      disabled={busy || !className.trim() || className.trim() === detail.name}
+                    >
+                      <Pencil size={15} /> Đổi tên
+                    </button>
+                  </form>
+                )}
+                <button
+                  type="button"
+                  className="button primary"
+                  disabled={refreshing}
+                  onClick={() => void refresh()}
                 >
-                  <span className="class-live-dot" />{' '}
-                  {connected ? 'Đang cập nhật realtime' : 'Đang offline'}
-                </span>
-              </div>
-              <div className="class-meta-ribbon">
-                <span>
-                  <UserRound size={16} /> Giảng viên: <strong>{detail.teacherName}</strong>
-                </span>
-                <span className="sep">•</span>
-                <span>
-                  <UsersRound size={16} /> <strong>{memberTotal} học viên</strong>
-                </span>
-                <span className="sep">•</span>
-                <span className="class-code-chip">
-                  <Hash size={16} /> Mã lớp: <code>{detail.joinCode}</code>
-                </span>
+                  <RefreshCw size={16} className={refreshing ? 'spin' : ''} /> Tải lại dữ liệu
+                </button>
               </div>
             </div>
-            <div className="class-header-actions">
-              <button type="button" className="button secondary" onClick={() => void copyCode()}>
-                <Copy size={16} /> Sao chép mã
-              </button>
-              {isOwner && (
-                <form onSubmit={rename} className="class-rename-form">
-                  <label htmlFor="class-rename">Tên lớp học</label>
-                  <input
-                    id="class-rename"
-                    required
-                    aria-label="Tên lớp"
-                    value={className}
-                    maxLength={120}
-                    onChange={(e) => setClassName(e.target.value)}
-                  />
-                  <button
-                    className="button secondary"
-                    disabled={busy || !className.trim() || className.trim() === detail.name}
-                  >
-                    <Pencil size={15} /> Đổi tên
-                  </button>
-                </form>
-              )}
-              <button
-                type="button"
-                className="button primary"
-                disabled={refreshing}
-                onClick={() => void refresh()}
-              >
-                <RefreshCw size={16} className={refreshing ? 'spin' : ''} /> Tải lại dữ liệu
-              </button>
-            </div>
-          </div>
-          {(isOwner || learnerView) && (
-            <nav className="tab-bar class-tabs" aria-label="Công cụ lớp học">
-              {TABS.filter((tab) => !learnerView || allowedViews.includes(tab.key)).map((tab) => {
-                const Icon = tab.icon,
-                  count = tabCount[tab.key]
-                return (
-                  <button
-                    type="button"
-                    className={view === tab.key ? 'active' : ''}
-                    key={tab.key}
-                    onClick={() => go(tab.key)}
-                  >
-                    <Icon size={18} />
-                    <span>
-                      {learnerView && tab.key === 'grades' ? 'Kết quả của tôi' : tab.label}
-                    </span>
-                    {count !== undefined && <span className="class-tab-count">{count}</span>}
-                  </button>
-                )
-              })}
-            </nav>
-          )}
-        </section>
+            {(isOwner || learnerView) && (
+              <nav className="tab-bar class-tabs" aria-label="Công cụ lớp học">
+                {TABS.filter((tab) => !learnerView || allowedViews.includes(tab.key)).map((tab) => {
+                  const Icon = tab.icon,
+                    count = tabCount[tab.key]
+                  return (
+                    <button
+                      type="button"
+                      className={view === tab.key ? 'active' : ''}
+                      key={tab.key}
+                      onClick={() => go(tab.key)}
+                    >
+                      <Icon size={18} />
+                      <span>
+                        {learnerView && tab.key === 'grades' ? 'Kết quả của tôi' : tab.label}
+                      </span>
+                      {count !== undefined && <span className="class-tab-count">{count}</span>}
+                    </button>
+                  )
+                })}
+              </nav>
+            )}
+          </section>
         </div>
         {error && (
           <div className="error-banner" role="alert">
@@ -1156,7 +1179,9 @@ function Members({
 }) {
   const [query, setQuery] = useState('')
   const [page, setPage] = useState(1)
-  const [selectedStudent, setSelectedStudent] = useState<NonNullable<Classroom['members']>[number] | null>(null)
+  const [selectedStudent, setSelectedStudent] = useState<
+    NonNullable<Classroom['members']>[number] | null
+  >(null)
   const members = detail.members || []
   const filtered = members.filter((member) =>
     `${member.displayName} ${member.username}`
@@ -1220,12 +1245,19 @@ function Members({
                 tabIndex={isOwner ? 0 : undefined}
                 aria-label={isOwner ? `Xem kết quả của ${member.displayName}` : undefined}
                 onClick={isOwner ? () => setSelectedStudent(member) : undefined}
-                onKeyDown={isOwner ? (event) => {
-                  if (event.target === event.currentTarget && (event.key === 'Enter' || event.key === ' ')) {
-                    event.preventDefault()
-                    setSelectedStudent(member)
-                  }
-                } : undefined}
+                onKeyDown={
+                  isOwner
+                    ? (event) => {
+                        if (
+                          event.target === event.currentTarget &&
+                          (event.key === 'Enter' || event.key === ' ')
+                        ) {
+                          event.preventDefault()
+                          setSelectedStudent(member)
+                        }
+                      }
+                    : undefined
+                }
               >
                 <td>
                   <span className="class-member-cell">
@@ -1275,7 +1307,13 @@ function Members({
         </div>
       )}
       <Pagination total={filtered.length} page={current} onPageChange={setPage} />
-      {isOwner && selectedStudent && <StudentClassResultsDialog classroom={detail} student={selectedStudent} onClose={() => setSelectedStudent(null)} />}
+      {isOwner && selectedStudent && (
+        <StudentClassResultsDialog
+          classroom={detail}
+          student={selectedStudent}
+          onClose={() => setSelectedStudent(null)}
+        />
+      )}
     </section>
   )
 }
@@ -1485,41 +1523,90 @@ function Chat({
     <section className="card feature-card chat-panel class-panel class-chat">
       <div className="class-panel-head">
         <div className="class-chat-identity">
-          <span className="class-chat-group-avatar"><UsersRound size={24} /></span>
+          <span className="class-chat-group-avatar">
+            <UsersRound size={24} />
+          </span>
           <div>
-          <h2>
-            Trò chuyện lớp học
-          </h2>
-          <p className="muted"><span className={`class-chat-connection ${connected ? 'online' : ''}`} />{connected ? 'Đã kết nối · Trao đổi cùng cả lớp' : 'Đang kết nối lại…'}</p>
+            <h2>Trò chuyện lớp học</h2>
+            <p className="muted">
+              <span className={`class-chat-connection ${connected ? 'online' : ''}`} />
+              {connected ? 'Đã kết nối · Trao đổi cùng cả lớp' : 'Đang kết nối lại…'}
+            </p>
           </div>
         </div>
-        <span className="class-chat-counter"><MessageCircle size={15} />{messages.length} tin nhắn</span>
+        <span className="class-chat-counter">
+          <MessageCircle size={15} />
+          {messages.length} tin nhắn
+        </span>
       </div>
-      <div ref={list} className="chat-list" role="log" aria-label="Tin nhắn trong lớp" aria-relevant="additions" aria-live="polite" onScroll={() => {
-        const element = list.current
-        if (element) followLatest.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80
-      }}>
+      <div
+        ref={list}
+        className="chat-list"
+        role="log"
+        aria-label="Tin nhắn trong lớp"
+        aria-relevant="additions"
+        aria-live="polite"
+        onScroll={() => {
+          const element = list.current
+          if (element)
+            followLatest.current =
+              element.scrollHeight - element.scrollTop - element.clientHeight < 80
+        }}
+      >
         {messages.length ? (
           messages.map((item, index) => (
             <div className="class-chat-message-group" key={item.id}>
-              {(index === 0 || new Date(messages[index - 1].createdAt).toDateString() !== new Date(item.createdAt).toDateString()) && <div className="class-chat-day"><span>{new Date(item.createdAt).toLocaleDateString('vi-VN', { weekday: 'long', day: '2-digit', month: '2-digit', year: 'numeric' })}</span></div>}
-            <div className={`chat-message ${item.userId === userId ? 'mine' : ''}`} key={item.id}>
-              {item.userId !== userId && <span className="avatar" title={item.displayName}>{item.displayName.slice(0, 1).toUpperCase()}</span>}
-              <div className="class-chat-message-content">
-                {item.userId !== userId && <span className="class-chat-sender">{item.displayName}</span>}
-              <div className="chat-bubble">
-                <p>{item.body}</p>
-              </div>
-              <div className="class-chat-message-meta">
-                <time dateTime={item.createdAt} title={new Date(item.createdAt).toLocaleString('vi-VN')}>{new Date(item.createdAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}</time>
+              {(index === 0 ||
+                new Date(messages[index - 1].createdAt).toDateString() !==
+                  new Date(item.createdAt).toDateString()) && (
+                <div className="class-chat-day">
+                  <span>
+                    {new Date(item.createdAt).toLocaleDateString('vi-VN', {
+                      weekday: 'long',
+                      day: '2-digit',
+                      month: '2-digit',
+                      year: 'numeric',
+                    })}
+                  </span>
+                </div>
+              )}
+              <div className={`chat-message ${item.userId === userId ? 'mine' : ''}`} key={item.id}>
                 {item.userId !== userId && (
-                  <button type="button" className="class-chat-report" onClick={() => report(item.id)} aria-label={`Báo cáo tin nhắn của ${item.displayName}`} title="Báo cáo tin nhắn">
-                    <Flag size={12} />
-                  </button>
+                  <span className="avatar" title={item.displayName}>
+                    {item.displayName.slice(0, 1).toUpperCase()}
+                  </span>
                 )}
-                {item.userId === userId && <CheckCircle2 size={12} aria-label="Đã gửi" />}
-              </div>
-              </div>
+                <div className="class-chat-message-content">
+                  {item.userId !== userId && (
+                    <span className="class-chat-sender">{item.displayName}</span>
+                  )}
+                  <div className="chat-bubble">
+                    <p>{item.body}</p>
+                  </div>
+                  <div className="class-chat-message-meta">
+                    <time
+                      dateTime={item.createdAt}
+                      title={new Date(item.createdAt).toLocaleString('vi-VN')}
+                    >
+                      {new Date(item.createdAt).toLocaleTimeString('vi-VN', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                      })}
+                    </time>
+                    {item.userId !== userId && (
+                      <button
+                        type="button"
+                        className="class-chat-report"
+                        onClick={() => report(item.id)}
+                        aria-label={`Báo cáo tin nhắn của ${item.displayName}`}
+                        title="Báo cáo tin nhắn"
+                      >
+                        <Flag size={12} />
+                      </button>
+                    )}
+                    {item.userId === userId && <CheckCircle2 size={12} aria-label="Đã gửi" />}
+                  </div>
+                </div>
               </div>
             </div>
           ))
@@ -1532,7 +1619,9 @@ function Chat({
         )}
       </div>
       <form className="inline-form" onSubmit={send}>
-        <span className="class-chat-compose-icon" aria-hidden="true"><MessageCircle size={22} /></span>
+        <span className="class-chat-compose-icon" aria-hidden="true">
+          <MessageCircle size={22} />
+        </span>
         <input
           aria-label="Tin nhắn lớp"
           required
@@ -1541,7 +1630,12 @@ function Chat({
           onChange={(event) => setMessage(event.target.value)}
           placeholder="Aa · Nhắn tin cho lớp…"
         />
-        <button className="button primary" disabled={busy || !message.trim()} aria-label={busy ? 'Đang gửi tin nhắn' : 'Gửi tin nhắn'} title="Gửi tin nhắn">
+        <button
+          className="button primary"
+          disabled={busy || !message.trim()}
+          aria-label={busy ? 'Đang gửi tin nhắn' : 'Gửi tin nhắn'}
+          title="Gửi tin nhắn"
+        >
           <Send size={21} />
         </button>
       </form>

@@ -323,6 +323,276 @@ class StudyRoadmapIntegrationTest {
         assertEquals(0, db.queryForObject("select count(*) from attempts", Integer.class));
         assertEquals(0, db.queryForObject("select count(*) from xp_ledger", Integer.class));
         socketRoundTrip();
+        managementWorkflow();
+    }
+
+    void managementWorkflow() {
+        var repo = app.getBean(UserRepository.class);
+        var service = app.getBean(StudyManagementService.class);
+        var teacher = new User("course_author", "Author", "unused");
+        teacher.role = "TEACHER";
+        repo.save(teacher);
+        var colleague = new User("course_colleague", "Colleague", "unused");
+        colleague.role = "TEACHER";
+        repo.save(colleague);
+        var admin = new User("course_admin", "Editor", "unused");
+        admin.role = "ADMIN";
+        repo.save(admin);
+        var student = repo.save(new User("course_student", "Student", "unused"));
+        assertThrows(ApiException.class, () -> service.workspace(student.username));
+        assertFalse(
+            json.valueToTree(service.workspace(teacher.username)).path("modules").isEmpty()
+        );
+        var live = json.valueToTree(service.module(teacher.username, "l1-m1"));
+        var draft = json.valueToTree(service.create(teacher.username, "l1-m1", 1, null));
+        var stale = json.valueToTree(service.create(admin.username, "l1-m1", 1, null));
+        long draftId = draft.path("id").asLong();
+        assertThrows(ApiException.class, () -> service.draft(colleague.username, draftId));
+        var edited = (ObjectNode) draft.path("payload").deepCopy();
+        edited.put("title", "Renamed module");
+        ((ObjectNode) edited.path("lessons").get(0).path("questions").get(0)).put(
+            "prompt",
+            "Updated prompt"
+        );
+        var saved = json.valueToTree(service.save(teacher.username, draftId, 1, edited));
+        assertEquals(live, json.valueToTree(service.module(teacher.username, "l1-m1")));
+        assertThrows(ApiException.class, () -> service.save(teacher.username, draftId, 1, edited));
+        assertThrows(ApiException.class, () ->
+            service.action(teacher.username, draftId, "publish", saved.path("version").asInt(), "")
+        );
+        var submitted = json.valueToTree(
+            service.action(
+                teacher.username,
+                draftId,
+                "submit",
+                saved.path("version").asInt(),
+                "Please review"
+            )
+        );
+        assertThrows(ApiException.class, () ->
+            service.save(teacher.username, draftId, submitted.path("version").asInt(), edited)
+        );
+        var returned = json.valueToTree(
+            service.action(
+                admin.username,
+                draftId,
+                "return",
+                submitted.path("version").asInt(),
+                "Please improve"
+            )
+        );
+        assertEquals("RETURNED", returned.path("status").asText());
+        var resubmitted = json.valueToTree(
+            service.action(
+                teacher.username,
+                draftId,
+                "submit",
+                returned.path("version").asInt(),
+                "Done"
+            )
+        );
+        var published = json.valueToTree(
+            service.action(
+                admin.username,
+                draftId,
+                "publish",
+                resubmitted.path("version").asInt(),
+                "Approved"
+            )
+        );
+        assertEquals("PUBLISHED", published.path("status").asText());
+        assertEquals(
+            "Renamed module",
+            db.queryForObject("select title from study_modules where id='l1-m1'", String.class)
+        );
+        assertEquals(
+            live.path("lessons").get(0).path("id"),
+            json
+                .valueToTree(service.module(admin.username, "l1-m1"))
+                .path("lessons")
+                .get(0)
+                .path("id")
+        );
+        assertThrows(ApiException.class, () ->
+            service.action(
+                admin.username,
+                stale.path("id").asLong(),
+                "publish",
+                stale.path("version").asInt(),
+                ""
+            )
+        );
+        assertEquals(2, json.valueToTree(service.history(admin.username, "l1-m1")).size());
+
+        var before = json.valueToTree(
+            course.action(
+                student.username,
+                "ROADMAP_LESSON",
+                json.valueToTree(Map.of("lessonId", "1.1"))
+            )
+        );
+        long attempt = before.path("attempt").path("id").asLong();
+        String snapshot = db.queryForObject(
+            "select questions_json from study_attempts where id=?",
+            String.class,
+            attempt
+        );
+        var created = json.valueToTree(service.create(teacher.username, null, 1, null));
+        var payload = (ObjectNode) created.path("payload").deepCopy();
+        payload.put("title", "New first module");
+        payload.put("ordinalNo", 1);
+        var lesson = (ObjectNode) live.path("lessons").get(0).deepCopy();
+        lesson.put("id", "managed-lesson");
+        int index = 0;
+        for (var question : lesson.path("questions"))
+            ((ObjectNode) question).put("id", "managed-q" + ++index);
+        ((com.fasterxml.jackson.databind.node.ArrayNode) payload.path("lessons")).add(lesson);
+        long newId = created.path("id").asLong();
+        var newSaved = json.valueToTree(service.save(teacher.username, newId, 1, payload));
+        var newSubmitted = json.valueToTree(
+            service.action(teacher.username, newId, "submit", newSaved.path("version").asInt(), "")
+        );
+        service.action(admin.username, newId, "publish", newSubmitted.path("version").asInt(), "");
+        var overview = json.valueToTree(
+            course.action(student.username, "ROADMAP_OPEN", json.createObjectNode())
+        );
+        assertEquals(
+            payload.path("id").asText(),
+            overview.path("levels").get(0).path("modules").get(0).path("id").asText()
+        );
+        assertTrue(
+            overview.path("levels").get(0).path("modules").get(1).path("unlocked").asBoolean(),
+            "Previously open module must remain open"
+        );
+        assertEquals(
+            snapshot,
+            db.queryForObject(
+                "select questions_json from study_attempts where id=?",
+                String.class,
+                attempt
+            )
+        );
+        assertDoesNotThrow(() ->
+            course.action(
+                student.username,
+                "ROADMAP_ATTEMPT",
+                json.valueToTree(Map.of("attemptId", attempt))
+            )
+        );
+        long managedAttempt = json
+            .valueToTree(
+                course.action(
+                    student.username,
+                    "ROADMAP_LESSON",
+                    json.valueToTree(Map.of("lessonId", "managed-lesson"))
+                )
+            )
+            .path("attempt")
+            .path("id")
+            .asLong();
+
+        var archive = json.valueToTree(
+            service.create(admin.username, payload.path("id").asText(), 1, null)
+        );
+        var archived = (ObjectNode) archive.path("payload").deepCopy();
+        archived.put("archived", true);
+        var archiveSaved = json.valueToTree(
+            service.save(admin.username, archive.path("id").asLong(), 1, archived)
+        );
+        service.action(
+            admin.username,
+            archive.path("id").asLong(),
+            "publish",
+            archiveSaved.path("version").asInt(),
+            ""
+        );
+        assertThrows(ApiException.class, () ->
+            course.action(
+                student.username,
+                "ROADMAP_LESSON",
+                json.valueToTree(Map.of("lessonId", "managed-lesson"))
+            )
+        );
+        assertDoesNotThrow(() ->
+            course.action(
+                student.username,
+                "ROADMAP_ATTEMPT",
+                json.valueToTree(Map.of("attemptId", managedAttempt))
+            )
+        );
+        assertFalse(
+            db
+                .queryForList(
+                    "select * from study_progress where user_id=? and lesson_id='1.1'",
+                    student.id
+                )
+                .isEmpty()
+        );
+        var restored = json.valueToTree(service.create(admin.username, "l1-m1", 1, 1));
+        assertEquals(live.path("title"), restored.path("payload").path("title"));
+        service.action(
+            admin.username,
+            restored.path("id").asLong(),
+            "publish",
+            restored.path("version").asInt(),
+            "Restore original"
+        );
+        assertEquals(
+            live.path("title").asText(),
+            db.queryForObject("select title from study_modules where id='l1-m1'", String.class)
+        );
+        var forged = json.valueToTree(service.create(admin.username, null, 1, null));
+        var forgedPayload = (ObjectNode) forged.path("payload").deepCopy();
+        ((com.fasterxml.jackson.databind.node.ArrayNode) forgedPayload.path("lessons")).add(
+            live.path("lessons").get(0).deepCopy()
+        );
+        var forgedSaved = json.valueToTree(
+            service.save(admin.username, forged.path("id").asLong(), 1, forgedPayload)
+        );
+        assertThrows(ApiException.class, () ->
+            service.action(
+                admin.username,
+                forged.path("id").asLong(),
+                "publish",
+                forgedSaved.path("version").asInt(),
+                ""
+            )
+        );
+        assertEquals(
+            "l1-m1",
+            db.queryForObject("select module_id from study_lessons where id='1.1'", String.class)
+        );
+        var deletable = json.valueToTree(service.create(teacher.username, null, 1, null));
+        long deleteId = deletable.path("id").asLong();
+        assertThrows(ApiException.class, () ->
+            service.action(colleague.username, deleteId, "delete", 1, "")
+        );
+        assertThrows(ApiException.class, () ->
+            service.action(teacher.username, deleteId, "delete", 2, "")
+        );
+        service.action(teacher.username, deleteId, "delete", 1, "");
+        assertThrows(ApiException.class, () -> service.draft(teacher.username, deleteId));
+        var pending = json.valueToTree(service.create(teacher.username, "l1-m1", 1, null));
+        var waiting = json.valueToTree(
+            service.action(teacher.username, pending.path("id").asLong(), "submit", 1, "")
+        );
+        service.action(
+            admin.username,
+            pending.path("id").asLong(),
+            "delete",
+            waiting.path("version").asInt(),
+            ""
+        );
+        assertThrows(ApiException.class, () ->
+            service.draft(admin.username, pending.path("id").asLong())
+        );
+        assertThrows(ApiException.class, () ->
+            service.action(admin.username, draftId, "delete", published.path("version").asInt(), "")
+        );
+        assertEquals(
+            live.path("title").asText(),
+            db.queryForObject("select title from study_modules where id='l1-m1'", String.class)
+        );
     }
 
     void socketRoundTrip() throws Exception {

@@ -298,19 +298,20 @@ public class PlacementService {
                 u.id
             );
             String firstModule = db.queryForObject(
-                "select id from study_modules where level_id=? order by ordinal_no limit 1",
+                "select id from study_modules where level_id=? and archived=false order by ordinal_no limit 1",
                 String.class,
                 start
             );
             String startPath = "/roadmap?planet=level-" + start + "&module=" + firstModule;
             String resumePath = "/roadmap?planet=level-" + current;
             if (state.get("last_lesson_id") != null) {
-                var last = db.queryForMap(
-                    "select l.id,l.module_id,m.level_id,p.completed_at from study_lessons l join study_modules m on m.id=l.module_id left join study_progress p on p.lesson_id=l.id and p.user_id=? where l.id=?",
+                var candidates = db.queryForList(
+                    "select l.id,l.module_id,m.level_id,p.completed_at from study_lessons l join study_modules m on m.id=l.module_id left join study_progress p on p.lesson_id=l.id and p.user_id=? where l.id=? and l.archived=false and m.archived=false",
                     u.id,
                     state.get("last_lesson_id")
                 );
-                if (last.get("completed_at") == null) resumePath =
+                var last = candidates.isEmpty() ? null : candidates.getFirst();
+                if (last != null && last.get("completed_at") == null) resumePath =
                     "/roadmap?planet=level-" +
                     last.get("level_id") +
                     "&module=" +

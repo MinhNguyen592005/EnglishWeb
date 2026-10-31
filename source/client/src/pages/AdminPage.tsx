@@ -117,9 +117,7 @@ function UsersPanel({
       <div className="users-board-head">
         <div>
           <h1>Quản lý tài khoản</h1>
-          <p className="muted">
-            Theo dõi người dùng, vai trò và trạng thái truy cập.
-          </p>
+          <p className="muted">Theo dõi người dùng, vai trò và trạng thái truy cập.</p>
         </div>
         <span className="users-total">{visible.length} tài khoản</span>
       </div>
@@ -147,7 +145,21 @@ function UsersPanel({
         ))}
       </div>
       <div className="account-list-toolbar">
-        <label className="account-search"><Search size={18} /><input type="search" aria-label="Tìm tài khoản" placeholder="Tìm tên hoặc tài khoản…" value={filter} onChange={(event) => setFilter(event.target.value)} />{filter && <button type="button" aria-label="Xóa tìm kiếm tài khoản" onClick={() => setFilter('')}><X size={16} /></button>}</label>
+        <label className="account-search">
+          <Search size={18} />
+          <input
+            type="search"
+            aria-label="Tìm tài khoản"
+            placeholder="Tìm tên hoặc tài khoản…"
+            value={filter}
+            onChange={(event) => setFilter(event.target.value)}
+          />
+          {filter && (
+            <button type="button" aria-label="Xóa tìm kiếm tài khoản" onClick={() => setFilter('')}>
+              <X size={16} />
+            </button>
+          )}
+        </label>
         <span>{visible.length} kết quả</span>
       </div>
       <div className="table-wrap">
@@ -376,7 +388,16 @@ function ReportsPanel({
   const rows = visibleReports.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE)
   return (
     <section className="admin-reports">
-      <header className="management-page-heading"><div><h1>Báo cáo vi phạm</h1><p>Xem xét báo cáo và giữ môi trường học tập an toàn.</p></div><span className={`report-live ${connected ? 'online' : ''}`}><i />{connected ? 'Đang cập nhật trực tiếp' : 'Đang kết nối lại'}</span></header>
+      <header className="management-page-heading">
+        <div>
+          <h1>Báo cáo vi phạm</h1>
+          <p>Xem xét báo cáo và giữ môi trường học tập an toàn.</p>
+        </div>
+        <span className={`report-live ${connected ? 'online' : ''}`}>
+          <i />
+          {connected ? 'Đang cập nhật trực tiếp' : 'Đang kết nối lại'}
+        </span>
+      </header>
       <div className="report-kpi-grid">
         <article>
           <ShieldAlert />
@@ -610,15 +631,30 @@ export function AdminPage() {
     [error, setError] = useState(''),
     [notice, setNotice] = useState(''),
     [busy, setBusy] = useState(false)
-  const [selectedReport, setSelectedReport] = useState<AdminReport | null>(null),
+  const [selectedReportKey, setSelectedReport] = useState<Pick<
+      AdminReport,
+      'source' | 'id'
+    > | null>(null),
     [reportFilter, setReportFilter] = useState<ReportFilter>('all'),
     [reportSearch, setReportSearch] = useState(''),
     [reportSort, setReportSort] = useState<ReportSort>('newest')
+  const selectedReport =
+    reports.find(
+      (report) => report.id === selectedReportKey?.id && report.source === selectedReportKey.source,
+    ) ?? null
   async function reload() {
     if (tab === 'users') setUsers(await api.adminUsers())
     else if (tab === 'audit') setAudit(await api.adminAudit())
   }
-  useRealtimeRefresh(reload)
+  useRealtimeRefresh(async () => {
+    try {
+      await reload()
+      setError('')
+    } catch (e) {
+      setError((e as Error).message || 'Không thể đồng bộ dữ liệu. Đang thử lại.')
+      throw e
+    }
+  })
   useEffect(() => {
     reload().catch((e) => setError(e.message))
   }, [tab])
@@ -649,6 +685,9 @@ export function AdminPage() {
     let active = true
     const update = (data: { reports: AdminReport[]; overview: NonNullable<typeof overview> }) => {
       setReports(data.reports)
+      setSelectedReport((key) =>
+        key && data.reports.some((r) => r.id === key.id && r.source === key.source) ? key : null,
+      )
       setOverview(data.overview)
     }
     const stop = subscribe((message) => {
@@ -783,7 +822,9 @@ export function AdminPage() {
               : 'Tổng quan quản trị'
   return (
     <Layout title={tabTitle}>
-      <div className={`admin-page${tab === 'users' || tab === 'reports' ? ' admin-management' : ''}`}>
+      <div
+        className={`admin-page${tab === 'users' || tab === 'reports' ? ' admin-management' : ''}`}
+      >
         {error && (
           <p className="error-banner" role="alert">
             {error}
@@ -801,7 +842,10 @@ export function AdminPage() {
                 <h1>Tổng quan hệ thống</h1>
                 <p>Theo dõi người dùng, hoạt động ứng dụng và tình trạng máy chủ.</p>
               </div>
-              <span className={`admin-overview-status ${connected ? 'online' : ''}`} role="status"><i />{connected ? 'Đang cập nhật trực tiếp' : 'Đang kết nối lại'}</span>
+              <span className={`admin-overview-status ${connected ? 'online' : ''}`} role="status">
+                <i />
+                {connected ? 'Đang cập nhật trực tiếp' : 'Đang kết nối lại'}
+              </span>
             </header>
             <div className="admin-kpi-grid">
               {dashboardCards.map(({ label, value, detail, icon: Icon, tone }) => (
@@ -814,7 +858,10 @@ export function AdminPage() {
                   </div>
                   <strong>{value}</strong>
                   <small>{detail}</small>
-                  <Link to={tone === 'danger' ? '/admin?tab=reports' : '/admin?tab=users'}>{tone === 'danger' ? 'Xem báo cáo' : 'Quản lý tài khoản'}<ArrowRight size={14} /></Link>
+                  <Link to={tone === 'danger' ? '/admin?tab=reports' : '/admin?tab=users'}>
+                    {tone === 'danger' ? 'Xem báo cáo' : 'Quản lý tài khoản'}
+                    <ArrowRight size={14} />
+                  </Link>
                 </article>
               ))}
             </div>

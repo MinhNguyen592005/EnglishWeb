@@ -206,10 +206,9 @@ try {
   items.unshift(notification(4, { title: 'Thông báo mới sau khi đăng nhập' }))
   broadcast()
   await expect(bell).toHaveAttribute('aria-label', 'Thông báo, 1 chưa đọc')
-  await expect(second.getByRole('button', { name: /^Thông báo(?:, \d+ chưa đọc)?$/ })).toHaveAttribute(
-    'aria-label',
-    'Thông báo, 1 chưa đọc',
-  )
+  await expect(
+    second.getByRole('button', { name: /^Thông báo(?:, \d+ chưa đọc)?$/ }),
+  ).toHaveAttribute('aria-label', 'Thông báo, 1 chưa đọc')
   await bell.click()
   await dialog.getByRole('button', { name: 'Đánh dấu tất cả đã đọc' }).click()
   await expect(second.locator('.notification-dot')).toHaveCount(0)

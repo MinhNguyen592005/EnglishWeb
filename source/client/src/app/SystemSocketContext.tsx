@@ -143,7 +143,8 @@ export function SystemSocketProvider({ children }: { children: ReactNode }) {
           return
         }
         if (!message || typeof message.action !== 'string') return
-        if (message.action === 'DATA_INVALIDATED') window.dispatchEvent(new Event(realtimeRefreshEvent))
+        if (message.action === 'DATA_INVALIDATED')
+          window.dispatchEvent(new Event(realtimeRefreshEvent))
         if (message.action === 'ACCOUNT_UPDATE') {
           const profile = message.payload as Profile
           if (

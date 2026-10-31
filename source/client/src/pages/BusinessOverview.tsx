@@ -18,7 +18,15 @@ const shortDate = (value: string) => {
 export function BusinessOverview() {
   const [data, setData] = useState<{ days: Day[]; finishedMatches: number } | null>(null)
   const [error, setError] = useState('')
-  useRealtimeRefresh(() => api.adminBusiness().then((value) => { setData(value); setError('') }).catch((e) => setError(e.message)))
+  useRealtimeRefresh(() =>
+    api
+      .adminBusiness()
+      .then((value) => {
+        setData(value)
+        setError('')
+      })
+      .catch((e) => setError(e.message)),
+  )
   useEffect(() => {
     api
       .adminBusiness()

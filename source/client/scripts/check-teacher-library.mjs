@@ -46,6 +46,8 @@ await context.route('**/api/v1/**', async (route) => {
     method = route.request().method()
   const json = (data) => route.fulfill({ json: data })
   if (path === '/api/v1/auth/me') return json(profile)
+  if (path === '/api/v1/notifications')
+    return json({ items: [], unreadCount: 0, nextBeforeId: null })
   if (path === '/api/v1/auth/csrf') return json({ token: 'fixture-csrf' })
   if (path === '/api/v1/classes') return json([classroom])
   if (path === '/api/v1/classes/90') return json(classroom)
@@ -128,6 +130,7 @@ try {
   await expect(page.locator('.tm-card')).toHaveCount(0)
   await page.screenshot({ path: 'artifacts/teacher-library/empty-library.png', fullPage: true })
   await page.goto(`${base}/classes/90?view=assignments`)
+  await page.getByRole('button', { name: /Giao b\u00e0i t\u1eadp m\u1edbi/ }).click()
   await expect(
     page.getByText('Chưa có nội dung để giao bài tập/kiểm tra', { exact: true }),
   ).toBeVisible()
@@ -197,11 +200,14 @@ try {
   const compactRow = await page.locator('.tm-card').boundingBox()
   assert.ok(compactRow.height < 180, 'Library rows should be compact on desktop')
   await page.goto(`${base}/classes/90?view=assignments`)
+  await page.getByRole('button', { name: /Giao b\u00e0i t\u1eadp m\u1edbi/ }).click()
   const chooseMaterial = () => page.getByRole('radio', { name: /Ôn tập Unit 1/ })
   await expect(chooseMaterial()).toBeVisible()
   await chooseMaterial().check()
   await expect(page.getByLabel('Tên bài tập hiển thị trong lớp')).toHaveValue('Ôn tập Unit 1')
   // Library changes made in another tab become visible without leaving the classroom.
+  await page.getByLabel('Tên bài tập hiển thị trong lớp').fill('My unsaved title')
+  detail = { ...detail, updatedAt: new Date(Date.now() + 10000).toISOString() }
   materials = [detail, { ...detail, id: 32, name: 'Bộ mới từ tab khác', questionCount: 8 }]
   await page.evaluate(() =>
     window.dispatchEvent(
@@ -212,6 +218,7 @@ try {
     ),
   )
   await expect(page.getByRole('radio', { name: /Bộ mới từ tab khác/ })).toBeVisible()
+  await expect(page.getByLabel('Tên bài tập hiển thị trong lớp')).toHaveValue('My unsaved title')
   const callsBeforeRefresh = materialListCalls
   await page.getByRole('button', { name: 'Tải lại dữ liệu', exact: true }).click()
   await expect(chooseMaterial()).toBeVisible()
@@ -219,17 +226,22 @@ try {
   await page.getByLabel('Hạn nộp bài').fill(localDue)
   await page.screenshot({ path: 'artifacts/teacher-library/class-delivery.png', fullPage: true })
   await page.getByRole('button', { name: 'Giao bài cho lớp' }).click()
-  await expect(page.getByRole('status')).toContainText('Đã giao bài tập cho lớp thành công.')
+  await expect(page.locator('.success-banner')).toContainText('Đã giao bài tập cho lớp thành công.')
   assert.equal(assignments.length, 1)
   assert.equal(assignments[0].materialId, 31)
+  assert.equal(assignments[0].title, 'My unsaved title')
   assert.equal(assignments[0].lessonId, undefined)
   await page.goto(`${base}/classes/90?view=exams`)
+  await page.getByRole('button', { name: /T\u1ea1o ki\u1ec3m tra m\u1edbi/ }).click()
   await chooseMaterial().check()
   await expect(page.getByLabel('Tên bài kiểm tra')).toHaveValue('Ôn tập Unit 1')
   await page.getByLabel('Hạn làm bài').fill(localDue)
   await page.getByRole('button', { name: 'Tạo bài kiểm tra', exact: true }).click()
-  await expect(page.getByRole('status')).toContainText('Đã tạo bài kiểm tra cho lớp thành công.')
+  await expect(page.locator('.success-banner')).toContainText(
+    'Đã tạo bài kiểm tra cho lớp thành công.',
+  )
   assert.equal(exams.length, 1)
+  materials = [detail]
   await page.goto(`${base}/teacher/questions`)
   await page.setViewportSize({ width: 390, height: 844 })
   await expect(page.locator('.tm-card')).toHaveCount(1)
@@ -241,6 +253,7 @@ try {
   await page.getByRole('button', { name: 'Lưu trữ Ôn tập Unit 1' }).click()
   await expect(page.locator('.tm-card')).toHaveCount(0)
   await page.goto(`${base}/classes/90?view=assignments`)
+  await page.getByRole('button', { name: /Giao b\u00e0i t\u1eadp m\u1edbi/ }).click()
   await expect(
     page.getByText('Chưa có nội dung để giao bài tập/kiểm tra', { exact: true }),
   ).toBeVisible()
@@ -259,6 +272,7 @@ try {
   await expect(page.getByRole('alert')).toHaveCount(0)
   assert.equal(materialListCalls, callsBeforeOverview)
   await page.goto(`${base}/classes/90?view=assignments`)
+  await page.getByRole('button', { name: /Giao b\u00e0i t\u1eadp m\u1edbi/ }).click()
   await expect(page.getByText('Chưa tải được nội dung để giao bài', { exact: true })).toBeVisible()
   await expect(page.locator('.class-workspace > .error-banner')).toHaveCount(0)
   failStatus = 404

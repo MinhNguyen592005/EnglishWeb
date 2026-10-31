@@ -27,19 +27,24 @@ public class AuthController {
     private final AuthenticationManager manager;
     private final HttpSessionSecurityContextRepository contextRepository;
     private final com.grammarquest.service.PlacementService placement;
+    private final org.springframework.context.ApplicationEventPublisher events;
+
+    public record UserRegistered(Long userId) {}
 
     public AuthController(
         UserRepository users,
         PasswordEncoder encoder,
         AuthenticationManager manager,
         HttpSessionSecurityContextRepository contextRepository,
-        com.grammarquest.service.PlacementService placement
+        com.grammarquest.service.PlacementService placement,
+        org.springframework.context.ApplicationEventPublisher events
     ) {
         this.users = users;
         this.encoder = encoder;
         this.manager = manager;
         this.contextRepository = contextRepository;
         this.placement = placement;
+        this.events = events;
     }
 
     public record Register(
@@ -145,6 +150,7 @@ public class AuthController {
         user.placementEligible = true;
         user = users.save(user);
         placement.enrollNewUser(user.id);
+        events.publishEvent(new UserRegistered(user.id));
         return ResponseEntity.status(201).body(Profile.from(user));
     }
 

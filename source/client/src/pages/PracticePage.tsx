@@ -200,7 +200,9 @@ export function PracticePage() {
                         setActionError('')
                       }}
                     >
-                      <span className="practice-level-number">{String(item.id).padStart(2, '0')}</span>
+                      <span className="practice-level-number">
+                        {String(item.id).padStart(2, '0')}
+                      </span>
                       <span>Level {item.id}</span>
                       {!item.unlocked ? (
                         <LockKeyhole size={13} />
@@ -297,7 +299,11 @@ export function PracticePage() {
                               aria-valuemax={module.lessonCount || 1}
                               aria-valuenow={module.completedCount}
                             >
-                              <span style={{ width: `${module.lessonCount ? Math.min(100, module.completedCount / module.lessonCount * 100) : 0}%` }} />
+                              <span
+                                style={{
+                                  width: `${module.lessonCount ? Math.min(100, (module.completedCount / module.lessonCount) * 100) : 0}%`,
+                                }}
+                              />
                             </div>
                           </div>
                           <button

@@ -796,18 +796,28 @@ export function ArenaPage() {
               </div>
               {filteredLeaders.some((entry) => entry.rank <= 3) && (
                 <div className="pvp-podium" aria-label="Vinh danh ba người chơi dẫn đầu">
-                  {filteredLeaders.filter((entry) => entry.rank <= 3).map((entry) => (
-                    <article className={`pvp-podium-card place-${entry.rank}`} key={entry.userId}>
-                      <span className="pvp-podium-place"><Crown size={17} /> Hạng #{entry.rank}</span>
-                      <div className={`pvp-avatar ${FRAME_CLASS_MAP[entry.equippedFrame] || 'frame-default'}`}>
-                        <span>{entry.displayName.slice(0, 1).toUpperCase()}</span>
-                      </div>
-                      <strong>{entry.displayName}</strong>
-                      <span className="pvp-podium-tier">{entry.rankTitle}</span>
-                      <div className="pvp-podium-score">{entry.elo.toLocaleString('vi-VN')} <small>ELO</small></div>
-                      <div className="pvp-podium-step" aria-hidden="true">{entry.rank}</div>
-                    </article>
-                  ))}
+                  {filteredLeaders
+                    .filter((entry) => entry.rank <= 3)
+                    .map((entry) => (
+                      <article className={`pvp-podium-card place-${entry.rank}`} key={entry.userId}>
+                        <span className="pvp-podium-place">
+                          <Crown size={17} /> Hạng #{entry.rank}
+                        </span>
+                        <div
+                          className={`pvp-avatar ${FRAME_CLASS_MAP[entry.equippedFrame] || 'frame-default'}`}
+                        >
+                          <span>{entry.displayName.slice(0, 1).toUpperCase()}</span>
+                        </div>
+                        <strong>{entry.displayName}</strong>
+                        <span className="pvp-podium-tier">{entry.rankTitle}</span>
+                        <div className="pvp-podium-score">
+                          {entry.elo.toLocaleString('vi-VN')} <small>ELO</small>
+                        </div>
+                        <div className="pvp-podium-step" aria-hidden="true">
+                          {entry.rank}
+                        </div>
+                      </article>
+                    ))}
                 </div>
               )}
               <div className="table-wrap">
@@ -940,7 +950,13 @@ export function ArenaPage() {
                         className={`pvp-cosmetic-card ${item.unlocked ? 'unlocked' : 'locked'} ${item.equipped ? 'equipped' : ''}`}
                       >
                         <div className="pvp-cosmetic-preview">
-                          <span className="pvp-reward-state">{item.equipped ? 'Đang trang bị' : item.unlocked ? 'Đã sở hữu' : 'Chờ chinh phục'}</span>
+                          <span className="pvp-reward-state">
+                            {item.equipped
+                              ? 'Đang trang bị'
+                              : item.unlocked
+                                ? 'Đã sở hữu'
+                                : 'Chờ chinh phục'}
+                          </span>
                           <div className={`pvp-avatar lg ${item.cssClass}`}>
                             <span>{user?.displayName.slice(0, 1).toUpperCase()}</span>
                           </div>
@@ -993,7 +1009,13 @@ export function ArenaPage() {
                         className={`pvp-cosmetic-card ${item.unlocked ? 'unlocked' : 'locked'} ${item.equipped ? 'equipped' : ''}`}
                       >
                         <div className="pvp-cosmetic-preview">
-                          <span className="pvp-reward-state">{item.equipped ? 'Đang trang bị' : item.unlocked ? 'Đã sở hữu' : 'Chờ chinh phục'}</span>
+                          <span className="pvp-reward-state">
+                            {item.equipped
+                              ? 'Đang trang bị'
+                              : item.unlocked
+                                ? 'Đã sở hữu'
+                                : 'Chờ chinh phục'}
+                          </span>
                           <span className={`pvp-badge-showcase ${item.cssClass}`}>
                             <CosmeticIcon name={item.icon} size={38} />
                           </span>

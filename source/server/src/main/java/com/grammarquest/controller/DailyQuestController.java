@@ -30,7 +30,10 @@ public class DailyQuestController {
     }
 
     @PostMapping("/{id}/replace")
-    public DailyQuestService.DailyQuestOverview replace(Authentication auth, @PathVariable Long id) {
+    public DailyQuestService.DailyQuestOverview replace(
+        Authentication auth,
+        @PathVariable Long id
+    ) {
         return dailyQuestService.replaceQuest(auth.getName(), id);
     }
 

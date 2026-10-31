@@ -4136,6 +4136,14 @@ td small {
   }
 }
 @media (max-width: 650px) {
-  .topbar-left { gap: 6px; padding-left: 0; }
-  .topbar-quests { margin-left: 0; padding: 8px; gap: 5px; font-size: 12px; }
+  .topbar-left {
+    gap: 6px;
+    padding-left: 0;
+  }
+  .topbar-quests {
+    margin-left: 0;
+    padding: 8px;
+    gap: 5px;
+    font-size: 12px;
+  }
 }

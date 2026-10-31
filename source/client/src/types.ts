@@ -409,6 +409,7 @@ export type DailyQuestMilestone = {
 }
 export type UserStreak = { currentStreak: number; longestStreak: number; completedToday: boolean }
 export type DailyQuestOverview = {
+  resetAt?: string
   quests: DailyQuest[]
   milestone: DailyQuestMilestone
   streak: UserStreak

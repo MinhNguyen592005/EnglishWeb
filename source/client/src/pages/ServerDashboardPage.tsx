@@ -111,7 +111,8 @@ export function ServerDashboardPage() {
   const consoleRef = useRef<HTMLDivElement>(null)
   const detailRef = useRef<HTMLElement>(null)
   useEffect(() => {
-    if (selectedId && window.matchMedia('(max-width: 900px)').matches) detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+    if (selectedId && window.matchMedia('(max-width: 900px)').matches)
+      detailRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }, [selectedId])
   const selected = stats?.clients.find((c) => c.sessionId === selectedId)
   async function manage(client: Client, disconnect: boolean) {
@@ -264,24 +265,52 @@ export function ServerDashboardPage() {
           </div>
           <div className="monitor-client-list" role="group" aria-label="Client">
             {stats?.clients.map((c) => (
-              <button type="button" key={c.sessionId}
+              <button
+                type="button"
+                key={c.sessionId}
                 className={`monitor-client-row ${selectedId === c.sessionId ? 'selected' : ''}`}
                 aria-pressed={selectedId === c.sessionId}
                 aria-controls="monitor-selected-client"
-                onClick={() => setSelectedId(c.sessionId)}>
-                <span className="monitor-client-avatar" aria-hidden="true">{c.username.slice(0, 1).toUpperCase()}</span>
+                onClick={() => setSelectedId(c.sessionId)}
+              >
+                <span className="monitor-client-avatar" aria-hidden="true">
+                  {c.username.slice(0, 1).toUpperCase()}
+                </span>
                 <span className="monitor-client-copy">
-                  <strong>{c.username} <span className="monitor-client-id">#{c.userId}</span></strong>
+                  <strong>
+                    {c.username} <span className="monitor-client-id">#{c.userId}</span>
+                  </strong>
                   <small>{activity(c.currentActivity)}</small>
-                  <span className="monitor-client-location">{[c.topic, c.lesson].filter(Boolean).join(' · ') || c.page}</span>
+                  <span className="monitor-client-location">
+                    {[c.topic, c.lesson].filter(Boolean).join(' · ') || c.page}
+                  </span>
                   <span className="monitor-client-tags">
                     <span>Tab {c.sessionId.slice(0, 8)}</span>
-                    <span className={c.activeArenaId || c.activeExamId || c.activeAttemptId ? 'has-resource' : ''}>{c.activeArenaId ? `PvP #${c.activeArenaId}` : c.activeExamId ? `Kiểm tra #${c.activeExamId}` : c.activeAttemptId ? `Lượt làm #${c.activeAttemptId}` : 'Không giữ gói đề'}</span>
-                    <span title="Nhịp tim cuối">Pong {new Date(c.lastPongAt).toLocaleTimeString('vi-VN')}</span>
+                    <span
+                      className={
+                        c.activeArenaId || c.activeExamId || c.activeAttemptId ? 'has-resource' : ''
+                      }
+                    >
+                      {c.activeArenaId
+                        ? `PvP #${c.activeArenaId}`
+                        : c.activeExamId
+                          ? `Kiểm tra #${c.activeExamId}`
+                          : c.activeAttemptId
+                            ? `Lượt làm #${c.activeAttemptId}`
+                            : 'Không giữ gói đề'}
+                    </span>
+                    <span title="Nhịp tim cuối">
+                      Pong {new Date(c.lastPongAt).toLocaleTimeString('vi-VN')}
+                    </span>
                   </span>
                 </span>
-                <span className={`monitor-client-presence ${c.idleSeconds >= 60 ? 'idle' : ''}`}><i />{c.idleSeconds >= 60 ? 'Vắng mặt' : 'Online'}</span>
-                <span className="monitor-client-chevron" aria-hidden="true">›</span>
+                <span className={`monitor-client-presence ${c.idleSeconds >= 60 ? 'idle' : ''}`}>
+                  <i />
+                  {c.idleSeconds >= 60 ? 'Vắng mặt' : 'Online'}
+                </span>
+                <span className="monitor-client-chevron" aria-hidden="true">
+                  ›
+                </span>
               </button>
             ))}
           </div>
@@ -289,56 +318,87 @@ export function ServerDashboardPage() {
           {stats?.clients.length === 0 && <p className="monitor-empty">Chưa có client kết nối.</p>}
         </section>
 
-        <section className="card feature-card monitor-detail" id="monitor-selected-client" ref={detailRef} aria-label="Chi tiết client">
-          <div className="panel-heading"><div>
-            <h2>{selected ? selected.username : 'Chi tiết client'}</h2>
-            {selected && <p className="muted">{activity(selected.currentActivity)}</p>}
+        <section
+          className="card feature-card monitor-detail"
+          id="monitor-selected-client"
+          ref={detailRef}
+          aria-label="Chi tiết client"
+        >
+          <div className="panel-heading">
+            <div>
+              <h2>{selected ? selected.username : 'Chi tiết client'}</h2>
+              {selected && <p className="muted">{activity(selected.currentActivity)}</p>}
+            </div>
+            {selectedId && (
+              <button
+                type="button"
+                className="monitor-clear-client"
+                aria-label="Bỏ chọn client"
+                title="Bỏ chọn client"
+                onClick={() => {
+                  setSelectedId(null)
+                  setFeedback('')
+                }}
+              >
+                <X size={18} />
+              </button>
+            )}
           </div>
-            {selectedId && <button type="button" className="monitor-clear-client" aria-label="Bỏ chọn client" title="Bỏ chọn client" onClick={() => { setSelectedId(null); setFeedback('') }}><X size={18} /></button>}
-          </div>
-          {!selectedId && <div className="monitor-select-placeholder"><Activity size={28} /><strong>Chưa chọn client</strong><span>Chọn một dòng bên trái để xem thông tin.</span></div>}
+          {!selectedId && (
+            <div className="monitor-select-placeholder">
+              <Activity size={28} />
+              <strong>Chưa chọn client</strong>
+              <span>Chọn một dòng bên trái để xem thông tin.</span>
+            </div>
+          )}
           {selectedId && !selected && <p className="monitor-empty">Client đã ngắt kết nối.</p>}
           {selected && (
             <>
-              <div className={`monitor-selected-status ${selected.idleSeconds >= 60 ? 'idle' : ''}`}><span>{selected.idleSeconds >= 60 ? 'Vắng mặt' : 'Đang hoạt động'}</span><strong>Không thao tác {duration(selected.idleSeconds)}</strong></div>
+              <div
+                className={`monitor-selected-status ${selected.idleSeconds >= 60 ? 'idle' : ''}`}
+              >
+                <span>{selected.idleSeconds >= 60 ? 'Vắng mặt' : 'Đang hoạt động'}</span>
+                <strong>Không thao tác {duration(selected.idleSeconds)}</strong>
+              </div>
               <details className="monitor-connection-details" key={selected.sessionId}>
                 <summary>Thông tin kết nối</summary>
-              <dl className="client-detail-grid">
-                <div>
-                  <dt>Tài khoản / Socket</dt>
-                  <dd>
-                    #{selected.userId} · {selected.username}
-                    <br />
-                    {selected.sessionId}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Kết nối lúc</dt>
-                  <dd>{new Date(selected.connectedAt).toLocaleString('vi-VN')}</dd>
-                </div>
-                <div>
-                  <dt>Hoạt động / vị trí</dt>
-                  <dd>
-                    {activity(selected.currentActivity)} ·{' '}
-                    {[selected.topic, selected.lesson].filter(Boolean).join(' · ') || selected.page}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Thao tác cuối</dt>
-                  <dd>
-                    {new Date(selected.lastInteractionAt).toLocaleString('vi-VN')} · AFK{' '}
-                    {duration(selected.idleSeconds)}
-                  </dd>
-                </div>
-                <div>
-                  <dt>Tin nhắn ứng dụng</dt>
-                  <dd>
-                    Client → Server: {selected.messagesReceived}
-                    <br />
-                    Server → Client: {selected.messagesSent}
-                  </dd>
-                </div>
-              </dl>
+                <dl className="client-detail-grid">
+                  <div>
+                    <dt>Tài khoản / Socket</dt>
+                    <dd>
+                      #{selected.userId} · {selected.username}
+                      <br />
+                      {selected.sessionId}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Kết nối lúc</dt>
+                    <dd>{new Date(selected.connectedAt).toLocaleString('vi-VN')}</dd>
+                  </div>
+                  <div>
+                    <dt>Hoạt động / vị trí</dt>
+                    <dd>
+                      {activity(selected.currentActivity)} ·{' '}
+                      {[selected.topic, selected.lesson].filter(Boolean).join(' · ') ||
+                        selected.page}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Thao tác cuối</dt>
+                    <dd>
+                      {new Date(selected.lastInteractionAt).toLocaleString('vi-VN')} · AFK{' '}
+                      {duration(selected.idleSeconds)}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt>Tin nhắn ứng dụng</dt>
+                    <dd>
+                      Client → Server: {selected.messagesReceived}
+                      <br />
+                      Server → Client: {selected.messagesSent}
+                    </dd>
+                  </div>
+                </dl>
               </details>
               <h3>Gói học tập đang giữ</h3>
               {[

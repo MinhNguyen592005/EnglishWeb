@@ -1,0 +1,833 @@
+[
+  {
+    "id": 1,
+    "title": "Nền tảng câu và từ",
+    "outcome": "nhận biết thành phần câu, sử dụng danh từ và đại từ, viết được câu đơn cơ bản.",
+    "modules": [
+      {
+        "id": "l1-m1",
+        "title": "Cấu trúc câu đơn",
+        "position": 1,
+        "lessons": [
+          {
+            "id": "1.1",
+            "title": "Trật tự từ trong câu",
+            "scope": "Chủ ngữ – động từ – tân ngữ; vị trí trạng ngữ cách thức, nơi chốn, thời gian; câu kể, hỏi, mệnh lệnh, cảm thán; viết hoa và dấu câu"
+          },
+          {
+            "id": "1.2",
+            "title": "Câu đơn và động từ",
+            "scope": "Nhận biết câu hoàn chỉnh; động từ có/không có tân ngữ; động từ nối như be/seem; các dạng bổ ngữ"
+          },
+          {
+            "id": "1.3",
+            "title": "Tân ngữ trực tiếp và gián tiếp",
+            "scope": "Câu có hai tân ngữ; chuyển sang cấu trúc với to/for; mẫu explain something to someone; hai ý nghĩa của for trong bài"
+          }
+        ]
+      },
+      {
+        "id": "l1-m2",
+        "title": "Danh từ cơ bản",
+        "position": 2,
+        "lessons": [
+          {
+            "id": "2.1",
+            "title": "Cấu tạo danh từ",
+            "scope": "Hậu tố chỉ người/nghề nghiệp; tạo danh từ từ động từ, tính từ và danh từ khác; từ cùng cách viết nhưng khác trọng âm"
+          },
+          {
+            "id": "2.2",
+            "title": "Danh từ ghép",
+            "scope": "Dạng V-ing + noun; danh từ ghép và sở hữu cách; danh từ chỉ vật liệu đứng trước danh từ khác"
+          },
+          {
+            "id": "2.3",
+            "title": "Đếm được và không đếm được — phần 1",
+            "scope": "Phân biệt hai nhóm; danh từ dùng được theo cả hai cách; cách dùng để chỉ suất, phần hoặc loại"
+          },
+          {
+            "id": "2.4",
+            "title": "Đếm được và không đếm được — phần 2",
+            "scope": "Danh từ thường không đếm được; đơn vị tương ứng; cụm như a piece of, a loaf of"
+          },
+          {
+            "id": "2.5",
+            "title": "Số ít và số nhiều",
+            "scope": "Thêm -s/-es; đuôi -y, -f, -fe, -o; các dạng số nhiều bất quy tắc"
+          },
+          {
+            "id": "2.7",
+            "title": "Giống của danh từ",
+            "scope": "Các dạng từ chỉ nam/nữ; nhận biết qua đại từ; đại từ dùng với người, động vật và đồ vật theo ngữ cảnh"
+          }
+        ]
+      },
+      {
+        "id": "l1-m3",
+        "title": "Đại từ và sở hữu",
+        "position": 3,
+        "lessons": [
+          {
+            "id": "4.1",
+            "title": "Đại từ nhân xưng",
+            "scope": "Đại từ chủ ngữ và tân ngữ; chọn dạng theo vị trí; cách dùng với người, động vật và đồ vật"
+          },
+          {
+            "id": "4.4",
+            "title": "Từ sở hữu",
+            "scope": "My/mine và các dạng tương ứng; a friend of mine; my own/of my own; một số cụm dùng the thay từ sở hữu"
+          },
+          {
+            "id": "4.5",
+            "title": "Đại từ phản thân",
+            "scope": "Động từ đi với đại từ phản thân; khi cần/không cần; dùng sau giới từ; dùng để nhấn mạnh"
+          },
+          {
+            "id": "4.6",
+            "title": "Từ chỉ định và đại từ bất định",
+            "scope": "This/that; các từ ghép với some/any/no; everyone/anyone và đại từ thay thế"
+          }
+        ]
+      },
+      {
+        "id": "l1-m4",
+        "title": "Be, have, do và there be",
+        "position": 4,
+        "lessons": [
+          {
+            "id": "10.1",
+            "title": "Be là động từ chính",
+            "scope": "Mệnh lệnh với be; cách dùng aren’t trong bài; be ở hiện tại đơn và quá khứ đơn"
+          },
+          {
+            "id": "10.3",
+            "title": "There be",
+            "scope": "Giới thiệu sự tồn tại; các dạng there is/are…; phân biệt there is và it is"
+          },
+          {
+            "id": "10.5",
+            "title": "Have và have got",
+            "scope": "Nghĩa sở hữu; phân biệt với nghĩa nhận/đạt được; các mẫu thường gặp"
+          },
+          {
+            "id": "10.6",
+            "title": "Have chỉ hoạt động",
+            "scope": "Have chỉ ăn uống, trải nghiệm và hoạt động; phân biệt với have chỉ sở hữu"
+          },
+          {
+            "id": "10.7",
+            "title": "Do và make",
+            "scope": "Do là trợ động từ hoặc động từ chính; phân biệt do/make; các cụm thường gặp"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "title": "Ngữ pháp thông dụng",
+    "outcome": "diễn đạt thói quen, hành động, sự kiện quá khứ và kế hoạch; đặt câu hỏi và mô tả người/vật.",
+    "modules": [
+      {
+        "id": "l2-m1",
+        "title": "Các thì cơ bản và câu mệnh lệnh",
+        "position": 1,
+        "lessons": [
+          {
+            "id": "9.1",
+            "title": "Hiện tại đơn",
+            "scope": "Thêm và phát âm -s/-es; các cách dùng; động từ trạng thái và hành động"
+          },
+          {
+            "id": "9.2",
+            "title": "Hiện tại tiếp diễn",
+            "scope": "Quy tắc thêm -ing; cấu tạo và cách dùng; phân biệt với hiện tại đơn trong ngữ cảnh"
+          },
+          {
+            "id": "9.3",
+            "title": "Quá khứ đơn",
+            "scope": "Thêm và phát âm -ed; động từ bất quy tắc; cách dùng để kể sự kiện"
+          },
+          {
+            "id": "9.4",
+            "title": "Quá khứ tiếp diễn",
+            "scope": "Động từ có dạng hiện tại/quá khứ giống nhau; cách dùng tiếp diễn; phối hợp hai thì khi kể chuyện"
+          },
+          {
+            "id": "9.7",
+            "title": "Tương lai đơn",
+            "scope": "Các cách dùng will/shall; diễn đạt tương lai; lựa chọn theo mục đích giao tiếp"
+          },
+          {
+            "id": "9.9",
+            "title": "Các cách diễn đạt tương lai",
+            "scope": "Going to so với will; be to, be about to, be due to; tương lai nhìn từ quá khứ"
+          },
+          {
+            "id": "9.10",
+            "title": "Câu mệnh lệnh",
+            "scope": "Các chức năng; hướng đến người cụ thể; mệnh lệnh với câu hỏi đuôi; hai mệnh lệnh nối bằng and"
+          }
+        ]
+      },
+      {
+        "id": "l2-m2",
+        "title": "Câu hỏi cơ bản",
+        "position": 2,
+        "lessons": [
+          {
+            "id": "13.1",
+            "title": "Yes/No và phủ định",
+            "scope": "Cấu tạo câu hỏi; câu phủ định; trả lời ngắn; chọn trợ động từ"
+          },
+          {
+            "id": "13.5",
+            "title": "Who, whom và what",
+            "scope": "Cấu tạo câu hỏi có từ để hỏi; hỏi người và sự vật; trật tự từ khi hỏi tân ngữ"
+          },
+          {
+            "id": "13.6",
+            "title": "When, where, which, whose",
+            "scope": "Hỏi thời gian, nơi chốn, lựa chọn và sở hữu"
+          },
+          {
+            "id": "13.7",
+            "title": "Why và how",
+            "scope": "Why/how; how much/many; how + tính từ/trạng từ; how long/how long ago; cách hỏi giao tiếp"
+          },
+          {
+            "id": "13.8",
+            "title": "Câu hỏi chủ ngữ",
+            "scope": "Phân biệt hỏi chủ ngữ và tân ngữ; trật tự câu; cách dùng trợ động từ"
+          }
+        ]
+      },
+      {
+        "id": "l2-m3",
+        "title": "Mạo từ",
+        "position": 3,
+        "lessons": [
+          {
+            "id": "3.1",
+            "title": "A/an — phần 1",
+            "scope": "Phát biểu khái quát; dạng số nhiều tương ứng; giới thiệu nghề nghiệp và mô tả người/vật"
+          },
+          {
+            "id": "3.2",
+            "title": "A/an — phần 2",
+            "scope": "Nhắc lần đầu; phân biệt với one; giá cả, khoảng cách, tần suất; tên bệnh trong bài"
+          },
+          {
+            "id": "3.3",
+            "title": "The — phần 1",
+            "scope": "Cách dùng cơ bản; từ viết tắt; danh từ chỉ quốc tịch/dân tộc"
+          },
+          {
+            "id": "3.4",
+            "title": "The — phần 2",
+            "scope": "Xác định người/vật; đối tượng duy nhất; các nhóm tên và sự kiện trong bài"
+          },
+          {
+            "id": "3.5",
+            "title": "Không dùng mạo từ — phần 1",
+            "scope": "Phát biểu khái quát; tên riêng; một số danh xưng và chức danh"
+          },
+          {
+            "id": "3.6",
+            "title": "Không dùng mạo từ — phần 2",
+            "scope": "Các phần trong ngày, bữa ăn; at school/in hospital; tên địa điểm"
+          }
+        ]
+      },
+      {
+        "id": "l2-m4",
+        "title": "Từ chỉ số lượng",
+        "position": 4,
+        "lessons": [
+          {
+            "id": "5.1",
+            "title": "Lượng từ và loại danh từ",
+            "scope": "Lượng từ với danh từ đếm được/không đếm được; diễn đạt số lượng gần đúng"
+          },
+          {
+            "id": "5.2",
+            "title": "Số lượng chung và cụ thể",
+            "scope": "Of sau lượng từ; lượng từ đứng riêng; more/less sau lượng từ"
+          },
+          {
+            "id": "5.3",
+            "title": "Some, any, no và none",
+            "scope": "Các cách dùng cơ bản; not…any/no/none; những cách dùng khác theo ngữ cảnh"
+          },
+          {
+            "id": "5.4",
+            "title": "Much, many, few và little",
+            "scope": "Much/many/a lot of; few/a few; little/a little; fewer/less"
+          },
+          {
+            "id": "5.5",
+            "title": "Both và all",
+            "scope": "Đi với danh từ; vị trí với động từ và đại từ; none of/neither of"
+          },
+          {
+            "id": "5.6",
+            "title": "All, whole, each và every",
+            "scope": "All/whole; all/everyone/everything; phân biệt each/every"
+          },
+          {
+            "id": "5.7",
+            "title": "Another, other, either và neither",
+            "scope": "Các dạng other; either/neither; each of và one of"
+          }
+        ]
+      },
+      {
+        "id": "l2-m5",
+        "title": "Tính từ và so sánh",
+        "position": 5,
+        "lessons": [
+          {
+            "id": "6.1",
+            "title": "Cấu tạo tính từ",
+            "scope": "Hậu tố, tiền tố; tính từ ghép chỉ tuổi và số đo"
+          },
+          {
+            "id": "6.2",
+            "title": "Vị trí tính từ",
+            "scope": "Trước danh từ/sau be; những trường hợp thay đổi nghĩa theo vị trí"
+          },
+          {
+            "id": "6.3",
+            "title": "Tính từ dùng như danh từ và -ed/-ing",
+            "scope": "Nhóm người như the blind; danh từ hoặc one/ones sau tính từ; phân biệt -ed/-ing"
+          },
+          {
+            "id": "6.4",
+            "title": "Tính từ sau động từ nối và trật tự từ",
+            "scope": "Look good/play well; cụm danh từ nhiều thành phần; quá khứ phân từ; trật tự tính từ"
+          },
+          {
+            "id": "6.5",
+            "title": "So sánh tính từ",
+            "scope": "So sánh hơn/nhất; tính từ nhiều âm tiết; dạng bất quy tắc và dễ nhầm"
+          }
+        ]
+      },
+      {
+        "id": "l2-m6",
+        "title": "Trạng từ thông dụng",
+        "position": 6,
+        "lessons": [
+          {
+            "id": "7.1",
+            "title": "Trạng từ cách thức",
+            "scope": "Có/không có -ly; hard/hardly; tính từ tận cùng -ly; chọn tính từ hay trạng từ"
+          },
+          {
+            "id": "7.4",
+            "title": "Trạng từ tần suất",
+            "scope": "Vị trí trong khẳng định, câu hỏi, phủ định và khi đứng đầu câu"
+          }
+        ]
+      },
+      {
+        "id": "l2-m7",
+        "title": "Giới từ cơ bản",
+        "position": 7,
+        "lessons": [
+          {
+            "id": "8.1",
+            "title": "Giới từ, trạng từ và liên từ",
+            "scope": "Từ đảm nhiệm nhiều vai trò; các nhóm chỉ có một vai trò; đại từ tân ngữ sau giới từ"
+          },
+          {
+            "id": "8.2",
+            "title": "Giới từ vị trí và thời gian",
+            "scope": "At/in/on theo vị trí; giới từ chuyển động; at/on/in theo thời gian"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "title": "Mở rộng khả năng diễn đạt",
+    "outcome": "diễn đạt quan hệ thời gian, mức độ, thái độ, lời khuyên và nghĩa vụ.",
+    "modules": [
+      {
+        "id": "l3-m1",
+        "title": "Thì hoàn thành và động từ nối",
+        "position": 1,
+        "lessons": [
+          {
+            "id": "9.5",
+            "title": "Hiện tại hoàn thành",
+            "scope": "Hoàn thành đơn và tiếp diễn; phân biệt hai dạng; phân biệt với quá khứ đơn"
+          },
+          {
+            "id": "9.6",
+            "title": "Quá khứ hoàn thành",
+            "scope": "Hoàn thành đơn và tiếp diễn; xác định sự việc xảy ra trước mốc quá khứ"
+          },
+          {
+            "id": "9.8",
+            "title": "Các dạng tương lai mở rộng",
+            "scope": "Tương lai tiếp diễn; tương lai hoàn thành; tương lai hoàn thành tiếp diễn"
+          },
+          {
+            "id": "10.2",
+            "title": "Be mở rộng",
+            "scope": "Hành vi tạm thời với being; has/have/had been; have been/have gone; since/for"
+          },
+          {
+            "id": "10.4",
+            "title": "Động từ gần nghĩa với be",
+            "scope": "Be/seem và mức độ chắc chắn; dùng/không dùng to be; động từ quá trình gần nghĩa với be/become"
+          }
+        ]
+      },
+      {
+        "id": "l3-m2",
+        "title": "Danh từ và đại từ mở rộng",
+        "position": 2,
+        "lessons": [
+          {
+            "id": "2.6",
+            "title": "Danh từ số nhiều đặc biệt",
+            "scope": "Danh từ tập hợp; hình thức số nhiều nhưng cách chia động từ phụ thuộc nghĩa; nhóm như trousers"
+          },
+          {
+            "id": "2.8",
+            "title": "Sở hữu cách",
+            "scope": "’s/s’; sở hữu cách so với danh từ ghép và of; danh từ không chỉ người; lược danh từ"
+          },
+          {
+            "id": "4.2",
+            "title": "One và ones",
+            "scope": "One/you khi nói khái quát; thay danh từ; which one/this one"
+          },
+          {
+            "id": "4.3",
+            "title": "It và các cách thay thế",
+            "scope": "It chỉ thời tiết/thời gian/chủ ngữ hình thức; phân biệt với one/some/any/none; I hope so"
+          }
+        ]
+      },
+      {
+        "id": "l3-m3",
+        "title": "Thời gian, mức độ và trọng tâm",
+        "position": 3,
+        "lessons": [
+          {
+            "id": "7.2",
+            "title": "Trạng từ thời gian",
+            "scope": "Thời điểm; still/yet; already và các trạng từ khác; vị trí"
+          },
+          {
+            "id": "7.3",
+            "title": "Khoảng thời gian và hạn chót",
+            "scope": "Since/for/ago; until/by; during/in/for"
+          },
+          {
+            "id": "7.5",
+            "title": "Trạng từ mức độ",
+            "scope": "Quite, fairly, rather; much/any/far/a lot"
+          },
+          {
+            "id": "7.6",
+            "title": "Từ tăng cường mức độ",
+            "scope": "Very/too/very much; từ thay very; các kết hợp thường gặp"
+          },
+          {
+            "id": "7.7",
+            "title": "Trạng từ nhấn trọng tâm",
+            "scope": "Even/only/just/simply; các nghĩa của too; too/either/also/as well"
+          }
+        ]
+      },
+      {
+        "id": "l3-m4",
+        "title": "Giới từ dễ nhầm và cụm động từ",
+        "position": 4,
+        "lessons": [
+          {
+            "id": "8.3",
+            "title": "Giới từ dễ nhầm — nhóm 1",
+            "scope": "About/on; across/over/through; after/afterwards; at/to/against; because/because of; before/in front of"
+          },
+          {
+            "id": "8.4",
+            "title": "Giới từ dễ nhầm — nhóm 2",
+            "scope": "Beside/besides; between/among; but for/except for; by/with/without; due to/owing to; like/as"
+          },
+          {
+            "id": "8.5",
+            "title": "Giới từ dễ nhầm — nhóm 3",
+            "scope": "Made of/from/with; of/off; out of/outside; over/above/on top of; under/underneath/below"
+          },
+          {
+            "id": "8.6",
+            "title": "Verb + preposition",
+            "scope": "Giới thiệu phrasal verbs; nghĩa trực tiếp/thành ngữ; cấu trúc với một hoặc hai tân ngữ"
+          },
+          {
+            "id": "8.7",
+            "title": "Verb + particle có tân ngữ",
+            "scope": "Phân biệt với kiểu trên; tiểu từ mở rộng nghĩa; nghĩa thành ngữ; vị trí tân ngữ danh từ/đại từ"
+          },
+          {
+            "id": "8.8",
+            "title": "Các kiểu phrasal verbs còn lại",
+            "scope": "Kiểu không có tân ngữ; nghĩa trực tiếp/thành ngữ; kiểu ba thành phần verb + particle + preposition"
+          }
+        ]
+      },
+      {
+        "id": "l3-m5",
+        "title": "Câu hỏi và phản hồi mở rộng",
+        "position": 5,
+        "lessons": [
+          {
+            "id": "13.2",
+            "title": "Các cách phủ định khác",
+            "scope": "Trạng từ như never; đính chính điều vừa nói; câu hỏi phủ định"
+          },
+          {
+            "id": "13.3",
+            "title": "Câu hỏi đuôi và echo tags",
+            "scope": "Đuôi trái dấu/cùng dấu theo ngữ cảnh; câu hưởng ứng; chọn trợ động từ và đại từ"
+          },
+          {
+            "id": "13.4",
+            "title": "Câu đáp bổ sung và tương phản",
+            "scope": "Too/but; so can I và dạng phủ định tương ứng; So have you/So you have"
+          },
+          {
+            "id": "13.9",
+            "title": "Câu hỏi lựa chọn và nhấn mạnh",
+            "scope": "Lựa chọn hành động/đối tượng; lựa chọn khẳng định/phủ định; nhấn mạnh với ever"
+          }
+        ]
+      },
+      {
+        "id": "l3-m6",
+        "title": "Động từ khuyết thiếu thông dụng",
+        "position": 6,
+        "lessons": [
+          {
+            "id": "11.1",
+            "title": "Giới thiệu modals",
+            "scope": "Hình thức; hai nhóm cách dùng; chức năng giao tiếp và mức độ chắc chắn"
+          },
+          {
+            "id": "11.2",
+            "title": "Diễn đạt khả năng",
+            "scope": "Can/be able to; can/could với tri giác; khả năng ở các thì khác"
+          },
+          {
+            "id": "11.3",
+            "title": "Xin phép và cấm đoán",
+            "scope": "Xin/cho phép; từ chối; các thời điểm khác; phân biệt khả năng và sự cho phép"
+          },
+          {
+            "id": "11.6",
+            "title": "Đề nghị, yêu cầu và gợi ý",
+            "scope": "Mời đồ ăn/uống; xin đồ vật; nhờ giúp; đề nghị làm giúp; gợi ý có người nói tham gia"
+          },
+          {
+            "id": "11.9",
+            "title": "Lời khuyên và nghĩa vụ",
+            "scope": "Should/ought to/had better; must/have to/have got to; sự cần thiết ở các thì khác"
+          },
+          {
+            "id": "11.10",
+            "title": "Không nên, không cần và bị cấm",
+            "scope": "Mustn’t/needn’t/don’t have to; needn’t have/didn’t have to; shouldn’t have"
+          },
+          {
+            "id": "11.11",
+            "title": "Thói quen",
+            "scope": "Hình thức và cách dùng used to; so sánh với would và quá khứ đơn; hành vi thường thấy với will/would"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 4,
+    "title": "Câu phức và biến đổi câu",
+    "outcome": "kết hợp nhiều ý, sử dụng mệnh đề, bị động, điều kiện và lời nói gián tiếp.",
+    "modules": [
+      {
+        "id": "l4-m1",
+        "title": "Nguyên mẫu và V-ing",
+        "position": 1,
+        "lessons": [
+          {
+            "id": "16.1",
+            "title": "Các dạng nguyên mẫu",
+            "scope": "Có/không có to; dạng tiếp diễn, hoàn thành, bị động; sau let/make/had better; sau help/know"
+          },
+          {
+            "id": "16.2",
+            "title": "Nguyên mẫu, V-ing và mục đích",
+            "scope": "Sau động từ tri giác; have + object; to/so as to/in order to; dạng phủ định chỉ mục đích"
+          },
+          {
+            "id": "16.3",
+            "title": "Động từ + to V",
+            "scope": "Có/không có tân ngữ; mẫu advise someone to do; know someone to be; lựa chọn với mệnh đề that"
+          },
+          {
+            "id": "16.4",
+            "title": "Tính từ và danh từ + to V",
+            "scope": "Tính từ + nguyên mẫu; of/for trong các mẫu; too/enough; danh từ + nguyên mẫu"
+          },
+          {
+            "id": "16.5",
+            "title": "Các vai trò của V-ing",
+            "scope": "Làm động từ/phân từ; tính từ; danh từ/danh động từ; các dạng xuất hiện trong bài luyện"
+          },
+          {
+            "id": "16.6",
+            "title": "Động từ + V-ing",
+            "scope": "Có/không có tân ngữ; từ sở hữu trước V-ing; danh từ hoặc dạng sở hữu trước V-ing"
+          },
+          {
+            "id": "16.7",
+            "title": "Tính từ, danh từ và giới từ + V-ing",
+            "scope": "Danh động từ/phân từ sau tính từ; các cụm thường gặp; giới từ + V-ing; to là giới từ"
+          }
+        ]
+      },
+      {
+        "id": "l4-m2",
+        "title": "Câu ghép và các loại mệnh đề",
+        "position": 2,
+        "lessons": [
+          {
+            "id": "1.4",
+            "title": "Câu ghép",
+            "scope": "Nối câu đơn; liên từ đẳng lập; giữ/lược chủ ngữ; quan hệ ý nghĩa"
+          },
+          {
+            "id": "1.5",
+            "title": "Mệnh đề danh từ",
+            "scope": "Mệnh đề chính/phụ; mệnh đề từ câu kể; if/whether; từ để hỏi; trật tự từ"
+          },
+          {
+            "id": "1.6",
+            "title": "Đại từ quan hệ",
+            "scope": "Làm chủ ngữ/tân ngữ; who/whom/which/that; lược đại từ; kết hợp giới từ"
+          },
+          {
+            "id": "1.7",
+            "title": "Các loại mệnh đề quan hệ",
+            "scope": "Whose; xác định/không xác định; dấu phẩy; thay đổi ý nghĩa"
+          },
+          {
+            "id": "1.8",
+            "title": "Mệnh đề thời gian, nơi chốn, cách thức",
+            "scope": "Liên từ phù hợp; thời gian diễn đạt tương lai; mệnh đề với where"
+          },
+          {
+            "id": "1.9",
+            "title": "Mệnh đề nguyên nhân và tương phản",
+            "scope": "Chỉ nguyên nhân; although/though; các cấu trúc tương phản; mệnh đề và cụm danh từ"
+          },
+          {
+            "id": "1.10",
+            "title": "Mệnh đề mục đích, kết quả, so sánh",
+            "scope": "So that/in order that; in case; so…that/such…that; as…as"
+          }
+        ]
+      },
+      {
+        "id": "l4-m3",
+        "title": "Bị động và cấu trúc sai khiến",
+        "position": 3,
+        "lessons": [
+          {
+            "id": "12.1",
+            "title": "Cấu tạo câu bị động",
+            "scope": "Be + quá khứ phân từ; các thì và modals; bị động tiếp diễn"
+          },
+          {
+            "id": "12.2",
+            "title": "Cách dùng câu bị động",
+            "scope": "Tình huống sử dụng; by + tác nhân; lược tác nhân; mẫu It is said that…"
+          },
+          {
+            "id": "12.3",
+            "title": "Have/get something done",
+            "scope": "Cấu trúc sai khiến; phân biệt với chủ động và bị động; vận dụng theo tình huống"
+          }
+        ]
+      },
+      {
+        "id": "l4-m4",
+        "title": "Câu điều kiện",
+        "position": 4,
+        "lessons": [
+          {
+            "id": "14.1",
+            "title": "Điều kiện loại 1",
+            "scope": "Cách dùng cơ bản; kết hợp modals; if + should; mệnh lệnh + and/or"
+          },
+          {
+            "id": "14.2",
+            "title": "Điều kiện loại 2",
+            "scope": "Ý nghĩa giả định; were/was; If I were you; kết hợp modals"
+          },
+          {
+            "id": "14.3",
+            "title": "Điều kiện loại 3",
+            "scope": "Giả định quá khứ; If I had been you/in your position; modals với have + quá khứ phân từ; tiếc nuối"
+          }
+        ]
+      },
+      {
+        "id": "l4-m5",
+        "title": "Lời nói trực tiếp và gián tiếp",
+        "position": 5,
+        "lessons": [
+          {
+            "id": "15.1",
+            "title": "Lời nói trực tiếp",
+            "scope": "Ngoặc kép và dấu câu; dấu câu với động từ tường thuật; lời trích dẫn trong lời trích dẫn"
+          },
+          {
+            "id": "15.2",
+            "title": "Say, tell và ask",
+            "scope": "Phân biệt cấu trúc; cụm cố định; câu gián tiếp khi động từ tường thuật ở hiện tại"
+          },
+          {
+            "id": "15.3",
+            "title": "Câu kể gián tiếp",
+            "scope": "Các mẫu thường gặp; thay đổi thì; đại từ; từ chỉ thời gian và nơi chốn"
+          },
+          {
+            "id": "15.4",
+            "title": "Câu hỏi gián tiếp",
+            "scope": "Yes/No với if/whether; từ để hỏi; câu hỏi chủ ngữ; trật tự từ"
+          },
+          {
+            "id": "15.5",
+            "title": "Nguyên mẫu trong lời nói gián tiếp",
+            "scope": "Tường thuật mệnh lệnh/yêu cầu; đề nghị/gợi ý; xin lời khuyên; từ để hỏi + nguyên mẫu"
+          },
+          {
+            "id": "15.6",
+            "title": "Vận dụng lời nói gián tiếp",
+            "scope": "Hiểu ý định người nói; chọn cách tường thuật; kết hợp nhiều phát ngôn thành đoạn"
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": 5,
+    "title": "Chuyên sâu trong phạm vi sách",
+    "outcome": "hiểu sắc thái, giả định phức tạp và các cách biến đổi cấu trúc nâng cao.",
+    "modules": [
+      {
+        "id": "l5-m1",
+        "title": "Mong ước và sở thích giả định",
+        "position": 1,
+        "lessons": [
+          {
+            "id": "11.7",
+            "title": "Wish, if only và it’s time",
+            "scope": "Mong ước hiện tại; tiếc nuối quá khứ; would/could sau wish; it’s high/about time"
+          },
+          {
+            "id": "11.8",
+            "title": "Would rather và would sooner",
+            "scope": "Sở thích cá nhân; mong muốn về hành động người khác; dạng phủ định"
+          }
+        ]
+      },
+      {
+        "id": "l5-m2",
+        "title": "Điều kiện hỗn hợp",
+        "position": 2,
+        "lessons": [
+          {
+            "id": "14.4",
+            "title": "Điều kiện hỗn hợp và liên từ điều kiện",
+            "scope": "Phối hợp các thời điểm; if not/unless; các liên từ thay if theo ngữ cảnh"
+          }
+        ]
+      },
+      {
+        "id": "l5-m3",
+        "title": "Suy đoán và modals đặc biệt",
+        "position": 3,
+        "lessons": [
+          {
+            "id": "11.4",
+            "title": "Mức độ chắc chắn và khả năng xảy ra",
+            "scope": "Sự việc chắc chắn/khả năng; hiện tại/quá khứ; câu trả lời chắc chắn và không chắc chắn"
+          },
+          {
+            "id": "11.5",
+            "title": "Suy đoán",
+            "scope": "Hai nghĩa của must be; must have been/can’t have been; phân biệt với nghĩa vụ"
+          },
+          {
+            "id": "11.12",
+            "title": "Need và dare",
+            "scope": "Động từ chính và động từ khuyết thiếu; hình thức và cách dùng"
+          },
+          {
+            "id": "11.13",
+            "title": "Các cách dùng đặc biệt",
+            "scope": "Would/wouldn’t; that…should sau động từ/tính từ; there + modal"
+          }
+        ]
+      },
+      {
+        "id": "l5-m4",
+        "title": "Cấu trúc phân từ",
+        "position": 4,
+        "lessons": [
+          {
+            "id": "1.11",
+            "title": "Hiện tại phân từ",
+            "scope": "Nối câu bằng V-ing; phủ định; thay mệnh đề trạng ngữ; thay một số mệnh đề quan hệ"
+          },
+          {
+            "id": "1.12",
+            "title": "Phân từ hoàn thành và quá khứ phân từ",
+            "scope": "Being/having been; it being/there being; sự phù hợp chủ ngữ; cấu trúc quá khứ phân từ"
+          }
+        ]
+      },
+      {
+        "id": "l5-m5",
+        "title": "Trạng từ liên kết và đảo ngữ",
+        "position": 5,
+        "lessons": [
+          {
+            "id": "7.8",
+            "title": "Quan điểm, liên kết và đảo ngữ",
+            "scope": "Trạng từ thể hiện quan điểm; trạng từ liên kết; đảo ngữ sau trạng từ phủ định"
+          }
+        ]
+      },
+      {
+        "id": "l5-m6",
+        "title": "Sắc thái của to V và V-ing",
+        "position": 6,
+        "lessons": [
+          {
+            "id": "16.8",
+            "title": "Phân biệt to V và V-ing",
+            "scope": "Trường hợp không đổi nghĩa; thay đổi sắc thái; đổi nghĩa với remember, forget, regret, try, stop, go on"
+          }
+        ]
+      }
+    ]
+  }
+]

@@ -6,19 +6,84 @@ const context = await browser.newContext({ viewport: { width: 1440, height: 1000
 const page = await context.newPage()
 const errors = []
 page.on('pageerror', (error) => errors.push(error.message))
-const days = Array.from({ length: 14 }, (_, i) => ({ date: `2026-10-${String(i + 16).padStart(2, '0')}`, registrations: (i * 7) % 17, classes: i % 4, matches: (i * 3) % 11 }))
-const clients = ['student01', 'teacher01', 'student02'].map((username, i) => ({ username, sessionId: `session-${i}`, userId: i + 10, currentActivity: 'IN_CLASSROOM', page: '/classes/90', topic: '', lesson: '', lastInteractionAt: Date.now(), idleSeconds: i === 2 ? 90 : 0, lastPongAt: Date.now(), connectedAt: Date.now(), messagesReceived: 12, messagesSent: 15, activeAttemptId: null, allocatedQuestions: 0 }))
+const days = Array.from({ length: 14 }, (_, i) => ({
+  date: `2026-10-${String(i + 16).padStart(2, '0')}`,
+  registrations: (i * 7) % 17,
+  classes: i % 4,
+  matches: (i * 3) % 11,
+}))
+const clients = ['student01', 'teacher01', 'student02'].map((username, i) => ({
+  username,
+  sessionId: `session-${i}`,
+  userId: i + 10,
+  currentActivity: 'IN_CLASSROOM',
+  page: '/classes/90',
+  topic: '',
+  lesson: '',
+  lastInteractionAt: Date.now(),
+  idleSeconds: i === 2 ? 90 : 0,
+  lastPongAt: Date.now(),
+  connectedAt: Date.now(),
+  messagesReceived: 12,
+  messagesSent: 15,
+  activeAttemptId: null,
+  allocatedQuestions: 0,
+}))
 await context.route('**/api/v1/**', (route) => {
   const path = new URL(route.request().url()).pathname
-  return route.fulfill({ json: path.endsWith('/auth/me') ? { id: 1, username: 'admin', displayName: 'Admin', role: 'ADMIN', totalXp: 0, level: 1 } : path.endsWith('/admin/business') ? { days, finishedMatches: 286 } : {} })
+  return route.fulfill({
+    json: path.endsWith('/auth/me')
+      ? { id: 1, username: 'admin', displayName: 'Admin', role: 'ADMIN', totalXp: 0, level: 1 }
+      : path.endsWith('/admin/business')
+        ? { days, finishedMatches: 286 }
+        : {},
+  })
 })
 await context.routeWebSocket('**/api/ws-system', (ws) => {
   ws.onMessage((raw) => {
     const message = JSON.parse(String(raw))
-    if (message.action === 'ADMIN_REPORTS_WATCH') ws.send(JSON.stringify({ action: 'WORKSPACE_DATA', requestId: message.requestId, payload: { reports: [], overview: { users: 1248, openReports: 3 } } }))
+    if (message.action === 'ADMIN_REPORTS_WATCH')
+      ws.send(
+        JSON.stringify({
+          action: 'WORKSPACE_DATA',
+          requestId: message.requestId,
+          payload: { reports: [], overview: { users: 1248, openReports: 3 } },
+        }),
+      )
     if (message.action === 'SYSTEM_MONITOR_WATCH') {
-      ws.send(JSON.stringify({ action: 'SYSTEM_MONITOR_DATA', requestId: message.requestId, payload: {} }))
-      ws.send(JSON.stringify({ action: 'STATS_UPDATE', data: { connections: 18, activeSockets: 24, ram: 148, heapCommitted: 512, heapMax: 1024, activeSnapshots: 7, clients, events: [], queue: [], alerts: [], capacity: { reservedSockets: 24, maxSockets: 500, maxSocketsPerAccount: 3, activeRequests: 2, maxConcurrentRequests: 100, rejectedRequests: 0, rejectedConnections: 0 } } }))
+      ws.send(
+        JSON.stringify({
+          action: 'SYSTEM_MONITOR_DATA',
+          requestId: message.requestId,
+          payload: {},
+        }),
+      )
+      ws.send(
+        JSON.stringify({
+          action: 'STATS_UPDATE',
+          data: {
+            connections: 18,
+            activeSockets: 24,
+            ram: 148,
+            heapCommitted: 512,
+            heapMax: 1024,
+            activeSnapshots: 7,
+            clients,
+            events: [],
+            queue: [],
+            alerts: [],
+            capacity: {
+              reservedSockets: 24,
+              maxSockets: 500,
+              maxSocketsPerAccount: 3,
+              activeRequests: 2,
+              maxConcurrentRequests: 100,
+              rejectedRequests: 0,
+              rejectedConnections: 0,
+            },
+          },
+        }),
+      )
     }
   })
 })
@@ -44,11 +109,18 @@ try {
   await page.screenshot({ path: 'artifacts/admin/overview-desktop.png', fullPage: true })
   for (const width of [1440, 1024, 768, 390]) {
     await page.setViewportSize({ width, height: 1000 })
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth), `overflow at ${width}`).toBe(true)
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      `overflow at ${width}`,
+    ).toBe(true)
   }
   await page.screenshot({ path: 'artifacts/admin/overview-mobile.png', fullPage: true })
   await page.getByRole('link', { name: 'Xem báo cáo', exact: true }).click()
   await expect(page).toHaveURL(/tab=reports/)
   expect(errors).toEqual([])
-  console.log('PASS: overview data, two KPI cards, three charts, telemetry, reports link, no overflow at 1440/1024/768/390')
-} finally { await browser.close() }
+  console.log(
+    'PASS: overview data, two KPI cards, three charts, telemetry, reports link, no overflow at 1440/1024/768/390',
+  )
+} finally {
+  await browser.close()
+}

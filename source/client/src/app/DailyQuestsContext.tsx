@@ -66,6 +66,16 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
   useRealtimeRefresh(refresh, userId !== null)
 
   useEffect(() => {
+    if (userId === null) return
+    // Use the server's reset instant; polling also supports older servers and retries failed resets.
+    const remaining = data?.resetAt ? Date.parse(data.resetAt) - Date.now() : NaN
+    const delay =
+      Number.isFinite(remaining) && remaining > 0 ? Math.min(remaining + 1000, 60000) : 60000
+    const timer = setTimeout(() => void refresh(), delay)
+    return () => clearTimeout(timer)
+  }, [userId, data, refresh, refreshing])
+
+  useEffect(() => {
     setSnapshot(null)
     setError('')
     setActionError('')
@@ -163,8 +173,13 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
   }
 
   async function replace(id: number) {
-    if (userId === null || operation.current || !data ||
-        !data.quests.some((quest) => quest.id === id && !quest.completed && !quest.claimed)) return false
+    if (
+      userId === null ||
+      operation.current ||
+      !data ||
+      !data.quests.some((quest) => quest.id === id && !quest.completed && !quest.claimed)
+    )
+      return false
     operation.current = true
     const requestRevision = ++revision.current
     setPending(id)
@@ -176,7 +191,9 @@ export function DailyQuestsProvider({ children }: { children: ReactNode }) {
       setSnapshot({ userId, data: overview })
       try {
         localStorage.setItem(`grammarquest:quests:${userId}`, crypto.randomUUID())
-      } catch { /* Storage may be unavailable. */ }
+      } catch {
+        /* Storage may be unavailable. */
+      }
       return true
     } catch (e) {
       if (currentUser.current === userId && revision.current === requestRevision)

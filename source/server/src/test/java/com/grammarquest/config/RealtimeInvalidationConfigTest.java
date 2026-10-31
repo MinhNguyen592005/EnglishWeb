@@ -11,13 +11,16 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 
 class RealtimeInvalidationConfigTest {
+
     @Test
     void onlySuccessfulAuthenticatedMutationsInvalidateReaders() throws Exception {
         var events = mock(ApplicationEventPublisher.class);
         var captured = new java.util.ArrayList<HandlerInterceptor>();
         var registry = new InterceptorRegistry() {
             @Override
-            public org.springframework.web.servlet.config.annotation.InterceptorRegistration addInterceptor(HandlerInterceptor interceptor) {
+            public org.springframework.web.servlet.config.annotation.InterceptorRegistration addInterceptor(
+                HandlerInterceptor interceptor
+            ) {
                 captured.add(interceptor);
                 return super.addInterceptor(interceptor);
             }

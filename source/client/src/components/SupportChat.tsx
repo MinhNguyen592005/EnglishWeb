@@ -396,7 +396,9 @@ export function SupportInbox() {
           {error}
         </p>
       )}
-      <div className={`support-inbox ${selected ? 'has-selection' : ''} ${showDetails && selected ? 'show-details' : ''}`}>
+      <div
+        className={`support-inbox ${selected ? 'has-selection' : ''} ${showDetails && selected ? 'show-details' : ''}`}
+      >
         <nav className="support-thread-list" aria-label="Hội thoại hỗ trợ">
           <div className="support-thread-heading">
             <strong>Hội thoại</strong>
@@ -433,49 +435,88 @@ export function SupportInbox() {
             ))}
           </div>
           <div className="support-thread-items">
-          {visibleThreads.map((thread) => (
-            <button
-              type="button"
-              key={thread.id}
-              className={`support-thread-item ${selected === thread.id ? 'selected' : ''}`}
-              aria-pressed={selected === thread.id}
-              onClick={() => { setSelected(thread.id); setShowDetails(false) }}
-            >
-              <span className="support-thread-avatar">
-                {thread.displayName.slice(0, 1).toUpperCase()}
-              </span>
-              <span className="support-thread-copy">
-                <strong>{thread.displayName}</strong>
-                <p>{thread.preview}</p>
-                <small>
-                  <span
-                    className={`support-thread-state ${thread.status === 'CLOSED' || thread.lastSenderType === 'ADMIN' ? 'answered' : ''}`}
-                  />
-                  {thread.status === 'CLOSED'
-                    ? 'Đã đóng'
-                    : thread.status === 'IN_PROGRESS'
-                      ? 'Đang xử lý'
-                      : thread.lastSenderType === 'ADMIN'
-                        ? 'Đã trả lời'
-                        : 'Chờ xử lý'}{' '}
-                  · {new Date(thread.updatedAt).toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' })} {new Date(thread.updatedAt).toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}
-                </small>
-              </span>
-            </button>
-          ))}
-          {!threads.length && <p className="muted">Chưa có hội thoại hỗ trợ.</p>}
-          {threads.length > 0 && !visibleThreads.length && (
-            <p className="support-empty-list">Không tìm thấy hội thoại phù hợp.</p>
-          )}
+            {visibleThreads.map((thread) => (
+              <button
+                type="button"
+                key={thread.id}
+                className={`support-thread-item ${selected === thread.id ? 'selected' : ''}`}
+                aria-pressed={selected === thread.id}
+                onClick={() => {
+                  setSelected(thread.id)
+                  setShowDetails(false)
+                }}
+              >
+                <span className="support-thread-avatar">
+                  {thread.displayName.slice(0, 1).toUpperCase()}
+                </span>
+                <span className="support-thread-copy">
+                  <strong>{thread.displayName}</strong>
+                  <p>{thread.preview}</p>
+                  <small>
+                    <span
+                      className={`support-thread-state ${thread.status === 'CLOSED' || thread.lastSenderType === 'ADMIN' ? 'answered' : ''}`}
+                    />
+                    {thread.status === 'CLOSED'
+                      ? 'Đã đóng'
+                      : thread.status === 'IN_PROGRESS'
+                        ? 'Đang xử lý'
+                        : thread.lastSenderType === 'ADMIN'
+                          ? 'Đã trả lời'
+                          : 'Chờ xử lý'}{' '}
+                    ·{' '}
+                    {new Date(thread.updatedAt).toLocaleDateString('vi-VN', {
+                      day: '2-digit',
+                      month: '2-digit',
+                    })}{' '}
+                    {new Date(thread.updatedAt).toLocaleTimeString('vi-VN', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                    })}
+                  </small>
+                </span>
+              </button>
+            ))}
+            {!threads.length && <p className="muted">Chưa có hội thoại hỗ trợ.</p>}
+            {threads.length > 0 && !visibleThreads.length && (
+              <p className="support-empty-list">Không tìm thấy hội thoại phù hợp.</p>
+            )}
           </div>
         </nav>
         <div className="support-inbox-chat">
-          {selectedThread && <header className="support-chat-toolbar">
-            <button type="button" className="support-inbox-back" aria-label="Quay lại danh sách hội thoại" onClick={() => { setSelected(null); setShowDetails(false) }}><ArrowLeft size={20} /></button>
-            <span className="support-thread-avatar">{selectedThread.displayName.slice(0, 1).toUpperCase()}</span>
-            <div><strong>{selectedThread.displayName}</strong><small>@{selectedThread.username} · Hội thoại #{selectedThread.id}</small></div>
-            <button type="button" className={`support-details-toggle ${showDetails ? 'active' : ''}`} aria-label="Thông tin hội thoại" aria-expanded={showDetails} aria-controls="support-conversation-details" onClick={() => setShowDetails((value) => !value)}><Info size={20} /></button>
-          </header>}
+          {selectedThread && (
+            <header className="support-chat-toolbar">
+              <button
+                type="button"
+                className="support-inbox-back"
+                aria-label="Quay lại danh sách hội thoại"
+                onClick={() => {
+                  setSelected(null)
+                  setShowDetails(false)
+                }}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <span className="support-thread-avatar">
+                {selectedThread.displayName.slice(0, 1).toUpperCase()}
+              </span>
+              <div>
+                <strong>{selectedThread.displayName}</strong>
+                <small>
+                  @{selectedThread.username} · Hội thoại #{selectedThread.id}
+                </small>
+              </div>
+              <button
+                type="button"
+                className={`support-details-toggle ${showDetails ? 'active' : ''}`}
+                aria-label="Thông tin hội thoại"
+                aria-expanded={showDetails}
+                aria-controls="support-conversation-details"
+                onClick={() => setShowDetails((value) => !value)}
+              >
+                <Info size={20} />
+              </button>
+            </header>
+          )}
           {selected ? (
             <ConversationPanel key={selected} threadId={selected} />
           ) : (
@@ -486,8 +527,22 @@ export function SupportInbox() {
             </p>
           )}
         </div>
-        <aside className="support-user-panel" id="support-conversation-details" aria-label="Thông tin hội thoại" hidden={!showDetails || !selected}>
-          <div className="support-details-heading"><strong>Thông tin hội thoại</strong><button type="button" aria-label="Đóng thông tin hội thoại" onClick={() => setShowDetails(false)}><X size={18} /></button></div>
+        <aside
+          className="support-user-panel"
+          id="support-conversation-details"
+          aria-label="Thông tin hội thoại"
+          hidden={!showDetails || !selected}
+        >
+          <div className="support-details-heading">
+            <strong>Thông tin hội thoại</strong>
+            <button
+              type="button"
+              aria-label="Đóng thông tin hội thoại"
+              onClick={() => setShowDetails(false)}
+            >
+              <X size={18} />
+            </button>
+          </div>
           {selectedThread ? (
             <>
               <div className="support-user-profile">

@@ -39,28 +39,49 @@ export function QuestsDialog({ onClose }: { onClose: () => void }) {
       onClick={(event) => {
         if (event.target === event.currentTarget) {
           const bounds = event.currentTarget.getBoundingClientRect()
-          if (event.clientX < bounds.left || event.clientX > bounds.right ||
-              event.clientY < bounds.top || event.clientY > bounds.bottom) onClose()
+          if (
+            event.clientX < bounds.left ||
+            event.clientX > bounds.right ||
+            event.clientY < bounds.top ||
+            event.clientY > bounds.bottom
+          )
+            onClose()
         }
         if (event.target instanceof Element && event.target.closest('a[href]')) onClose()
       }}
     >
       <header className="quests-dialog-header">
-        <span className="quests-dialog-icon"><Gift size={25} /></span>
+        <span className="quests-dialog-icon">
+          <Gift size={25} />
+        </span>
         <div>
           <h1 id="quests-dialog-title">Nhiệm vụ của bạn</h1>
           <p id="quests-dialog-description">Hoàn thành mục tiêu, nhận XP và giữ nhịp học tập.</p>
         </div>
-        <button type="button" className="quests-dialog-close" onClick={onClose} aria-label="Đóng nhiệm vụ" autoFocus>
+        <button
+          type="button"
+          className="quests-dialog-close"
+          onClick={onClose}
+          aria-label="Đóng nhiệm vụ"
+          autoFocus
+        >
           <X size={20} />
         </button>
       </header>
       <div className="quests-dialog-content">
         <DailyQuestsWidget bossHref={bossLesson ? `/lessons/${bossLesson.id}` : null} />
         <details className="quests-dialog-guide">
-          <summary><Info size={16} /> Cách nhận thưởng và giữ chuỗi</summary>
-          <p>Hoàn thành các nhiệm vụ rồi bấm nhận thưởng cho từng mục. Hoàn thành cả 3 nhiệm vụ để mở rương và duy trì chuỗi ngày học.</p>
-          <p>Nhiệm vụ đổi khi sang ngày mới theo giờ máy chủ. Nhận thưởng nhiệm vụ và mở rương là hai thao tác riêng.</p>
+          <summary>
+            <Info size={16} /> Cách nhận thưởng và giữ chuỗi
+          </summary>
+          <p>
+            Hoàn thành các nhiệm vụ rồi bấm nhận thưởng cho từng mục. Hoàn thành cả 3 nhiệm vụ để mở
+            rương và duy trì chuỗi ngày học.
+          </p>
+          <p>
+            Nhiệm vụ đổi khi sang ngày mới theo giờ máy chủ. Nhận thưởng nhiệm vụ và mở rương là hai
+            thao tác riêng.
+          </p>
         </details>
       </div>
     </dialog>

@@ -32,7 +32,11 @@ export function StudyRoadmap() {
   useEffect(
     () =>
       subscribe((message) => {
-        if (message.action === 'ROADMAP_PROGRESS_CHANGED') reload()
+        if (
+          message.action === 'ROADMAP_PROGRESS_CHANGED' ||
+          message.action === 'CURRICULUM_CHANGED'
+        )
+          reload()
       }),
     [subscribe, reload],
   )
@@ -133,9 +137,21 @@ export function StudyRoadmap() {
           </div>
         </div>
         <div className="roadmap-overview" aria-label="Tổng quan hành trình">
-          <span><BookOpen size={17} /><strong>{total}</strong> bài học</span>
-          <span><Trophy size={17} /><strong>{levels.filter((level) => level.passed).length}/{levels.length}</strong> hành tinh đã vượt qua</span>
-          <span><Target size={17} /><strong>{total ? Math.round(done / total * 100) : 0}%</strong> hoàn thành</span>
+          <span>
+            <BookOpen size={17} />
+            <strong>{total}</strong> bài học
+          </span>
+          <span>
+            <Trophy size={17} />
+            <strong>
+              {levels.filter((level) => level.passed).length}/{levels.length}
+            </strong>{' '}
+            hành tinh đã vượt qua
+          </span>
+          <span>
+            <Target size={17} />
+            <strong>{total ? Math.round((done / total) * 100) : 0}%</strong> hoàn thành
+          </span>
         </div>
         <section className="card roadmap-summary">
           <div className="roadmap-summary-main">
@@ -181,7 +197,6 @@ export function StudyRoadmap() {
             <span className="section-label">BẢN ĐỒ KHÁM PHÁ</span>
             <h2>Chọn hành tinh của bạn</h2>
             <p>Từ nền tảng câu và từ đến các cấu trúc ngữ pháp chuyên sâu.</p>
-
           </div>
           <div className="planet-path">
             {levels.map((level, index) => (
@@ -270,9 +285,17 @@ export function StudyRoadmap() {
                   onClick={() => open({ planet: `level-${selected.id}`, module: m.id }, false)}
                 >
                   <div className="module-card-top">
-                    <span className="module-card-number">{String(m.ordinalNo).padStart(2, '0')}</span>
+                    <span className="module-card-number">
+                      {String(m.ordinalNo).padStart(2, '0')}
+                    </span>
                     <span className="module-card-status">
-                      {!m.unlocked ? <LockKeyhole size={15} /> : m.lessonCount > 0 && m.completedCount === m.lessonCount ? <Check size={15} /> : <BookOpen size={15} />}
+                      {!m.unlocked ? (
+                        <LockKeyhole size={15} />
+                      ) : m.lessonCount > 0 && m.completedCount === m.lessonCount ? (
+                        <Check size={15} />
+                      ) : (
+                        <BookOpen size={15} />
+                      )}
                     </span>
                   </div>
                   <span>MODULE {m.ordinalNo}</span>
@@ -283,10 +306,20 @@ export function StudyRoadmap() {
                       : m.lockReason}
                   </small>
                   <div className="progress-track">
-                    <div style={{ width: `${m.lessonCount ? (m.completedCount / m.lessonCount) * 100 : 0}%` }} />
+                    <div
+                      style={{
+                        width: `${m.lessonCount ? (m.completedCount / m.lessonCount) * 100 : 0}%`,
+                      }}
+                    />
                   </div>
                   <div className="module-card-footer">
-                    <span>{module?.id === m.id ? 'Đang xem' : m.unlocked ? 'Xem bài học' : 'Chưa mở khóa'}</span>
+                    <span>
+                      {module?.id === m.id
+                        ? 'Đang xem'
+                        : m.unlocked
+                          ? 'Xem bài học'
+                          : 'Chưa mở khóa'}
+                    </span>
                     {m.unlocked && <ArrowRight size={16} />}
                   </div>
                 </button>
@@ -442,8 +475,37 @@ function LessonScreen({
   onBack: (levelId?: number, moduleId?: string) => void
   openLesson: (id: string, levelId: number, moduleId: string) => void
 }) {
-  const { request, connected } = useSystemSocket()
+  const { request, connected, subscribe } = useSystemSocket()
   const [lesson, setLesson] = useState<StudyLessonDetail | null>(null)
+  const [changed, setChanged] = useState(false)
+  const lessonRef = useRef(lesson)
+  lessonRef.current = lesson
+  const onRemoteChange = async () => {
+    if (!lesson) return
+    const next = await request<StudyLessonDetail>('ROADMAP_LESSON', 'ROADMAP_COURSE_DATA', {
+      lessonId: id,
+    })
+    if (lessonRef.current !== lesson || JSON.stringify(next) === JSON.stringify(lesson)) return
+    if (lesson.attempt?.status === 'IN_PROGRESS') setChanged(true)
+    else setLesson(next)
+  }
+  useRealtimeRefresh(onRemoteChange, connected)
+  const remoteChange = useRef(onRemoteChange)
+  remoteChange.current = onRemoteChange
+  useEffect(
+    () =>
+      subscribe((message) => {
+        if (
+          message.action === 'ROADMAP_PROGRESS_CHANGED' ||
+          message.action === 'CURRICULUM_CHANGED'
+        )
+          void remoteChange.current().catch((e) => setError(e.message))
+      }),
+    [subscribe],
+  )
+  useEffect(() => {
+    setChanged(false)
+  }, [id])
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
   useEffect(() => {
@@ -484,6 +546,25 @@ function LessonScreen({
   }
   return (
     <Layout title="Bài học lộ trình">
+      {lesson && error && (
+        <div className="error-banner" role="alert">
+          {error}
+        </div>
+      )}
+      {changed && (
+        <div className="notice" role="status">
+          Bài học có cập nhật. Tải lại sẽ bỏ câu trả lời chưa gửi.
+          <button
+            type="button"
+            onClick={() => {
+              setChanged(false)
+              setRevision((n) => n + 1)
+            }}
+          >
+            Tải lại bài học
+          </button>
+        </div>
+      )}
       <div className="study-course lesson-reading">
         <button className="text-button study-back" onClick={() => onBack()}>
           <ArrowLeft size={16} />
@@ -521,7 +602,10 @@ function LessonScreen({
                     Đến luyện tập <ArrowRight size={14} />
                   </a>
                 </div>
-                <p className="lesson-objective"><strong>Mục tiêu bài học</strong>{lesson.content.objective}</p>
+                <p className="lesson-objective">
+                  <strong>Mục tiêu bài học</strong>
+                  {lesson.content.objective}
+                </p>
                 {lesson.content.prerequisites.length > 0 && (
                   <div className="study-prerequisites">
                     <span>Cần biết:</span>
@@ -542,7 +626,11 @@ function LessonScreen({
                 {lesson.content.sections.map((section, i) => (
                   <section
                     key={i}
-                    className={/công thức|cấu trúc|ghi nhớ|quy tắc|lưu ý/i.test(section.title) ? 'lesson-key-concept' : ''}
+                    className={
+                      /công thức|cấu trúc|ghi nhớ|quy tắc|lưu ý/i.test(section.title)
+                        ? 'lesson-key-concept'
+                        : ''
+                    }
                   >
                     <h2>{section.title}</h2>
                     <p className="study-multiline">{section.body}</p>
@@ -577,7 +665,8 @@ function LessonScreen({
                         <span>Sai:</span> <span className="lesson-incorrect">{mistake.wrong}</span>
                       </p>
                       <p>
-                        <strong>Đúng:</strong> <strong className="lesson-correction">{mistake.right}</strong>
+                        <strong>Đúng:</strong>{' '}
+                        <strong className="lesson-correction">{mistake.right}</strong>
                       </p>
                       <p>{mistake.explanation}</p>
                     </div>
@@ -609,7 +698,7 @@ function LessonScreen({
             </article>
             <div id="lesson-practice" className="study-practice-anchor">
               <StudyQuiz
-                key={`${lesson.attempt.id}-${lesson.attempt.status}`}
+                key={`${lesson.attempt.id}-${lesson.attempt.status}-${revision}`}
                 attempt={lesson.attempt}
                 onAttempt={updateAttempt}
                 onBack={() => onBack(lesson.levelId, lesson.moduleId)}
@@ -628,8 +717,27 @@ function LessonScreen({
 }
 
 function AttemptScreen({ id, onBack }: { id: number; onBack: () => void }) {
-  const { request, connected } = useSystemSocket()
+  const { request, connected, subscribe } = useSystemSocket()
   const [attempt, setAttempt] = useState<StudyAttempt | null>(null)
+  const [changed, setChanged] = useState(false)
+  const checkAttempt = async () => {
+    if (!attempt) return
+    const next = await request<StudyAttempt>('ROADMAP_ATTEMPT', 'ROADMAP_COURSE_DATA', {
+      attemptId: id,
+    })
+    if (JSON.stringify(next) !== JSON.stringify(attempt)) setChanged(true)
+  }
+  useRealtimeRefresh(checkAttempt, connected)
+  const checkRef = useRef(checkAttempt)
+  checkRef.current = checkAttempt
+  useEffect(
+    () =>
+      subscribe((message) => {
+        if (message.action === 'ROADMAP_PROGRESS_CHANGED')
+          void checkRef.current().catch((e) => setError(e.message))
+      }),
+    [subscribe],
+  )
   const [error, setError] = useState('')
   const [revision, setRevision] = useState(0)
   const [, setSearch] = useSearchParams()
@@ -650,6 +758,25 @@ function AttemptScreen({ id, onBack }: { id: number; onBack: () => void }) {
   }, [id, request, connected, revision])
   return (
     <Layout title="Ôn tập và kiểm tra lộ trình">
+      {attempt && error && (
+        <div className="error-banner" role="alert">
+          {error}
+        </div>
+      )}
+      {changed && (
+        <div className="notice" role="status">
+          Có cập nhật mới. Tải lại sẽ bỏ câu trả lời chưa gửi.
+          <button
+            type="button"
+            onClick={() => {
+              setChanged(false)
+              setRevision((n) => n + 1)
+            }}
+          >
+            Tải lại lượt làm bài
+          </button>
+        </div>
+      )}
       <div className="study-course">
         <button className="text-button study-back" onClick={() => onBack()}>
           <ArrowLeft size={16} />
@@ -663,7 +790,7 @@ function AttemptScreen({ id, onBack }: { id: number; onBack: () => void }) {
           )
         ) : (
           <StudyQuiz
-            key={`${attempt.id}-${attempt.status}`}
+            key={`${attempt.id}-${attempt.status}-${revision}`}
             attempt={attempt}
             onAttempt={(a) => {
               setAttempt(a)

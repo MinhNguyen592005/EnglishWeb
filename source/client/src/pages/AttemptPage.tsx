@@ -7,7 +7,7 @@ import {
   Trophy,
   XCircle,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Link, Navigate, useNavigate, useParams } from 'react-router-dom'
 import { Layout } from '../components/Layout'
 import { ErrorState, Loading } from '../components/States'
@@ -15,6 +15,7 @@ import { useAuth } from '../app/AuthContext'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import type { AnswerResult, Attempt } from '../types'
 import './classroom-attempt.css'
+import { useRealtimeRefresh } from '../services/realtimeRefresh'
 
 export function AttemptPage() {
   const { request, connected } = useSystemSocket()
@@ -25,6 +26,29 @@ export function AttemptPage() {
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
   const [actionError, setActionError] = useState('')
+  const [remoteAttempt, setRemoteAttempt] = useState<Attempt | null>(null)
+  const currentRead = useRef({ id, attempt, busy })
+  currentRead.current = { id, attempt, busy }
+  useRealtimeRefresh(
+    async () => {
+      if (!attempt || busy) return
+      const reading = currentRead.current
+      const data = await request<Attempt>('GET_ATTEMPT', 'ATTEMPT_DATA', { attemptId: Number(id) })
+      if (
+        currentRead.current.id !== reading.id ||
+        currentRead.current.attempt !== reading.attempt ||
+        currentRead.current.busy
+      )
+        return
+      if (
+        data.status !== attempt.status ||
+        data.questions.some((q, i) => q.answer !== attempt.questions[i]?.answer)
+      )
+        setRemoteAttempt(data)
+      else setRemoteAttempt(null)
+    },
+    connected && !!attempt && !busy,
+  )
   const navigate = useNavigate()
   const { reload } = useAuth()
   useEffect(() => {
@@ -37,13 +61,27 @@ export function AttemptPage() {
   useEffect(() => {
     if (!connected) return
     let active = true
-    setAttempt(null)
+    const existing =
+      currentRead.current.attempt?.id === Number(id) ? currentRead.current.attempt : null
+    if (!existing) setAttempt(null)
+    setRemoteAttempt(null)
     setError('')
-    setFeedback(null)
-    setSelected(null)
+    if (!existing) {
+      setFeedback(null)
+      setSelected(null)
+    }
     request<Attempt>('GET_ATTEMPT', 'ATTEMPT_DATA', { attemptId: Number(id) })
       .then((data) => {
-        if (active) setAttempt(data)
+        if (active) {
+          if (existing) {
+            if (currentRead.current.attempt !== existing || currentRead.current.busy) return
+            if (
+              data.status !== existing.status ||
+              data.questions.some((q, i) => q.answer !== existing.questions[i]?.answer)
+            )
+              setRemoteAttempt(data)
+          } else setAttempt(data)
+        }
       })
       .catch((e) => {
         if (active) setError(e.message)
@@ -73,6 +111,7 @@ export function AttemptPage() {
         option: selected,
       })
       setFeedback(response)
+      setRemoteAttempt(null)
       setAttempt(
         (prev) =>
           prev && {
@@ -109,6 +148,23 @@ export function AttemptPage() {
   const options = ['A', 'B', 'C', 'D']
   return (
     <Layout title={isClassWork ? 'Bài tập lớp' : isBoss ? 'Đánh boss' : 'Luyện tập'}>
+      {remoteAttempt && (
+        <div className="notice" role="status">
+          Lượt làm bài đã thay đổi ở phiên khác. Đồng bộ sẽ bỏ câu trả lời chưa gửi.
+          <button
+            type="button"
+            disabled={busy}
+            onClick={() => {
+              setAttempt(remoteAttempt)
+              setRemoteAttempt(null)
+              setSelected(null)
+              setFeedback(null)
+            }}
+          >
+            Đồng bộ lượt làm bài
+          </button>
+        </div>
+      )}
       <div className="breadcrumb">
         <Link
           to={

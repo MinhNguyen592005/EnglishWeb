@@ -47,6 +47,7 @@ const teacherLinks = [
   { to: '/teacher', label: 'Tổng quan', icon: House },
   { to: '/classes', label: 'Lớp học', icon: School },
   { to: '/teacher/questions', label: 'Kho học liệu', icon: BookOpen },
+  { to: '/teacher/journeys', label: 'Quản lý hành trình', icon: Compass },
 ]
 const adminLinks = [
   { to: '/admin', label: 'Tổng quan', icon: House },
@@ -54,6 +55,7 @@ const adminLinks = [
   { to: '/admin?tab=reports', label: 'Báo cáo vi phạm', icon: FileWarning },
   { to: '/admin?tab=support', label: 'Hỗ trợ người dùng', icon: CircleHelp },
   { to: '/admin?tab=audit', label: 'Nhật ký quản trị', icon: ScrollText },
+  { to: '/admin/journeys', label: 'Quản lý hành trình', icon: Compass },
 ]
 export function Layout({ children, title }: { children: ReactNode; title: string }) {
   const location = useLocation()

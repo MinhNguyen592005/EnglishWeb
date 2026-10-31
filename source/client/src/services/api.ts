@@ -53,7 +53,7 @@ async function fetchFromServer(path: string, init: RequestInit): Promise<Respons
   }
 }
 
-async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
+export async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const method = init.method || 'GET'
   if (method !== 'GET' && !csrfToken) await refreshCsrf()
   const response = await fetchFromServer(`/api/v1${path}`, {

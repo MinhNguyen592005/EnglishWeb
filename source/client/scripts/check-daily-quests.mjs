@@ -81,6 +81,7 @@ const freshOverview = () => ({
   streak: { currentStreak: 5, longestStreak: 12, completedToday: false },
 })
 let overview = freshOverview()
+let overviewReads = 0
 let failLoad = false,
   failClaim = false,
   overviewDelay = 0,
@@ -103,9 +104,12 @@ await context.route('**/api/v1/**', async (route) => {
   const path = new URL(route.request().url()).pathname
   const json = (data) => route.fulfill({ json: data })
   if (path === '/api/v1/auth/me') return json(profile)
+  if (path === '/api/v1/notifications')
+    return json({ items: [], unreadCount: 0, nextBeforeId: null })
   if (path === '/api/v1/auth/csrf') return json({ token: 'fixture-csrf' })
   if (path === '/api/v1/attempts') return json([])
   if (path === '/api/v1/daily-quests') {
+    overviewReads++
     const snapshot = structuredClone(overview)
     await delay(overviewDelay)
     return failLoad
@@ -156,7 +160,7 @@ await context.routeWebSocket('**/api/ws-system', (socket) => {
 
 try {
   await mkdir('artifacts/daily-quests', { recursive: true })
-  await page.goto(`${base}/dashboard`)
+  await page.goto(`${base}/quests`)
   await expect(page.locator('.dq-task')).toHaveCount(3)
   await expect(page.locator('.dq-claimed')).toHaveCount(1)
   await expect(page.getByRole('button', { name: 'Rương đang khóa' })).toBeDisabled()
@@ -191,12 +195,13 @@ try {
   await expect(page.locator('.topbar .streak-pill')).toHaveText('6')
   await expect(page.locator('.dq-streak-status')).toContainText('Đã duy trì chuỗi hôm nay')
   assert.equal(chestCount, 1)
+  await page.getByRole('button', { name: 'Đóng nhiệm vụ' }).click()
   await page.locator('.topbar-profile').click()
   await expect(page.locator('.profile-stat')).toContainText(['Chuỗi 6 ngày'])
 
   // A failed refresh preserves existing data; a failed initial load has retry UI.
   failLoad = true
-  await page.goto(`${base}/dashboard`)
+  await page.goto(`${base}/quests`)
   await expect(page.getByText('Chưa tải được nhiệm vụ', { exact: true })).toBeVisible()
   failLoad = false
   await page.getByRole('button', { name: 'Thử lại', exact: true }).click()
@@ -247,7 +252,7 @@ try {
 
   const otherTab = await context.newPage()
   otherTab.on('pageerror', (error) => errors.push(error.message))
-  await otherTab.goto(`${base}/dashboard`)
+  await otherTab.goto(`${base}/quests`)
   await expect(otherTab.locator('.dq-task')).toHaveCount(3)
   overview.streak = { currentStreak: 9, longestStreak: 12, completedToday: true }
   profile = { ...profile, totalXp: 6000, level: 7, xpInLevel: 0 }
@@ -255,6 +260,14 @@ try {
   await expect(otherTab.locator('.topbar .streak-pill')).toHaveText('9')
   await expect(otherTab.locator('.home-stats').getByText(/6.000 XP/)).toBeVisible()
   await otherTab.close()
+  // A mounted dashboard refreshes at the server reset instant without navigation.
+  overview.resetAt = new Date(Date.now() + 1000).toISOString()
+  const beforeResetSchedule = overviewReads
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')))
+  await expect.poll(() => overviewReads).toBeGreaterThan(beforeResetSchedule)
+  const scheduledReads = overviewReads
+  overview.resetAt = new Date(Date.now() + 86400000).toISOString()
+  await expect.poll(() => overviewReads, { timeout: 5000 }).toBeGreaterThan(scheduledReads)
   assert.deepEqual(errors, [])
   console.log(
     'PASS: desktop/mobile, reward claims, chest, XP/streak sync, loading, retry, empty, failed claims, focus refresh and cross-tab sync. Screenshots: artifacts/daily-quests/',

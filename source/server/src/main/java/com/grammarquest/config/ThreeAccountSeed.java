@@ -13,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Profile("dev")
 @ConditionalOnProperty(name = "app.seed-three-accounts", havingValue = "true")
 public class ThreeAccountSeed implements CommandLineRunner {
+
     private final UserRepository users;
     private final PasswordEncoder encoder;
 

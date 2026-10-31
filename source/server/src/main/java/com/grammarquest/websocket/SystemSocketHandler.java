@@ -848,6 +848,15 @@ public class SystemSocketHandler extends TextWebSocketHandler {
         invalidatedUsers.add(event.username());
     }
 
+    @org.springframework.transaction.event.TransactionalEventListener(
+        phase = org.springframework.transaction.event.TransactionPhase.AFTER_COMMIT
+    )
+    public void userRegistered(com.grammarquest.controller.AuthController.UserRegistered event) {
+        accounts.forEach((id, account) -> {
+            if ("ADMIN".equals(accountRoles.get(id))) invalidatedUsers.add(account.username());
+        });
+    }
+
     @org.springframework.scheduling.annotation.Scheduled(fixedDelay = 500)
     public void pushInvalidations() {
         var changed = new java.util.HashSet<String>();

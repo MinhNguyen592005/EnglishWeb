@@ -12,14 +12,29 @@ export function useRealtimeRefresh(refresh: () => unknown, enabled = true) {
     let running = false
     let queued = false
     let disposed = false
+    let failures = 0
     const run = async () => {
       if (disposed) return
-      if (running) { queued = true; return }
+      if (running) {
+        queued = true
+        return
+      }
       running = true
-      try { await callback.current() } catch { /* Readers retain their own error state. */ }
-      finally {
+      try {
+        await callback.current()
+        failures = 0
+      } catch {
+        failures++
+        if (!disposed && failures <= 4) {
+          clearTimeout(timer)
+          timer = setTimeout(() => void run(), Math.min(1000 * 2 ** (failures - 1), 10000))
+        }
+      } finally {
         running = false
-        if (queued && !disposed) { queued = false; schedule() }
+        if (queued && !disposed) {
+          queued = false
+          schedule()
+        }
       }
     }
     const schedule = () => {

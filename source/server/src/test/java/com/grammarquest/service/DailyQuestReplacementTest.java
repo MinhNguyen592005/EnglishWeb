@@ -12,15 +12,32 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class DailyQuestReplacementTest {
+
     DailyQuestRepository definitions = mock(DailyQuestRepository.class);
     UserDailyQuestRepository assignments = mock(UserDailyQuestRepository.class);
     UserRepository users = mock(UserRepository.class);
     UserQuestStreakRepository streaks = mock(UserQuestStreakRepository.class);
-    DailyQuestService service = new DailyQuestService(definitions, assignments, streaks, users, mock(XpLedgerRepository.class));
+    DailyQuestService service = new DailyQuestService(
+        definitions,
+        assignments,
+        streaks,
+        users,
+        mock(XpLedgerRepository.class)
+    );
     UserDailyQuest quest = new UserDailyQuest(1L, 10, LocalDate.now());
 
     DailyQuest definition(int id) {
-        DailyQuest value = new DailyQuest("Q" + id, "EASY", "Task", "Task", "PRACTICE", "PRACTICE_COUNT", 1, 30, "BookOpen");
+        DailyQuest value = new DailyQuest(
+            "Q" + id,
+            "EASY",
+            "Task",
+            "Task",
+            "PRACTICE",
+            "PRACTICE_COUNT",
+            1,
+            30,
+            "BookOpen"
+        );
         value.id = id;
         return value;
     }
@@ -39,7 +56,9 @@ class DailyQuestReplacementTest {
     @Test
     void replacesWithDifferentQuestAndResetsProgress() {
         DailyQuest replacement = definition(11);
-        when(definitions.findByTierAndActiveTrue("EASY")).thenReturn(List.of(definition(10), replacement));
+        when(definitions.findByTierAndActiveTrue("EASY")).thenReturn(
+            List.of(definition(10), replacement)
+        );
         when(definitions.findAll()).thenReturn(List.of(definition(10), replacement));
         when(streaks.findById(1L)).thenReturn(Optional.of(new UserQuestStreak(1L)));
         quest.currentProgress = 1;
@@ -70,7 +89,9 @@ class DailyQuestReplacementTest {
     void rejectsUnavailableOrAlreadyAssignedAlternatives() {
         DailyQuest retired = definition(11);
         retired.active = false;
-        when(definitions.findByTierAndActiveTrue("EASY")).thenReturn(List.of(definition(10), retired));
+        when(definitions.findByTierAndActiveTrue("EASY")).thenReturn(
+            List.of(definition(10), retired)
+        );
         assertThrows(ApiException.class, () -> service.replaceQuest("learner", 5L));
         assertEquals(10, quest.questId);
         verify(assignments, never()).saveAndFlush(any());

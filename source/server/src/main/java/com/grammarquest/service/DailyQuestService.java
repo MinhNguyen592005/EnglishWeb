@@ -71,7 +71,8 @@ public class DailyQuestService {
     public record DailyQuestOverview(
         List<QuestView> quests,
         MilestoneView milestone,
-        StreakView streak
+        StreakView streak,
+        java.time.Instant resetAt
     ) {}
 
     public record QuestClaimResult(QuestView quest, AuthController.Profile profile) {}
@@ -128,7 +129,12 @@ public class DailyQuestService {
             milestoneClaimed
         );
 
-        return new DailyQuestOverview(views, milestone, streakView);
+        return new DailyQuestOverview(
+            views,
+            milestone,
+            streakView,
+            today.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant()
+        );
     }
 
     @Transactional
@@ -320,30 +326,51 @@ public class DailyQuestService {
 
     @Transactional
     public DailyQuestOverview replaceQuest(String username, Long userQuestId) {
-        User user = users.findByUsernameIgnoreCase(username).orElseThrow(() ->
-            new ApiException(HttpStatus.NOT_FOUND, "USER_NOT_FOUND", "Không tìm thấy người dùng")
-        );
-        UserDailyQuest quest = userQuests.findWithLockById(userQuestId).orElseThrow(() ->
-            new ApiException(HttpStatus.NOT_FOUND, "QUEST_NOT_FOUND", "Không tìm thấy nhiệm vụ")
-        );
+        User user = users
+            .findByUsernameIgnoreCase(username)
+            .orElseThrow(() ->
+                new ApiException(
+                    HttpStatus.NOT_FOUND,
+                    "USER_NOT_FOUND",
+                    "Không tìm thấy người dùng"
+                )
+            );
+        UserDailyQuest quest = userQuests
+            .findWithLockById(userQuestId)
+            .orElseThrow(() ->
+                new ApiException(HttpStatus.NOT_FOUND, "QUEST_NOT_FOUND", "Không tìm thấy nhiệm vụ")
+            );
         if (!quest.userId.equals(user.id)) throw new ApiException(
-            HttpStatus.FORBIDDEN, "FORBIDDEN", "Không có quyền đổi nhiệm vụ này"
+            HttpStatus.FORBIDDEN,
+            "FORBIDDEN",
+            "Không có quyền đổi nhiệm vụ này"
         );
         LocalDate today = LocalDate.now();
-        if (!today.equals(quest.questDate) || quest.completed || quest.claimed) throw new ApiException(
-            HttpStatus.CONFLICT, "QUEST_NOT_REPLACEABLE", "Chỉ có thể đổi nhiệm vụ hôm nay chưa hoàn thành"
+        if (
+            !today.equals(quest.questDate) || quest.completed || quest.claimed
+        ) throw new ApiException(
+            HttpStatus.CONFLICT,
+            "QUEST_NOT_REPLACEABLE",
+            "Chỉ có thể đổi nhiệm vụ hôm nay chưa hoàn thành"
         );
-        DailyQuest definition = dailyQuests.findById(quest.questId).orElseThrow(() ->
-            new ApiException(HttpStatus.NOT_FOUND, "QUEST_NOT_FOUND", "Không tìm thấy nhiệm vụ")
-        );
+        DailyQuest definition = dailyQuests
+            .findById(quest.questId)
+            .orElseThrow(() ->
+                new ApiException(HttpStatus.NOT_FOUND, "QUEST_NOT_FOUND", "Không tìm thấy nhiệm vụ")
+            );
         Set<Integer> assigned = new HashSet<>();
         userQuests.findByUserIdAndQuestDate(user.id, today).forEach(q -> assigned.add(q.questId));
         List<DailyQuest> candidates = new ArrayList<>(
-            dailyQuests.findByTierAndActiveTrue(definition.tier).stream()
-                .filter(q -> available(q) && !assigned.contains(q.id)).toList()
+            dailyQuests
+                .findByTierAndActiveTrue(definition.tier)
+                .stream()
+                .filter(q -> available(q) && !assigned.contains(q.id))
+                .toList()
         );
         if (candidates.isEmpty()) throw new ApiException(
-            HttpStatus.CONFLICT, "NO_REPLACEMENT", "Chưa có nhiệm vụ khác cùng độ khó để đổi"
+            HttpStatus.CONFLICT,
+            "NO_REPLACEMENT",
+            "Chưa có nhiệm vụ khác cùng độ khó để đổi"
         );
         Collections.shuffle(candidates);
         quest.questId = candidates.get(0).id;

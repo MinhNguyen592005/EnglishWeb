@@ -15,9 +15,43 @@ import org.springframework.web.socket.*;
 class SystemSocketHandlerTest {
 
     @Test
+    void registrationInvalidatesOnlyAdminSessions() throws Exception {
+        var handler = new SystemSocketHandler(
+            new ObjectMapper(),
+            users,
+            learning,
+            matchmaker,
+            arenaSocket,
+            mock(com.grammarquest.service.LiveExamService.class),
+            mock(com.grammarquest.service.SocketClassroomService.class),
+            mock(com.grammarquest.service.LearnerReportService.class),
+            mock(com.grammarquest.security.AnswerRateLimiter.class),
+            mock(com.grammarquest.service.ArenaSnapshotStore.class)
+        );
+        var admin = socket("admin");
+        var learner = socket("bystander");
+        handler.afterConnectionEstablished(admin);
+        handler.afterConnectionEstablished(learner);
+        clearInvocations(admin, learner);
+        handler.userRegistered(new com.grammarquest.controller.AuthController.UserRegistered(99L));
+        handler.pushInvalidations();
+        var sent = ArgumentCaptor.forClass(TextMessage.class);
+        verify(admin).sendMessage(sent.capture());
+        assertEquals(
+            "DATA_INVALIDATED",
+            new ObjectMapper().readTree(sent.getValue().getPayload()).path("action").asText()
+        );
+        verify(learner, never()).sendMessage(any());
+    }
+
+    @Test
     void invalidationsAreCoalescedAndPersonalChangesStayWithinTheAccount() throws Exception {
         var handler = new SystemSocketHandler(
-            new ObjectMapper(), users, learning, matchmaker, arenaSocket,
+            new ObjectMapper(),
+            users,
+            learning,
+            matchmaker,
+            arenaSocket,
             mock(com.grammarquest.service.LiveExamService.class),
             mock(com.grammarquest.service.SocketClassroomService.class),
             mock(com.grammarquest.service.LearnerReportService.class),
@@ -35,7 +69,10 @@ class SystemSocketHandlerTest {
         handler.pushInvalidations();
         var sent = ArgumentCaptor.forClass(TextMessage.class);
         verify(owner, times(1)).sendMessage(sent.capture());
-        assertEquals("DATA_INVALIDATED", new ObjectMapper().readTree(sent.getValue().getPayload()).path("action").asText());
+        assertEquals(
+            "DATA_INVALIDATED",
+            new ObjectMapper().readTree(sent.getValue().getPayload()).path("action").asText()
+        );
         verify(other, never()).sendMessage(any());
         clearInvocations(owner, other);
         handler.pushInvalidations();

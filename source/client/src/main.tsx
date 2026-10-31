@@ -16,15 +16,31 @@ import { QuestsPage } from './pages/QuestsPage'
 import { Roadmap } from './pages/RoadmapPage'
 import { Forbidden, NotFound, ProfilePage } from './pages/OtherPages'
 import { ClassesPage, ClassDetailPage } from './pages/ClassroomPages'
-import { ArenaPage } from './pages/ArenaPage'
-import { AdminPage } from './pages/AdminPage'
-import { TeacherQuestionsPage } from './pages/TeacherQuestionsPage'
 import { TeacherDashboardPage } from './pages/TeacherDashboardPage'
-import { TeacherCurriculumPage } from './pages/TeacherCurriculumPage'
 import { SupportChatWidget } from './components/SupportChat'
 import './styles.css'
 import './readability.css'
 import './ui-refresh.css'
+
+const ArenaPage = React.lazy(() =>
+  import('./pages/ArenaPage').then((module) => ({ default: module.ArenaPage })),
+)
+const AdminPage = React.lazy(() =>
+  import('./pages/AdminPage').then((module) => ({ default: module.AdminPage })),
+)
+const StudyManagementPage = React.lazy(() =>
+  import('./pages/StudyManagementPage').then((module) => ({ default: module.StudyManagementPage })),
+)
+const TeacherQuestionsPage = React.lazy(() =>
+  import('./pages/TeacherQuestionsPage').then((module) => ({
+    default: module.TeacherQuestionsPage,
+  })),
+)
+const TeacherCurriculumPage = React.lazy(() =>
+  import('./pages/TeacherCurriculumPage').then((module) => ({
+    default: module.TeacherCurriculumPage,
+  })),
+)
 
 function Protected({
   children,
@@ -204,6 +220,22 @@ function AppRoutes() {
         }
       />
       <Route path="/system" element={<Navigate to="/admin" replace />} />
+      <Route
+        path="/admin/journeys"
+        element={
+          <AdminOnly>
+            <StudyManagementPage />
+          </AdminOnly>
+        }
+      />
+      <Route
+        path="/teacher/journeys"
+        element={
+          <TeacherOnly>
+            <StudyManagementPage />
+          </TeacherOnly>
+        }
+      />
       <Route path="/admin/server-dashboard" element={<Navigate to="/admin" replace />} />
       <Route
         path="/teacher/questions"
@@ -257,7 +289,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <NotificationsProvider>
               <PlacementProvider>
                 <RegistrationWelcomeProvider>
-                  <AppRoutes />
+                  <React.Suspense fallback={<Loading />}>
+                    <AppRoutes />
+                  </React.Suspense>
                   <AppSupport />
                 </RegistrationWelcomeProvider>
               </PlacementProvider>

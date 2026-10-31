@@ -15,19 +15,8 @@ DEFAULT_MIGRATION = ROOT / 'source/server/src/main/resources/db/migration/V20__s
 
 
 def course_outline():
-    # STUDY.md is the agreed curriculum; preserve its 120 original topic codes.
-    lines = (ROOT / 'STUDY.md').read_text(encoding='utf-8-sig').splitlines()
-    levels, level, module = [], None, None
-    for i, line in enumerate(lines):
-        match = re.match(r'^LEVEL ([1-5]) [—–-] (.+)$', line)
-        if match:
-            level = {'id': int(match[1]), 'title': match[2].capitalize(), 'outcome': lines[i+1].removeprefix('Mục tiêu: ').strip(), 'modules': []}
-            levels.append(level)
-        elif level and (match := re.match(r'^Module (\d+) [—–-] (.+)$', line)):
-            module = {'id': f'l{level["id"]}-m{match[1]}', 'title': match[2], 'position': int(match[1]), 'lessons': []}
-            level['modules'].append(module)
-        elif level and module and re.fullmatch(r'\d+\.\d+', line):
-            module['lessons'].append({'id': line, 'title': lines[i+1], 'scope': lines[i+2]})
+    # Structured source replaces the former Markdown outline without changing seed IDs.
+    levels = json.loads((Path(__file__).resolve().parent / 'outline.json').read_text(encoding='utf-8'))
     assert [len(l['modules']) for l in levels] == [4, 7, 6, 5, 6]
     assert [sum(len(m['lessons']) for m in l['modules']) for l in levels] == [18, 34, 31, 26, 11]
     return levels
@@ -81,6 +70,7 @@ def generate():
     outline, notes = course_outline(), lesson_content()
     ids = {lesson['id'] for level in outline for module in level['modules'] for lesson in module['lessons']}
     assert ids == set(notes), f'Content/outline mismatch: {ids ^ set(notes)}'
+    # Retain the original V20 header so --check remains byte-for-byte compatible.
     statements = ['-- Generated from STUDY.md and scripts/study-course/content. Original Vietnamese explanations and exercises.', '-- Updates course content only. Existing attempts keep their original question snapshots.']
     styles = ['aqua', 'violet', 'coral', 'gold', 'mint']
     for level in outline:

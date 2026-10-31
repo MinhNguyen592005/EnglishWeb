@@ -6,17 +6,59 @@ const context = await browser.newContext({ viewport: { width: 1440, height: 1000
 const page = await context.newPage()
 const errors = []
 page.on('pageerror', (error) => errors.push(error.message))
-const profile = { id: 80, username: 'teacher', displayName: 'Teacher', role: 'TEACHER', level: 1, totalXp: 0 }
-const assignment = { id: 1, title: 'Unit 1', dueAt: '2027-01-01T00:00:00Z', passPercent: 80, status: 'PUBLISHED', instructions: '', lessonId: 1, lessonTitle: 'Unit 1' }
-const classroom = { id: 90, name: 'English 10A', teacherId: 80, teacherName: 'Teacher', joinCode: 'CLASS90', members: [{ id: 100, username: 'student', displayName: 'Student', role: 'LEARNER' }], assignments: [assignment] }
+const profile = {
+  id: 80,
+  username: 'teacher',
+  displayName: 'Teacher',
+  role: 'TEACHER',
+  level: 1,
+  totalXp: 0,
+}
+const assignment = {
+  id: 1,
+  title: 'Unit 1',
+  dueAt: '2027-01-01T00:00:00Z',
+  passPercent: 80,
+  status: 'PUBLISHED',
+  instructions: '',
+  lessonId: 1,
+  lessonTitle: 'Unit 1',
+}
+const classroom = {
+  id: 90,
+  name: 'English 10A',
+  teacherId: 80,
+  teacherName: 'Teacher',
+  joinCode: 'CLASS90',
+  members: [{ id: 100, username: 'student', displayName: 'Student', role: 'LEARNER' }],
+  assignments: [assignment],
+}
 let submitted = false
 let socket
 const commands = []
 let resultReads = 0
 const chatMessages = [
-  { id: 1, userId: 100, displayName: 'Minh Anh', body: 'Thầy ơi, em muốn hỏi thêm về bài tập hôm nay ạ.', createdAt: '2026-10-29T08:00:00Z' },
-  { id: 2, userId: 80, displayName: 'Teacher', body: 'Các em đọc kỹ phần ví dụ nhé. Có câu nào chưa rõ thì gửi vào đây, thầy sẽ giải thích thêm.', createdAt: '2026-10-29T08:01:00Z' },
-  { id: 3, userId: 100, displayName: 'Minh Anh', body: 'Dạ em hiểu rồi, em cảm ơn thầy!', createdAt: '2026-10-29T08:02:00Z' },
+  {
+    id: 1,
+    userId: 100,
+    displayName: 'Minh Anh',
+    body: 'Thầy ơi, em muốn hỏi thêm về bài tập hôm nay ạ.',
+    createdAt: '2026-10-29T08:00:00Z',
+  },
+  {
+    id: 2,
+    userId: 80,
+    displayName: 'Teacher',
+    body: 'Các em đọc kỹ phần ví dụ nhé. Có câu nào chưa rõ thì gửi vào đây, thầy sẽ giải thích thêm.',
+    createdAt: '2026-10-29T08:01:00Z',
+  },
+  {
+    id: 3,
+    userId: 100,
+    displayName: 'Minh Anh',
+    body: 'Dạ em hiểu rồi, em cảm ơn thầy!',
+    createdAt: '2026-10-29T08:02:00Z',
+  },
 ]
 await context.route('**/api/v1/**', (route) => {
   const path = new URL(route.request().url()).pathname
@@ -28,7 +70,20 @@ await context.route('**/api/v1/**', (route) => {
   else if (path.endsWith('/messages')) data = chatMessages
   else if (path.endsWith('/assignments/1/results')) {
     resultReads++
-    data = submitted ? [{ userId: 100, displayName: 'Student', attemptId: 1, status: 'COMPLETED', correctCount: 9, totalQuestions: 10, completedAt: '2026-10-29T10:00:00Z', passed: true }] : []
+    data = submitted
+      ? [
+          {
+            userId: 100,
+            displayName: 'Student',
+            attemptId: 1,
+            status: 'COMPLETED',
+            correctCount: 9,
+            totalQuestions: 10,
+            completedAt: '2026-10-29T10:00:00Z',
+            passed: true,
+          },
+        ]
+      : []
   }
   return route.fulfill({ json: data })
 })
@@ -37,8 +92,22 @@ await context.routeWebSocket('**/api/ws-system', (ws) => {
   ws.onMessage((raw) => {
     const message = JSON.parse(String(raw))
     commands.push(message.action)
-    const action = ['CLASS_OPEN', 'CLASS_LIST'].includes(message.action) ? 'CLASS_SNAPSHOT' : message.action === 'CLASS_UNWATCH' ? 'CLASS_DATA' : null
-    if (action) ws.send(JSON.stringify({ action, requestId: message.requestId, payload: message.action === 'CLASS_LIST' ? { classes: [classroom] } : { classroom, messages: [] } }))
+    const action = ['CLASS_OPEN', 'CLASS_LIST'].includes(message.action)
+      ? 'CLASS_SNAPSHOT'
+      : message.action === 'CLASS_UNWATCH'
+        ? 'CLASS_DATA'
+        : null
+    if (action)
+      ws.send(
+        JSON.stringify({
+          action,
+          requestId: message.requestId,
+          payload:
+            message.action === 'CLASS_LIST'
+              ? { classes: [classroom] }
+              : { classroom, messages: [] },
+        }),
+      )
   })
 })
 try {
@@ -69,7 +138,9 @@ try {
   await expect(page.locator('#new-class-name')).toHaveValue('Unsaved draft')
   const registrations = commands.filter((action) => action === 'CLASS_LIST').length
   socket.close({ code: 1001, reason: 'Reconnect test' })
-  await expect.poll(() => commands.filter((action) => action === 'CLASS_LIST').length, { timeout: 15000 }).toBeGreaterThan(registrations)
+  await expect
+    .poll(() => commands.filter((action) => action === 'CLASS_LIST').length, { timeout: 15000 })
+    .toBeGreaterThan(registrations)
   await expect(page.locator('#new-class-name')).toHaveValue('Unsaved draft')
   await page.goto('http://localhost:5174/classes/90?view=chat')
   await expect(page.locator('.chat-message')).toHaveCount(3)
@@ -81,8 +152,16 @@ try {
   await mkdir('artifacts/classroom', { recursive: true })
   await page.locator('.class-chat').screenshot({ path: 'artifacts/classroom/chat-messenger.png' })
   await page.setViewportSize({ width: 390, height: 844 })
-  await page.locator('.class-chat').screenshot({ path: 'artifacts/classroom/chat-messenger-mobile.png' })
-  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true)
+  await page
+    .locator('.class-chat')
+    .screenshot({ path: 'artifacts/classroom/chat-messenger-mobile.png' })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(
+    true,
+  )
   expect(errors).toEqual([])
-  console.log('PASS: class watches, row click, centered modal, live result update, Escape, list push, reconnect, preserved draft')
-} finally { await browser.close() }
+  console.log(
+    'PASS: class watches, row click, centered modal, live result update, Escape, list push, reconnect, preserved draft',
+  )
+} finally {
+  await browser.close()
+}

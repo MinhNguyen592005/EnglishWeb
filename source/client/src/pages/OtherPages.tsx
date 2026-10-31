@@ -37,7 +37,12 @@ function TeacherProfilePage() {
     null,
   )
   const [error, setError] = useState('')
-  useRealtimeRefresh(() => api.teacherOverview().then(setOverview).catch((e) => setError(e.message)))
+  useRealtimeRefresh(() =>
+    api
+      .teacherOverview()
+      .then(setOverview)
+      .catch((e) => setError(e.message)),
+  )
   useEffect(() => {
     api
       .teacherOverview()
@@ -245,7 +250,12 @@ function LearnerProfilePage() {
   const streak = dailyQuests?.streak
   const { user } = useAuth()
   const [history, setHistory] = useState<Attempt[] | null>(null)
-  useRealtimeRefresh(() => api.history().then(setHistory).catch((e) => setError(e.message)))
+  useRealtimeRefresh(() =>
+    api
+      .history()
+      .then(setHistory)
+      .catch((e) => setError(e.message)),
+  )
   const [error, setError] = useState('')
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState('Tân binh không gian')

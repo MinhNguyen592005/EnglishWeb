@@ -45,6 +45,27 @@ export function TeacherMaterialsPage() {
   const [notice, setNotice] = useState('')
   const [preview, setPreview] = useState<TeacherMaterial | null>(null)
   const saving = useRef(false)
+  const previewId = preview?.id
+  const previewRevision = materials?.find((item) => item.id === previewId)?.updatedAt
+  useEffect(() => {
+    if (!previewId || !materials) return
+    if (!materials.some((item) => item.id === previewId)) {
+      setPreview(null)
+      return
+    }
+    let active = true
+    api
+      .teacherMaterial(previewId)
+      .then((data) => {
+        if (active) setPreview(data)
+      })
+      .catch((e) => {
+        if (active) setError(e.message)
+      })
+    return () => {
+      active = false
+    }
+  }, [previewId, previewRevision, materials])
 
   async function reload() {
     setLoading(true)

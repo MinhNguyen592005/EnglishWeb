@@ -248,7 +248,8 @@ export function DailyQuestsWidget({ bossHref = null }: { bossHref?: string | nul
                           onClick={async () => {
                             setToast('')
                             if (await replace(quest.id)) {
-                              if (mounted.current) setToast('Đã đổi nhiệm vụ mới. Tiến độ bắt đầu từ 0.')
+                              if (mounted.current)
+                                setToast('Đã đổi nhiệm vụ mới. Tiến độ bắt đầu từ 0.')
                             }
                           }}
                         >
@@ -286,8 +287,6 @@ export function DailyQuestsWidget({ bossHref = null }: { bossHref?: string | nul
                 )
               })}
             </div>
-
-
           </>
         )}
         <div className="dq-toast" role="status" aria-live="polite" aria-atomic="true">
@@ -301,116 +300,118 @@ export function DailyQuestsWidget({ bossHref = null }: { bossHref?: string | nul
       </section>
 
       <aside className="dq-rewards-column" aria-label="Ph?n th??ng v? chu?i h?c t?p">
-            {!loading && quests.length > 0 && milestone && (
-              <div
-                className={`dq-chest ${milestone.claimed ? 'is-claimed' : milestone.allCompleted ? 'is-ready' : ''}`}
-              >
-                <div className="dq-chest-intro">
-                  <span className="dq-chest-icon">
-                    {milestone.claimed ? <ShieldCheck size={29} /> : <Gift size={29} />}
-                  </span>
-                  <div>
-                    <span className="dq-eyebrow">PHẦN THƯỞNG HOÀN THÀNH</span>
-                    <h3>Rương Tinh Tú</h3>
-                    <span className="dq-chest-reward">
-                      +{milestone.rewardXp} EXP <i /> Duy trì chuỗi ngày
-                    </span>
-                  </div>
-                </div>
-                <div className="dq-chest-dots" aria-hidden="true">
-                  {quests.map((quest, index) => (
-                    <span className={quest.completed ? 'is-done' : ''} key={quest.id}>
-                      {quest.completed ? <Check size={13} /> : index + 1}
-                    </span>
-                  ))}
-                </div>
-                <div
-                  className="dq-progress"
-                  role="progressbar"
-                  aria-label="Tiến độ mở Rương Tinh Tú"
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={Math.round(progress)}
-                >
-                  <span style={{ width: `${progress}%` }} />
-                </div>
-                <p>
-                  {milestone.claimed
-                    ? 'Rương đã mở! Hẹn bạn tiếp tục hành trình vào ngày mai.'
-                    : milestone.allCompleted
-                      ? 'Bạn đã hoàn thành mọi nhiệm vụ. Phần thưởng đang chờ!'
-                      : `Hoàn thành ${total}/${total} nhiệm vụ để mở rương. Hiện tại: ${completed}/${total}.`}
-                </p>
-                {milestone.claimed ? (
-                  <span className="dq-chest-done">
-                    <CheckCircle2 size={17} /> Đã mở rương hôm nay
-                  </span>
-                ) : (
-                  <button
-                    className="dq-button chest"
-                    disabled={!milestone.allCompleted || pending !== null}
-                    onClick={() => void receive('milestone', milestone.rewardXp)}
-                  >
-                    {pending === 'milestone' ? (
-                      <LoaderCircle size={17} className="dq-spin" />
-                    ) : milestone.allCompleted ? (
-                      <Gift size={17} />
-                    ) : (
-                      <LockKeyhole size={17} />
-                    )}{' '}
-                    {pending === 'milestone'
-                      ? 'Đang mở rương…'
-                      : milestone.allCompleted
-                        ? `Mở rương +${milestone.rewardXp} EXP`
-                        : 'Rương đang khóa'}
-                  </button>
-                )}
+        {!loading && quests.length > 0 && milestone && (
+          <div
+            className={`dq-chest ${milestone.claimed ? 'is-claimed' : milestone.allCompleted ? 'is-ready' : ''}`}
+          >
+            <div className="dq-chest-intro">
+              <span className="dq-chest-icon">
+                {milestone.claimed ? <ShieldCheck size={29} /> : <Gift size={29} />}
+              </span>
+              <div>
+                <span className="dq-eyebrow">PHẦN THƯỞNG HOÀN THÀNH</span>
+                <h3>Rương Tinh Tú</h3>
+                <span className="dq-chest-reward">
+                  +{milestone.rewardXp} EXP <i /> Duy trì chuỗi ngày
+                </span>
               </div>
+            </div>
+            <div className="dq-chest-dots" aria-hidden="true">
+              {quests.map((quest, index) => (
+                <span className={quest.completed ? 'is-done' : ''} key={quest.id}>
+                  {quest.completed ? <Check size={13} /> : index + 1}
+                </span>
+              ))}
+            </div>
+            <div
+              className="dq-progress"
+              role="progressbar"
+              aria-label="Tiến độ mở Rương Tinh Tú"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progress)}
+            >
+              <span style={{ width: `${progress}%` }} />
+            </div>
+            <p>
+              {milestone.claimed
+                ? 'Rương đã mở! Hẹn bạn tiếp tục hành trình vào ngày mai.'
+                : milestone.allCompleted
+                  ? 'Bạn đã hoàn thành mọi nhiệm vụ. Phần thưởng đang chờ!'
+                  : `Hoàn thành ${total}/${total} nhiệm vụ để mở rương. Hiện tại: ${completed}/${total}.`}
+            </p>
+            {milestone.claimed ? (
+              <span className="dq-chest-done">
+                <CheckCircle2 size={17} /> Đã mở rương hôm nay
+              </span>
+            ) : (
+              <button
+                className="dq-button chest"
+                disabled={!milestone.allCompleted || pending !== null}
+                onClick={() => void receive('milestone', milestone.rewardXp)}
+              >
+                {pending === 'milestone' ? (
+                  <LoaderCircle size={17} className="dq-spin" />
+                ) : milestone.allCompleted ? (
+                  <Gift size={17} />
+                ) : (
+                  <LockKeyhole size={17} />
+                )}{' '}
+                {pending === 'milestone'
+                  ? 'Đang mở rương…'
+                  : milestone.allCompleted
+                    ? `Mở rương +${milestone.rewardXp} EXP`
+                    : 'Rương đang khóa'}
+              </button>
             )}
+          </div>
+        )}
 
-      {streak && (
-        <section
-          className={`dq-streak ${streak.completedToday ? 'is-complete' : ''}`}
-          aria-labelledby="daily-streak-title"
-        >
-          <div className="dq-streak-heading">
-            <span className="dq-flame">
-              <Flame size={25} />
-            </span>
-            <div>
-              <span className="dq-eyebrow">GIỮ NHỊP HỌC TẬP</span>
-              <h2 id="daily-streak-title">Mỗi ngày một bước tiến</h2>
+        {streak && (
+          <section
+            className={`dq-streak ${streak.completedToday ? 'is-complete' : ''}`}
+            aria-labelledby="daily-streak-title"
+          >
+            <div className="dq-streak-heading">
+              <span className="dq-flame">
+                <Flame size={25} />
+              </span>
+              <div>
+                <span className="dq-eyebrow">GIỮ NHỊP HỌC TẬP</span>
+                <h2 id="daily-streak-title">Mỗi ngày một bước tiến</h2>
+              </div>
             </div>
-          </div>
-          <div className="dq-streak-metrics">
-            <div>
-              <strong>
-                {streak.currentStreak}
-                <small> ngày</small>
-              </strong>
-              <span>Chuỗi hiện tại</span>
+            <div className="dq-streak-metrics">
+              <div>
+                <strong>
+                  {streak.currentStreak}
+                  <small> ngày</small>
+                </strong>
+                <span>Chuỗi hiện tại</span>
+              </div>
+              <div>
+                <strong>
+                  <Trophy size={18} />
+                  {streak.longestStreak}
+                  <small> ngày</small>
+                </strong>
+                <span>Kỷ lục của bạn</span>
+              </div>
             </div>
-            <div>
-              <strong>
-                <Trophy size={18} />
-                {streak.longestStreak}
-                <small> ngày</small>
-              </strong>
-              <span>Kỷ lục của bạn</span>
+            <div className={`dq-streak-status ${streak.completedToday ? 'is-done' : ''}`}>
+              {streak.completedToday ? <CheckCircle2 size={17} /> : <Flame size={17} />}
+              <span>
+                {streak.completedToday
+                  ? 'Đã duy trì chuỗi hôm nay'
+                  : 'Mở rương hôm nay để giữ chuỗi'}
+              </span>
             </div>
-          </div>
-          <div className={`dq-streak-status ${streak.completedToday ? 'is-done' : ''}`}>
-            {streak.completedToday ? <CheckCircle2 size={17} /> : <Flame size={17} />}
-            <span>
-              {streak.completedToday ? 'Đã duy trì chuỗi hôm nay' : 'Mở rương hôm nay để giữ chuỗi'}
-            </span>
-          </div>
-          <p>
-            Hoàn thành nhiệm vụ và mở rương mỗi ngày để nối dài chuỗi. Đăng nhập thôi chưa được tính
-            là một ngày hoàn thành.
-          </p>
-        </section>
-      )}
+            <p>
+              Hoàn thành nhiệm vụ và mở rương mỗi ngày để nối dài chuỗi. Đăng nhập thôi chưa được
+              tính là một ngày hoàn thành.
+            </p>
+          </section>
+        )}
       </aside>
     </div>
   )

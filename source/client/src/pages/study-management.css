@@ -1,0 +1,290 @@
+.course-manager {
+  max-width: 1480px;
+  margin: 0 auto;
+  color: #334155;
+}
+.cm-heading,
+.cm-lesson-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+.cm-heading h1,
+.cm-heading h2,
+.cm-lesson-header h3 {
+  margin: 0 0 5px;
+}
+.cm-heading p,
+.cm-muted {
+  color: #64748b;
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+.cm-workspace {
+  display: grid;
+  grid-template-columns: minmax(260px, 320px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: start;
+}
+.cm-catalog,
+.cm-fields,
+.cm-content-items {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.cm-panel,
+.cm-editor {
+  padding: 22px;
+  min-width: 0;
+}
+.course-manager label,
+.cm-dialog label {
+  display: grid;
+  gap: 7px;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.course-manager :is(input:not([type='checkbox']), select, textarea),
+.cm-dialog select {
+  width: 100%;
+  min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #fff;
+  color: #334155;
+  font: inherit;
+}
+.course-manager textarea {
+  min-height: 90px;
+  resize: vertical;
+  line-height: 1.6;
+}
+.course-manager :is(button, input, select, textarea):focus-visible,
+.cm-dialog button:focus-visible {
+  outline: 3px solid #75aaa0;
+  outline-offset: 2px;
+}
+.course-manager button:not(.button),
+.cm-dialog button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
+  padding: 8px 12px;
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.875rem;
+}
+.course-manager button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.cm-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.cm-module-list,
+.cm-draft-list,
+.cm-lessons {
+  padding: 0;
+  list-style: none;
+  margin: 18px 0 0;
+  display: grid;
+  gap: 10px;
+}
+.cm-module-list li {
+  border-top: 1px solid #e2e8f0;
+  padding-top: 14px;
+  overflow-wrap: anywhere;
+}
+.cm-module-list small {
+  display: block;
+  color: #64748b;
+  margin: 6px 0 10px;
+}
+.cm-draft-list button {
+  width: 100%;
+  flex-direction: column;
+  align-items: flex-start !important;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.cm-draft-list span {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+.cm-draft-list [aria-current='true'] {
+  border-color: #6a9d91 !important;
+  background: #edf5f2 !important;
+}
+.cm-module-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(120px, 1fr);
+  gap: 16px;
+}
+.cm-check {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  font-weight: 400 !important;
+  grid-column: 1 / -1;
+}
+.cm-check input {
+  width: 17px;
+  height: 17px;
+  flex-shrink: 0;
+}
+.course-manager fieldset {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+.cm-lesson-header {
+  margin-top: 24px;
+}
+.cm-lessons {
+  margin-bottom: 20px;
+}
+.cm-lessons li {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 7px;
+}
+.course-manager .cm-lessons .cm-lesson-select {
+  flex: 1;
+  justify-content: flex-start;
+  text-align: left;
+  background: transparent;
+  border: 0;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+.cm-lessons .selected {
+  border-color: #6a9d91;
+  background: #f2f7f5;
+}
+.cm-tabs {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding: 16px 0;
+  border-top: 1px solid #e2e8f0;
+}
+.cm-tabs [aria-pressed='true'] {
+  background: #e6f1ec !important;
+  color: #2f6659 !important;
+  border-color: #8ab2a6 !important;
+}
+.cm-subcard {
+  padding: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  display: grid;
+  gap: 12px;
+}
+.cm-subcard h3 {
+  margin: 0;
+}
+.cm-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.cm-review {
+  margin-top: 26px;
+  padding-top: 20px;
+  border-top: 1px solid #e2e8f0;
+  display: grid;
+  gap: 14px;
+}
+.cm-notice {
+  padding: 12px 16px;
+  background: #edf5f2;
+  border: 1px solid #d4e5dd;
+  border-radius: 10px;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+.cm-empty {
+  text-align: center;
+  padding: 70px 15px;
+  color: #64748b;
+}
+.cm-preview {
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+.cm-preview p {
+  white-space: pre-wrap;
+}
+.cm-preview blockquote {
+  margin: 12px 0;
+  padding: 8px 18px;
+  border-left: 3px solid #92b5a9;
+  background: #f4f8f6;
+}
+.cm-dialog {
+  position: fixed;
+  inset: 0;
+  margin: auto;
+  width: min(900px, calc(100% - 32px));
+  max-height: 88dvh;
+  overflow-y: auto;
+  border: 1px solid #d7e2dd;
+  border-radius: 16px;
+  padding: 26px;
+  color: #334155;
+}
+.cm-dialog::backdrop {
+  background: rgb(15 23 42 / 40%);
+}
+.cm-version {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+@media (max-width: 960px) {
+  .cm-workspace {
+    grid-template-columns: 1fr;
+  }
+  .cm-catalog {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 600px) {
+  .cm-catalog,
+  .cm-module-fields,
+  .cm-options {
+    grid-template-columns: 1fr;
+  }
+  .cm-panel,
+  .cm-editor,
+  .cm-dialog {
+    padding: 16px;
+  }
+  .cm-lessons li {
+    flex-wrap: wrap;
+  }
+  .cm-actions .button {
+    flex: 1;
+  }
+}
