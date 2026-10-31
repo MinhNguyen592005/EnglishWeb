@@ -120,7 +120,7 @@
 }
 .teacher-question-bank .question-item-content > div:first-child > strong {
   margin-top: 8px;
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.7;
 }
 .teacher-question-bank .question-item-meta {
@@ -174,7 +174,7 @@
   display: flex;
   gap: 10px;
   align-items: center;
-  font-size: 21px;
+  font-size: 19px;
   margin: 0;
 }
 .teacher-assignment-dialog > p {
@@ -305,7 +305,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   cursor: pointer;
   user-select: none;
@@ -325,7 +325,7 @@
 }
 .selection-action-bar strong {
   color: var(--primary-strong);
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 .selection-actions {
   display: flex;
@@ -355,7 +355,7 @@
 }
 .question-item-content strong {
   display: block;
-  font-size: 1rem;
+  font-size: 0.9375rem;
   line-height: 1.4;
   margin-bottom: 6px;
 }
@@ -365,7 +365,7 @@
   gap: 8px;
   flex-wrap: wrap;
   color: var(--muted);
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   margin-bottom: 6px;
 }
 .question-options-preview {
@@ -377,7 +377,7 @@
   background: #fbfcfe;
   border-radius: 8px;
   border: 1px solid #eef2f6;
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
 }
 .question-option-item.is-correct {
   color: #10b981;
@@ -400,7 +400,7 @@
   background: #fff;
   border: 1px solid var(--border);
   border-radius: 6px;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
 }
 .bank-filter-bar {
   display: flex;
@@ -420,7 +420,7 @@
   flex: 1 1 200px;
 }
 .bank-filter-group label {
-  font-size: 0.85rem;
+  font-size: 0.8125rem;
   font-weight: 700;
   color: var(--muted);
   white-space: nowrap;
@@ -430,7 +430,7 @@
   flex: 1;
   min-height: 40px;
   padding: 8px 12px;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   border: 1px solid #d8e0ec;
   border-radius: 8px;
   background: #fff;
@@ -446,7 +446,7 @@
   background: #fff;
   border-radius: 20px;
   padding: 6px 14px;
-  font-size: 0.84rem;
+  font-size: 0.75rem;
   font-weight: 600;
   cursor: pointer;
   color: var(--text);
@@ -493,7 +493,7 @@
   flex-wrap: wrap;
 }
 .range-picker-left strong {
-  font-size: 0.9rem;
+  font-size: 0.8125rem;
   color: var(--primary-strong);
   display: flex;
   align-items: center;
@@ -503,7 +503,7 @@
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 0.88rem;
+  font-size: 0.8125rem;
   font-weight: 600;
 }
 .range-inputs input {
@@ -541,7 +541,7 @@
 .question-stt-tag {
   display: inline-block;
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: 0.75rem;
   color: var(--primary-strong);
   background: var(--primary-soft);
   padding: 2px 7px;

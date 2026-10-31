@@ -14,7 +14,7 @@
   align-items: center;
   gap: 10px;
   color: #5148cf;
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 800;
 }
 .placement-header {
@@ -162,7 +162,7 @@
   background: #ffffff0d;
 }
 .placement-welcome-hero h1 {
-  font-size: 23px;
+  font-size: 21px;
   line-height: 1.4;
   max-width: 470px;
   margin: 0 0 8px;
@@ -184,12 +184,12 @@
 .placement-welcome-star.star-one {
   right: 36px;
   bottom: 32px;
-  font-size: 30px;
+  font-size: 24px;
 }
 .placement-welcome-star.star-two {
   right: 70px;
   top: 46px;
-  font-size: 16px;
+  font-size: 15px;
   animation-delay: -2s;
   opacity: 0.7;
 }
@@ -294,11 +294,11 @@
   right: -6px;
   top: -7px;
   color: #eeb451;
-  font-size: 17px;
+  font-size: 15px;
 }
 .placement-welcome-step h2 {
   margin: 0 0 7px;
-  font-size: 23px;
+  font-size: 21px;
   line-height: 1.4;
   letter-spacing: -0.5px;
   outline: none;
@@ -329,7 +329,7 @@
   border-radius: 14px;
   padding: 11px 15px;
   line-height: 1.5;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   background: #fff;
@@ -543,7 +543,7 @@
   }
   .placement-brand {
     margin-bottom: 28px;
-    font-size: 18px;
+    font-size: 16px;
   }
   .placement-welcome-dialog {
     border-radius: 22px;
@@ -552,7 +552,7 @@
     padding: 25px 22px 22px;
   }
   .placement-welcome-hero h1 {
-    font-size: 20px;
+    font-size: 18px;
     padding-right: 6px;
   }
   .placement-welcome-brand > span {
@@ -561,14 +561,14 @@
   .placement-welcome-star.star-one {
     right: 10px;
     bottom: 12px;
-    font-size: 20px;
+    font-size: 18px;
     opacity: 0.6;
   }
   .placement-welcome-content {
     padding: 20px 22px;
   }
   .placement-welcome-step h2 {
-    font-size: 21px;
+    font-size: 19px;
   }
   .placement-welcome-option {
     min-height: 56px;
@@ -602,7 +602,7 @@
   text-align: center;
 }
 .placement-result h1 {
-  font-size: 32px;
+  font-size: 26px;
   color: var(--primary, #6554e8);
 }
 .placement-result p {

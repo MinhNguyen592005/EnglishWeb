@@ -5,6 +5,7 @@ import { Layout } from '../components/Layout'
 import { sortLessons, topicName } from './RoadmapPage'
 import type { Lesson } from '../types'
 import './dashboard-home.css'
+import './dashboard-overview.css'
 
 export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
   const { user } = useAuth()
@@ -30,7 +31,7 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
 
   return (
     <Layout title="Tổng quan">
-      <div className="dashboard-home">
+      <div className="dashboard-home dashboard-overview">
         <header className="home-heading">
           <div>
             <h1>Chào {user?.displayName || user?.username}!</h1>
@@ -43,44 +44,85 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
 
         <section className="home-stats" aria-label="Tiến độ học tập">
           <div>
-            <span>
-              <BookOpen size={16} />
-              Bài học hoàn thành
+            <span className="home-stat-icon">
+              <BookOpen size={21} />
             </span>
+<<<<<<< HEAD
             <strong className="stat-blue">
               {done}
               <small> / {lessons.length}</small>
             </strong>
             <p>{lessons.length ? `${percent}% hành trình` : 'Chưa có dữ liệu bài học'}</p>
+=======
+            <div className="home-stat-copy">
+              <span className="home-stat-label">Bài học hoàn thành</span>
+              <div className="home-stat-value">
+                <strong>
+                  {done}
+                  <small> / {lessons.length}</small>
+                </strong>
+                <p>{lessons.length ? `${percent}% hành trình` : 'Chưa có dữ liệu bài học'}</p>
+              </div>
+            </div>
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
           </div>
           <div>
-            <span>
-              <Target size={16} />
-              Cấp độ hiện tại
+            <span className="home-stat-icon">
+              <Target size={21} />
             </span>
+<<<<<<< HEAD
             <strong className="stat-green">Cấp {level}</strong>
             <p>{(user?.totalXp ?? 0).toLocaleString('vi-VN')} XP tích lũy</p>
+=======
+            <div className="home-stat-copy">
+              <span className="home-stat-label">Cấp độ hiện tại</span>
+              <div className="home-stat-value">
+                <strong>Cấp {level}</strong>
+                <p>{(user?.totalXp ?? 0).toLocaleString('vi-VN')} XP tích lũy</p>
+              </div>
+            </div>
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
           </div>
           <div>
-            <span>
-              <Flame size={16} />
-              Mục tiêu tiếp theo
+            <span className="home-stat-icon">
+              <Flame size={21} />
             </span>
+<<<<<<< HEAD
             <strong className="stat-gold">
               {remaining.toLocaleString('vi-VN')}
               <small>XP</small>
             </strong>
             <p>Để đạt cấp {level + 1}</p>
+=======
+            <div className="home-stat-copy">
+              <span className="home-stat-label">Mục tiêu tiếp theo</span>
+              <div className="home-stat-value">
+                <strong>
+                  {remaining.toLocaleString('vi-VN')}
+                  <small>XP</small>
+                </strong>
+                <p>Để đạt cấp {level + 1}</p>
+              </div>
+            </div>
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
           </div>
         </section>
 
         <div className="home-main home-overview-grid">
           <section className="home-next-lesson">
             <div className="home-section-top">
+<<<<<<< HEAD
               <span className="home-eyebrow">{current ? 'TIẾP TỤC HỌC' : 'BƯỚC TIẾP THEO'}</span>
               <span className="home-lesson-label">
                 <BookOpen size={14} />
                 {current ? 'Bài học trong lộ trình' : 'Lộ trình cá nhân'}
+=======
+              <span className="home-lesson-label">
+                <BookOpen size={16} />
+                {current
+                  ? 'Tiếp tục học · Bài học trong lộ trình'
+                  : 'Bước tiếp theo · Lộ trình cá nhân'}
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
               </span>
             </div>
             <h2>
@@ -119,7 +161,10 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
               <strong>
                 {xp.toLocaleString('vi-VN')} <small>/ 1.000 XP</small>
               </strong>
+<<<<<<< HEAD
               <span>{Math.round(Math.min(100, xp / 10))}%</span>
+=======
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
             </div>
             <div
               className="home-progress-track"
@@ -131,6 +176,10 @@ export function DashboardHome({ lessons }: { lessons: Lesson[] }) {
             >
               <span style={{ width: `${Math.min(100, xp / 10)}%` }} />
             </div>
+<<<<<<< HEAD
+=======
+            <span className="home-progress-percent">{Math.round(Math.min(100, xp / 10))}%</span>
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
             <p>XP từ bài học và phần thưởng nhiệm vụ giúp bạn tăng cấp. ELO PvP được tính riêng.</p>
           </section>
 

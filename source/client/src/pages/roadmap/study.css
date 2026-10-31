@@ -142,11 +142,11 @@
   min-width: 0;
 }
 .study-theory h2 {
-  font-size: 15px;
+  font-size: 14px;
   margin: 0 0 6px;
 }
 .study-theory p {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.65;
   color: #34415e;
   margin: 6px 0;
@@ -162,7 +162,7 @@
   padding: 13px 0;
   list-style: none;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
 }
 .study-theory-detail summary::-webkit-details-marker {
@@ -200,7 +200,7 @@
   padding: 10px 12px;
   background: #f6f7ff;
   margin: 0;
-  font-size: 14px;
+  font-size: 13px;
   border-radius: 0 8px 8px 0;
 }
 .study-example p {
@@ -256,7 +256,7 @@
   scroll-margin-top: 30px;
 }
 .study-question h3 {
-  font-size: 1.1rem;
+  font-size: 1rem;
   line-height: 1.65;
   margin: 14px 0 22px;
 }

@@ -12,7 +12,7 @@
   align-items: center;
 }
 .pvp-page .page-heading h1 {
-  font-size: 30px;
+  font-size: 24px;
   letter-spacing: -0.8px;
   margin: 8px 0;
 }
@@ -42,7 +42,7 @@
   padding: 24px;
 }
 .pvp-page .feature-card h2 {
-  font-size: 18px;
+  font-size: 16px;
   letter-spacing: -0.35px;
   display: flex;
   align-items: center;
@@ -108,7 +108,7 @@
 .pvp-page .pvp-avatar {
   width: 46px;
   height: 46px;
-  font-size: 17px;
+  font-size: 15px;
 }
 .pvp-page .pvp-avatar.sm {
   width: 34px;
@@ -120,7 +120,7 @@
   margin-bottom: 6px;
 }
 .pvp-page .pvp-strip-name-row > strong {
-  font-size: 15px;
+  font-size: 14px;
   overflow-wrap: anywhere;
 }
 .pvp-page .pvp-strip-user .muted {
@@ -152,7 +152,7 @@
   border-left: 1px solid #edf0f6;
 }
 .pvp-record strong {
-  font-size: 23px;
+  font-size: 21px;
   font-weight: 700;
   line-height: 1.2;
   color: #304263;
@@ -249,7 +249,7 @@
   padding: 25px 0 26px;
 }
 .pvp-page .pvp-match-main h2 {
-  font-size: 25px;
+  font-size: 22px;
   letter-spacing: -0.6px;
   margin: 0 0 12px;
   line-height: 1.35;
@@ -432,7 +432,7 @@
   margin-bottom: 16px;
 }
 .pvp-private-heading h2 {
-  font-size: 18px;
+  font-size: 16px;
   margin: 0 0 6px;
   letter-spacing: -0.3px;
 }
@@ -476,7 +476,7 @@
   width: 21px;
 }
 .pvp-page .pvp-private-title h2 {
-  font-size: 16px;
+  font-size: 15px;
   margin: 0 0 5px;
 }
 .pvp-page .pvp-private-title p {
@@ -650,7 +650,7 @@
   background: linear-gradient(120deg, #f6f7ff, #fff);
 }
 .pvp-page .arena-banner h2 {
-  font-size: 21px;
+  font-size: 19px;
   margin: 8px 0 0;
 }
 .pvp-page .arena-score {
@@ -681,7 +681,7 @@
   color: #929bb1;
 }
 .pvp-page .pvp-confirm-slot strong {
-  font-size: 14px;
+  font-size: 13px;
 }
 .pvp-page .pvp-confirm-slot small {
   font-size: 11px;
@@ -796,7 +796,7 @@
 }
 @media (max-width: 650px) {
   .pvp-page .page-heading h1 {
-    font-size: 25px;
+    font-size: 22px;
   }
   .pvp-page .heading-icon {
     width: 44px;
@@ -830,7 +830,7 @@
     border-left: 1px solid #edf0f6;
   }
   .pvp-record strong {
-    font-size: 20px;
+    font-size: 18px;
   }
   .pvp-page .pvp-tab-pills {
     margin: 0 -18px;
@@ -855,7 +855,7 @@
     gap: 0;
   }
   .pvp-page .pvp-match-main h2 {
-    font-size: 23px;
+    font-size: 21px;
     max-width: 260px;
   }
   .pvp-duel-art {

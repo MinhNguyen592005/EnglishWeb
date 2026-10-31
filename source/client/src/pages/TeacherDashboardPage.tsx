@@ -3,6 +3,7 @@ import {
   BookOpen,
   CheckCircle2,
   ClipboardList,
+  Clock3,
   RefreshCw,
   School,
   UsersRound,
@@ -16,6 +17,7 @@ import { api } from '../services/api'
 import { useSystemSocket } from '../app/SystemSocketContext'
 import type { TeacherOverview } from '../types'
 import './teacher-dashboard.css'
+import './teacher-overview.css'
 
 export function TeacherDashboardPage() {
   const { user } = useAuth()
@@ -74,15 +76,27 @@ export function TeacherDashboardPage() {
 
   return (
     <Layout title="Tổng quan giáo viên">
-      <div className="teacher-dashboard">
+      <div className="teacher-dashboard teacher-overview">
         <div className="page-heading teacher-dashboard-heading">
           <div>
             <h1>Chào {user?.displayName}!</h1>
             <p>Quản lý lớp học, giao bài và theo dõi kết quả của học viên.</p>
           </div>
-          <div className="heading-icon">
-            <School />
-          </div>
+          {data && (
+            <div className="teacher-dashboard-status" aria-live="polite">
+              <span className={connected ? 'status-dot online' : 'status-dot'} aria-hidden="true" />
+              <strong>{connected ? 'Đang cập nhật realtime' : 'Đang dùng dữ liệu gần nhất'}</strong>
+              {lastUpdated && (
+                <span>
+                  Cập nhật{' '}
+                  {lastUpdated.toLocaleTimeString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </span>
+              )}
+            </div>
+          )}
         </div>
         {error && (
           <div className="error-banner" role="alert">
@@ -98,22 +112,6 @@ export function TeacherDashboardPage() {
         ) : (
           data && (
             <>
-              <div className="teacher-dashboard-status" aria-live="polite">
-                <span
-                  className={connected ? 'status-dot online' : 'status-dot'}
-                  aria-hidden="true"
-                />
-                {connected ? 'Đang cập nhật realtime' : 'Đang dùng dữ liệu gần nhất'}
-                {lastUpdated && (
-                  <span>
-                    · Cập nhật{' '}
-                    {lastUpdated.toLocaleTimeString('vi-VN', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
-                )}
-              </div>
               <div className="teacher-dashboard-metrics">
                 <Link to="/classes" className="teacher-metric-card">
                   <span className="teacher-metric-icon">
@@ -160,10 +158,8 @@ export function TeacherDashboardPage() {
               </div>
               <section className="teacher-dashboard-section">
                 <div className="teacher-dashboard-section-heading">
-                  <div>
-                    <span className="section-label">THAO TÁC NHANH</span>
-                    <h2>Công việc của giáo viên</h2>
-                  </div>
+                  <h2>Công việc của giáo viên</h2>
+                  <span className="teacher-quick-label">Thao tác nhanh</span>
                 </div>
                 <div className="teacher-action-grid">
                   <Link to="/classes" className="teacher-action-card">
@@ -191,7 +187,6 @@ export function TeacherDashboardPage() {
               <section className="teacher-dashboard-section teacher-attention">
                 <div className="teacher-dashboard-section-heading">
                   <div>
-                    <span className="section-label">ƯU TIÊN</span>
                     <h2>Bài giao cần chú ý</h2>
                   </div>
                   <Link to="/classes" className="text-link">
@@ -216,7 +211,10 @@ export function TeacherDashboardPage() {
                               : 'Đang mở'
                       return (
                         <div className="teacher-assignment-row" key={item.id}>
-                          <div>
+                          <span className="teacher-assignment-icon" aria-hidden="true">
+                            <Clock3 size={20} />
+                          </span>
+                          <div className="teacher-assignment-copy">
                             <strong>{item.title}</strong>
                             <small>
                               {item.className} · Hạn {new Date(item.dueAt).toLocaleString('vi-VN')}{' '}

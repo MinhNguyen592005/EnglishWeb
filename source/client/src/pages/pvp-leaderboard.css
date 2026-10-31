@@ -102,7 +102,7 @@
 }
 .pvp-page .pvp-leaderboard h2 {
   color: #2c3543;
-  font-size: 23px;
+  font-size: 21px;
   font-weight: 650;
   letter-spacing: -0.65px;
   margin: 0 0 6px;
@@ -128,7 +128,7 @@
 }
 .pvp-board-position > strong {
   color: #46515f;
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: -1px;
   line-height: 1.4;
   font-weight: 600;
@@ -311,7 +311,7 @@
   background: #ab8b9a;
 }
 .pvp-page .pvp-leaderboard .pvp-elo-value {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   letter-spacing: -0.2px;
   color: #354252;
@@ -341,14 +341,14 @@
     margin-bottom: 22px;
   }
   .pvp-page .pvp-leaderboard h2 {
-    font-size: 21px;
+    font-size: 19px;
   }
   .pvp-board-position {
     padding-left: 12px;
     column-gap: 5px;
   }
   .pvp-board-position > strong {
-    font-size: 20px;
+    font-size: 18px;
   }
   .pvp-board-position > small {
     font-size: 9px;

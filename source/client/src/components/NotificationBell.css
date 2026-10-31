@@ -52,7 +52,7 @@
 }
 .notification-heading h2 {
   margin: 0;
-  font-size: 17px;
+  font-size: 15px;
 }
 .notification-heading-icon {
   display: inline-flex;
@@ -202,7 +202,7 @@
 }
 .notification-empty strong {
   color: #475569;
-  font-size: 14px;
+  font-size: 13px;
 }
 .notification-empty p {
   font-size: 12px;
@@ -235,10 +235,10 @@
   overflow-wrap: anywhere;
 }
 .notification-detail strong {
-  font-size: 15px;
+  font-size: 14px;
 }
 .notification-detail p {
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.8;
   white-space: pre-wrap;
 }

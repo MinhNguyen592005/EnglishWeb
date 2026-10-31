@@ -132,14 +132,14 @@
 .monitor-metric strong {
   display: block;
   margin-top: 4px;
-  font-size: 34px;
+  font-size: 28px;
   line-height: 1.1;
   color: #14213d;
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 .monitor-metric strong small {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--muted);
 }
@@ -191,7 +191,7 @@
 }
 .monitor-grid .panel-heading h2 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 0.9375rem;
 }
 .monitor-grid .panel-heading p {
   margin: 4px 0 0;
@@ -220,7 +220,7 @@
     grid-template-columns: 1fr;
   }
   .monitor-metric strong {
-    font-size: 30px;
+    font-size: 24px;
   }
 }
 
@@ -420,7 +420,7 @@
 }
 .monitor-detail h3 {
   margin: 0 0 8px;
-  font-size: 0.95rem;
+  font-size: 0.875rem;
 }
 .monitor-feedback {
   margin: 12px 0 0;

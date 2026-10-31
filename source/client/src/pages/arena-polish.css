@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿.pvp-page {
   --pvp-muted: #64748b;
 }
@@ -370,6 +371,78 @@
   .pvp-page .pvp-board-position {
     text-align: left;
   }
+=======
+﻿.pvp-page { --pvp-muted: #64748b; }
+.pvp-page > .page-heading { padding: 26px 30px; border: 1px solid #ddd6fe; border-radius: 22px; background: radial-gradient(ellipse at 100% 0%,#ddd6fe,transparent 60%),linear-gradient(120deg,#f5f3ff,#eff6ff); }
+.pvp-page > .page-heading p { font-size: 14px; }
+.pvp-page .pvp-profile-strip { padding-bottom: 18px; }
+.pvp-page .pvp-tab-pills { margin: 0; padding: 7px; gap: 7px; border: 1px solid #e2e8f0; border-radius: 16px; background: #f8fafc; overflow-x: auto; }
+.pvp-page .pvp-tab-btn { padding: 12px 18px; border: 1px solid transparent; border-radius: 11px; font-size: 13px; font-weight: 650; color: #64748b; white-space: nowrap; }
+.pvp-page .pvp-tab-btn.active { border: 1px solid #c4b5fd; border-radius: 11px; background: #ede9fe; color: #6d28d9; box-shadow: 0 2px 5px #6d28d90a; }
+.pvp-page .pvp-tab-btn:hover:not(.active) { background: #eef2ff; color: #4f46e5; }
+.pvp-page .pvp-rank-guide { background: #fff; border-radius: 16px; }
+.pvp-page .pvp-rank-guide summary { font-size: 13px; color: #475569; }
+.pvp-page .pvp-rank-guide summary small { font-size: 12px; color: #64748b; }
+.pvp-page .pvp-tier-card { padding: 16px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; }
+.pvp-page .pvp-tier-card.current { background: #f5f3ff; border-color: #a78bfa; }
+.pvp-page .pvp-tier-card > span { color: #64748b; font-size: 12px; }
+.pvp-page .pvp-leaderboard { padding: 26px; border-radius: 22px; background: #fff; }
+.pvp-page .pvp-leaderboard h2 { color: #26344c; font-size: 23px; }
+.pvp-page .pvp-leaderboard .panel-heading .muted { color: #64748b; font-size: 13px; }
+.pvp-page .pvp-board-position { padding: 14px 20px; border: 1px solid #ddd6fe; border-radius: 14px; background: #f5f3ff; }
+.pvp-page .pvp-board-position > span { color: #64748b; font-size: 12px; }
+.pvp-page .pvp-board-position > strong { color: #6d28d9; font-size: 23px; }
+.pvp-page .pvp-board-position > small { color: #6d28d9; font-size: 12px; }
+.pvp-page .pvp-rank-filters { gap: 8px; padding: 8px; border: 1px solid #e2e8f0; border-radius: 14px; background: #f8fafc; margin-bottom: 22px; }
+.pvp-page .pvp-rank-filter { padding: 9px 14px; border: 1px solid transparent; border-radius: 9px; font-size: 13px; color: #64748b; }
+.pvp-page .pvp-rank-filter.is-active { background: #ede9fe; border-color: #ddd6fe; color: #6d28d9; }
+.pvp-podium { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: 16px; margin-bottom: 28px; }
+.pvp-podium-card { --podium-bg: #fffbeb; --podium-border: #fde68a; --podium-ink: #92400e; display: flex; flex-direction: column; align-items: center; gap: 12px; text-align: center; border: 1px solid var(--podium-border); border-radius: 18px; padding: 22px 16px; background: radial-gradient(ellipse at 50% 0%,var(--podium-bg),#fff); min-width: 0; }
+.pvp-podium-card.place-2 { --podium-bg: #f1f5f9; --podium-border: #cbd5e1; --podium-ink: #475569; }
+.pvp-podium-card.place-3 { --podium-bg: #fff7ed; --podium-border: #fed7aa; --podium-ink: #9a3412; }
+.pvp-podium-place { display: inline-flex; align-items: center; gap: 7px; background: var(--podium-bg); color: var(--podium-ink); padding: 6px 12px; border-radius: 20px; font-size: 12px; font-weight: 750; }
+.pvp-page .pvp-podium .pvp-avatar { width: 62px; height: 62px; font-size: 21px; margin: 6px 0; }
+.pvp-podium-card > strong { font-size: 15px; line-height: 1.6; overflow-wrap: anywhere; }
+.pvp-podium-tier { font-size: 12px; color: #64748b; }
+.pvp-podium-score { color: var(--podium-ink); font-size: 23px; font-weight: 800; }
+.pvp-podium-score small { font-size: 11px; font-weight: 600; }
+.pvp-page .pvp-leaderboard .table-wrap { margin: 0; border: 1px solid #e2e8f0; border-radius: 14px; }
+.pvp-page .pvp-leaderboard th { background: #f8fafc; padding: 16px; color: #52617a; font-size: 12px; font-weight: 650; }
+.pvp-page .pvp-leaderboard td { padding: 18px 16px; color: #475569; font-size: 13px; }
+.pvp-page .pvp-leaderboard td small { color: #64748b; font-size: 12px; margin-top: 5px; }
+.pvp-page .pvp-leaderboard .pvp-my-row td { background: #eef2ff; }
+.pvp-page .pvp-position-number.is-leading { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; border-radius: 10px; padding: 8px; }
+.pvp-page .pvp-top-row.place-2 .pvp-position-number { background: #f1f5f9; color: #475569; border-color: #cbd5e1; }
+.pvp-page .pvp-top-row.place-3 .pvp-position-number { background: #ffedd5; color: #9a3412; border-color: #fed7aa; }
+.pvp-page .pvp-cosmetics-grid { grid-template-columns: repeat(3,minmax(0,1fr)); gap: 20px; margin-top: 24px; }
+.pvp-page .pvp-cosmetic-card { --reward-bg: #f5f3ff; --reward-ink: #6d28d9; --reward-line: #ddd6fe; border: 1px solid var(--reward-line); border-radius: 20px; background: #fff; overflow: hidden; display: flex; flex-direction: column; }
+.pvp-page .pvp-cosmetic-card:nth-child(3n+2) { --reward-bg: #eff6ff; --reward-ink: #1d4ed8; --reward-line: #bfdbfe; }
+.pvp-page .pvp-cosmetic-card:nth-child(3n) { --reward-bg: #fffbeb; --reward-ink: #92400e; --reward-line: #fde68a; }
+.pvp-page .pvp-cosmetic-card.equipped { border-color: #8b5cf6; box-shadow: 0 0 0 2px #ede9fe,0 8px 24px #7c3aed0a; }
+.pvp-page .pvp-cosmetic-preview { position: relative; min-height: 180px; padding: 48px 24px 28px; background: radial-gradient(circle at 50% 60%,#fff 0 25%,transparent 26%),radial-gradient(circle at 50% 60%,var(--reward-line),var(--reward-bg) 65%); border-bottom: 1px solid var(--reward-line); }
+.pvp-page .pvp-cosmetic-preview .pvp-avatar.lg { width: 80px; height: 80px; font-size: 24px; }
+.pvp-page .pvp-cosmetic-preview .pvp-badge-showcase { width: 80px; height: 80px; border-radius: 24px; box-shadow: 0 8px 18px #33415515; }
+.pvp-reward-state { position: absolute; top: 14px; left: 14px; background: #ffffffd9; border: 1px solid var(--reward-line); color: var(--reward-ink); font-size: 10px; padding: 5px 9px; border-radius: 20px; font-weight: 700; }
+.pvp-page .pvp-cosmetic-body { padding: 22px; flex: 1; gap: 12px; }
+.pvp-page .pvp-cosmetic-body > strong { color: #25344c; font-size: 15px; line-height: 1.6; }
+.pvp-page .pvp-cosmetic-body p { color: #64748b; font-size: 13px; line-height: 1.8; }
+.pvp-page .pvp-cosmetic-body .button { margin-top: auto; border-radius: 11px; font-size: 13px; }
+.pvp-page .pvp-cosmetic-body .button.primary { background: var(--reward-bg); color: var(--reward-ink); border-color: var(--reward-line); }
+.pvp-page .pvp-cosmetic-progress small { font-size: 12px; color: #64748b; line-height: 1.8; }
+.pvp-page .pvp-cosmetic-card.locked { opacity: 1; }
+.pvp-page .pvp-cosmetic-card.locked .pvp-cosmetic-preview { filter: none; opacity: 0.8; }
+@media(max-width:900px) { .pvp-page .pvp-cosmetics-grid { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+@media(max-width:600px) {
+ .pvp-page > .page-heading { padding: 22px; }
+ .pvp-page .pvp-leaderboard { padding: 18px; }
+ .pvp-page .pvp-tab-btn { padding: 10px 12px; font-size: 12px; }
+ .pvp-podium { grid-template-columns: minmax(0,1fr); gap: 12px; }
+ .pvp-podium-card { display: grid; grid-template-columns: 64px minmax(0,1fr); text-align: left; gap: 8px 16px; padding: 18px; }
+ .pvp-podium-card .pvp-avatar { grid-column: 1; grid-row: 1 / 5; }
+ .pvp-podium-card > :not(.pvp-avatar) { grid-column: 2; }
+ .pvp-page .pvp-cosmetics-grid { grid-template-columns: minmax(0,1fr); }
+ .pvp-page .pvp-board-position { text-align: left; }
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
 }
 
 /* Podium: silver / gold / bronze, with all steps sharing a baseline. */
@@ -420,7 +493,7 @@
   border-top: 1px solid var(--podium-border);
   background: linear-gradient(180deg, var(--podium-bg), var(--podium-border));
   color: var(--podium-ink);
-  font-size: 48px;
+  font-size: 39px;
   line-height: 1;
   font-weight: 850;
   text-shadow: 0 2px 0 #fff8;
@@ -456,6 +529,7 @@
   isolation: isolate;
   overflow: hidden;
 }
+<<<<<<< HEAD
 .pvp-page .pvp-reward-state {
   position: static;
   align-self: flex-start;
@@ -543,4 +617,28 @@
   .pvp-page .place-3 .pvp-podium-step {
     height: 40px;
   }
+=======
+.pvp-page .pvp-reward-state { position: static; align-self: flex-start; max-width: 100%; white-space: normal; line-height: 1.6; font-size: 11px; overflow-wrap: anywhere; }
+.pvp-page .pvp-cosmetic-preview > .pvp-avatar,
+.pvp-page .pvp-cosmetic-preview > .pvp-badge-showcase { flex: 0 0 80px; display: grid; place-items: center; margin: 0; }
+.pvp-page .pvp-cosmetic-body { min-width: 0; padding: 22px; }
+.pvp-page .pvp-cosmetic-body > strong,
+.pvp-page .pvp-cosmetic-body p { max-width: 100%; overflow-wrap: anywhere; }
+.pvp-page .pvp-cosmetic-body .button { width: 100%; max-width: 100%; white-space: normal; line-height: 1.6; padding: 12px; }
+.pvp-page .pvp-cosmetic-progress { min-width: 0; }
+.pvp-page .pvp-cosmetic-progress small { flex-wrap: wrap; overflow-wrap: anywhere; }
+@media (max-width: 600px) {
+  .pvp-page .pvp-podium { gap: 6px; padding: 18px 6px 0; }
+  .pvp-page .pvp-podium-card { padding: 14px 6px 0; gap: 8px; border-radius: 12px 12px 0 0; }
+  .pvp-page .pvp-podium-card > strong { font-size: 12px; line-height: 1.6; }
+  .pvp-page .pvp-podium-place { font-size: 10px; padding: 4px 6px; gap: 3px; }
+  .pvp-page .pvp-podium-place svg { width: 13px; }
+  .pvp-page .pvp-podium .pvp-avatar { width: 44px; height: 44px; font-size: 16px; }
+  .pvp-page .pvp-podium-tier { font-size: 10px; }
+  .pvp-page .pvp-podium-score { font-size: 16px; }
+  .pvp-page .pvp-podium-score small { display: block; font-size: 9px; }
+  .pvp-page .pvp-podium-step { width: calc(100% + 12px); height: 65px; font-size: 29px; }
+  .pvp-page .place-1 .pvp-podium-step { height: 95px; }
+  .pvp-page .place-3 .pvp-podium-step { height: 40px; }
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
 }

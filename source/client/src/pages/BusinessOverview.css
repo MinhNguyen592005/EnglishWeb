@@ -14,7 +14,7 @@
 }
 .business-overview .panel-heading h2 {
   margin: 6px 0 4px;
-  font-size: 1.15rem;
+  font-size: 1rem;
 }
 .business-overview .panel-heading p {
   margin: 0;
@@ -58,7 +58,7 @@
   color: #586881;
 }
 .biz-chart figcaption strong {
-  font-size: 24px;
+  font-size: 21px;
   line-height: 1;
   color: #14213d;
   font-variant-numeric: tabular-nums;

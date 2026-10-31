@@ -20,6 +20,7 @@ import type { StudyAttempt, StudyCourse, StudyKind } from './roadmap/types'
 import './roadmap/study.css'
 import './practice-page.css'
 import './practice-refresh.css'
+import './practice-selection.css'
 
 export function PracticePage() {
   const { request, subscribe, connected } = useSystemSocket()
@@ -129,7 +130,7 @@ export function PracticePage() {
 
   return (
     <Layout title="Luyện tập">
-      <div className="practice-home study-course">
+      <div className={`practice-home study-course${attemptId ? '' : ' practice-selection'}`}>
         {attemptId ? (
           <>
             <button type="button" className="practice-back" onClick={back}>
@@ -226,7 +227,9 @@ export function PracticePage() {
                   <>
                     <section className="practice-mixed">
                       <div>
-                        <span className="practice-eyebrow">ÔN TỔNG HỢP · LEVEL {level.id}</span>
+                        <span className="practice-eyebrow">
+                          <Shuffle size={16} /> Ôn tổng hợp · Level {level.id}
+                        </span>
                         <h2>{level.title}</h2>
                         <p>
                           Trộn câu hỏi từ {available.length} module đã mở trong level này. Các
@@ -284,13 +287,14 @@ export function PracticePage() {
                             )}
                           </span>
                           <div>
-                            <span className="practice-eyebrow">MODULE {module.ordinalNo}</span>
+                            <span className="practice-eyebrow">Module {module.ordinalNo}</span>
                             <h3>{module.title}</h3>
                             <p>
                               {module.unlocked
                                 ? `${module.lessonCount} bài học · ${module.completedCount} bài đã hoàn thành`
                                 : module.lockReason || 'Tiếp tục lộ trình để mở module này.'}
                             </p>
+<<<<<<< HEAD
                             <div
                               className="practice-module-progress"
                               role="progressbar"
@@ -305,6 +309,22 @@ export function PracticePage() {
                                 }}
                               />
                             </div>
+=======
+                          </div>
+                          <div
+                            className="practice-module-progress"
+                            role="progressbar"
+                            aria-label={`Tiến độ học ${module.title}`}
+                            aria-valuemin={0}
+                            aria-valuemax={module.lessonCount || 1}
+                            aria-valuenow={module.completedCount}
+                          >
+                            <span
+                              style={{
+                                width: `${module.lessonCount ? Math.min(100, (module.completedCount / module.lessonCount) * 100) : 0}%`,
+                              }}
+                            />
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
                           </div>
                           <button
                             type="button"

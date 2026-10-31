@@ -29,7 +29,7 @@
 }
 .qf-heading h2 {
   margin: 8px 0 20px;
-  font-size: 22px;
+  font-size: 20px;
   letter-spacing: -0.4px;
 }
 .qf-heading > button {
@@ -199,7 +199,7 @@
     padding: 18px;
   }
   .qf-heading h2 {
-    font-size: 19px;
+    font-size: 17px;
   }
   .qf-sample textarea,
   .qf-raw textarea {

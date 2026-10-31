@@ -9,22 +9,31 @@
 
 /* Consistent text sizing, including pages with their own legacy styles. */
 .app-layout .page-content :is(p, li, td, label, input, select, textarea) {
+<<<<<<< HEAD
   font-size: 0.9375rem;
   line-height: 1.7;
 }
 .app-layout .page-content :is(button, .button, .practice-primary, .home-primary) {
   font-size: 0.9375rem;
+=======
+  font-size: 0.875rem;
+  line-height: 1.7;
+}
+.app-layout .page-content :is(button, .button, .practice-primary, .home-primary) {
+  font-size: 0.875rem;
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
   line-height: 1.4;
 }
 .app-layout .page-content h1 {
-  font-size: clamp(1.7rem, 2.5vw, 2.2rem);
+  font-size: clamp(1.4375rem, 2.025vw, 1.8125rem);
   line-height: 1.25;
   letter-spacing: -0.03em;
 }
 .app-layout .page-content h2 {
-  font-size: clamp(1.15rem, 1.7vw, 1.45rem);
+  font-size: clamp(1rem, 1.377vw, 1.3125rem);
   line-height: 1.4;
 }
+<<<<<<< HEAD
 .app-layout .page-content h3 {
   font-size: 1.0625rem;
   line-height: 1.45;
@@ -43,6 +52,12 @@
     .tm-page,
     .study-course
   ) {
+=======
+.app-layout .page-content h3 { font-size: 0.9375rem; line-height: 1.45; }
+.page-content > :is(.dashboard-home, .practice-home, .pvp-page, .profile-page,
+  .teacher-profile-page, .class-page, .class-workspace, .teacher-dashboard,
+  .admin-page, .tm-page, .study-course) {
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
   width: 100%;
   max-width: 1240px;
   margin-inline: auto;
@@ -434,9 +449,13 @@ main:has(form input[autocomplete='username']) {
 main:has(form input[autocomplete='username']) > div > section:first-child {
   background: linear-gradient(135deg, #eff6ff, #ede9fe 55%, #fef9c3);
 }
+<<<<<<< HEAD
 main:has(form input[autocomplete='username']) form :is(input, label, button[type='submit']) {
   font-size: 0.9375rem;
 }
+=======
+main:has(form input[autocomplete='username']) form :is(input, label, button[type='submit']) { font-size: 0.875rem; }
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
 
 @media (max-width: 1000px) {
   .teacher-action-grid {
@@ -448,6 +467,7 @@ main:has(form input[autocomplete='username']) form :is(input, label, button[type
   }
 }
 @media (max-width: 650px) {
+<<<<<<< HEAD
   .practice-heading,
   .tm-header,
   .practice-mixed {
@@ -483,6 +503,18 @@ main:has(form input[autocomplete='username']) form :is(input, label, button[type
   .app-layout .page-content :is(button, .button, .practice-primary, .home-primary) {
     font-size: 0.875rem;
   }
+=======
+  .practice-heading, .tm-header, .practice-mixed { flex-wrap: wrap; }
+  .practice-mixed { padding: 20px; }
+  .practice-module { padding: 18px; }
+  .class-page .class-create-banner, .class-page .class-join-banner { padding: 20px; }
+  .class-page .class-create-form, .class-page .class-join-form { width: 100%; }
+  .teacher-action-grid, .study-examples-grid { grid-template-columns: minmax(0, 1fr); }
+  .teacher-dashboard-section { padding: 20px; }
+  .profile-mini-stat { padding: 16px; }
+  .profile-rewards { padding: 20px; }
+  .app-layout .page-content :is(button, .button, .practice-primary, .home-primary) { font-size: 0.8125rem; }
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
 }
 @media (prefers-reduced-motion: reduce) {
   .practice-primary {

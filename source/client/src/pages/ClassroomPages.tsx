@@ -56,6 +56,9 @@ import './classroom.css'
 import './classroom-polish.css'
 import './classroom-teacher.css'
 import './classroom-chat.css'
+import './classroom-learner.css'
+import './classroom-workspace-refresh.css'
+import './classroom-teacher-refresh.css'
 import { useRealtimeRefresh } from '../services/realtimeRefresh'
 
 type View = 'overview' | 'assignments' | 'members' | 'grades' | 'exams' | 'chat'
@@ -191,7 +194,7 @@ export function ClassesPage() {
   }, [filter])
   return (
     <Layout title="Lớp học">
-      <div className={`class-page${teacher ? ' teacher-classes' : ''}`}>
+      <div className={`class-page ${teacher ? 'teacher-classes' : 'learner-classes'}`}>
         <div className="page-heading">
           <div>
             <h1>{teacher ? 'Lớp học của tôi' : 'Lớp học của bạn'}</h1>
@@ -213,6 +216,7 @@ export function ClassesPage() {
         )}
         {teacher ? (
           <section className="class-create-banner">
+<<<<<<< HEAD
             <div>
               <span className="class-eyebrow">
                 <School size={16} /> KHÔNG GIAN GIẢNG DẠY
@@ -234,6 +238,32 @@ export function ClassesPage() {
                   placeholder="Ví dụ: Tiếng Anh 10A · Năm học 2026"
                   aria-describedby="new-class-help"
                 />
+=======
+            <div className="class-create-heading">
+              <span className="class-create-icon" aria-hidden="true">
+                <School size={24} />
+              </span>
+              <div>
+                <h2>Tạo lớp học mới</h2>
+                <p>Mã tham gia sẽ được tạo tự động.</p>
+              </div>
+            </div>
+            <form className="class-create-form" onSubmit={create}>
+              <label className="class-create-field" htmlFor="new-class-name">
+                <span className="sr-only">Tên lớp học</span>
+                <span className="class-create-input">
+                  <input
+                    id="new-class-name"
+                    required
+                    maxLength={120}
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ví dụ: Tiếng Anh 10A · Năm học 2026"
+                    aria-describedby="new-class-help"
+                  />
+                  <span className="class-required-note">Bắt buộc</span>
+                </span>
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
                 <small id="new-class-help">Đặt tên dễ nhận biết để học viên tìm đúng lớp.</small>
               </label>
               <button className="button primary" disabled={busy || !name.trim()}>
@@ -259,6 +289,7 @@ export function ClassesPage() {
                 <input
                   required
                   maxLength={12}
+                  aria-label="Mã mời vào lớp"
                   value={code}
                   onChange={(e) => setCode(e.target.value.toUpperCase())}
                   placeholder="Nhập mã lớp"
@@ -275,7 +306,7 @@ export function ClassesPage() {
             <div>
               <h2>
                 <BookOpen size={22} /> Danh sách lớp học{' '}
-                {classes && <span className="class-list-count">({filtered.length})</span>}
+                {classes && <span className="class-list-count">{filtered.length}</span>}
               </h2>
               <p>{teacher ? 'Các lớp bạn đang quản lý.' : 'Các lớp bạn đang tham gia.'}</p>
             </div>
@@ -597,7 +628,7 @@ export function ClassDetailPage() {
   if (!detail)
     return (
       <Layout title="Lớp học">
-        <div className="class-workspace">
+        <div className="class-workspace classroom-refresh">
           {error ? (
             <div className="error-banner">
               {error}
@@ -622,8 +653,9 @@ export function ClassDetailPage() {
   }
   return (
     <Layout title={detail.name}>
-      <div className={`class-workspace${isOwner ? ' teacher-class-workspace' : ''}`}>
+      <div className={`class-workspace classroom-refresh${isOwner ? ' teacher-class-workspace' : ''}`}>
         <div className="class-detail-top-row">
+<<<<<<< HEAD
           <Link
             to="/classes"
             className="button secondary class-back-link"
@@ -688,11 +720,27 @@ export function ClassDetailPage() {
                   className="button primary"
                   disabled={refreshing}
                   onClick={() => void refresh()}
+=======
+        <Link to="/classes" className="button secondary class-back-link" aria-label="Quay lại lớp học" title="Quay lại lớp học">
+          <ArrowLeft size={16} />
+          {isOwner && <span>Quay lại danh sách lớp</span>}
+        </Link>
+        {/* Hero: quay lại danh sách, tên lớp, metadata, thao tác, tab */}
+        <section className="class-hero with-tabs">
+          <div className="class-detail-header">
+            <div>
+              <div className="class-title-row">
+                <h1>{detail.name}</h1>
+                <span
+                  className={`class-live-pill ${connected ? 'online' : 'offline'}`}
+                  role="status"
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
                 >
                   <RefreshCw size={16} className={refreshing ? 'spin' : ''} /> Tải lại dữ liệu
                 </button>
               </div>
             </div>
+<<<<<<< HEAD
             {(isOwner || learnerView) && (
               <nav className="tab-bar class-tabs" aria-label="Công cụ lớp học">
                 {TABS.filter((tab) => !learnerView || allowedViews.includes(tab.key)).map((tab) => {
@@ -716,6 +764,69 @@ export function ClassDetailPage() {
               </nav>
             )}
           </section>
+=======
+            <div className="class-header-actions">
+              <button type="button" className="button secondary" onClick={() => void copyCode()}>
+                <Copy size={16} /> Sao chép mã
+              </button>
+              {isOwner && (
+                <details className="class-rename-menu">
+                  <summary className="button secondary">
+                    <Pencil size={15} /> Đổi tên
+                  </summary>
+                  <form onSubmit={rename} className="class-rename-form">
+                    <label htmlFor="class-rename">Tên lớp học</label>
+                    <input
+                      id="class-rename"
+                      required
+                      aria-label="Tên lớp"
+                      value={className}
+                      maxLength={120}
+                      onChange={(e) => setClassName(e.target.value)}
+                    />
+                    <button
+                      className="button secondary"
+                      disabled={busy || !className.trim() || className.trim() === detail.name}
+                    >
+                      <Pencil size={15} /> Lưu tên
+                    </button>
+                  </form>
+                </details>
+              )}
+              <button
+                type="button"
+                className="button primary"
+                disabled={refreshing}
+                onClick={() => void refresh()}
+              >
+                <RefreshCw size={16} className={refreshing ? 'spin' : ''} /> Tải lại dữ liệu
+              </button>
+            </div>
+          </div>
+          {(isOwner || learnerView) && (
+            <nav className="tab-bar class-tabs" aria-label="Công cụ lớp học">
+              {TABS.filter((tab) => !learnerView || allowedViews.includes(tab.key)).map((tab) => {
+                const Icon = tab.icon,
+                  count = tabCount[tab.key]
+                return (
+                  <button
+                    type="button"
+                    className={view === tab.key ? 'active' : ''}
+                    key={tab.key}
+                    onClick={() => go(tab.key)}
+                  >
+                    <Icon size={18} />
+                    <span>
+                      {learnerView && tab.key === 'grades' ? 'Kết quả của tôi' : tab.label}
+                    </span>
+                    {count !== undefined && <span className="class-tab-count">{count}</span>}
+                  </button>
+                )
+              })}
+            </nav>
+          )}
+        </section>
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
         </div>
         {error && (
           <div className="error-banner" role="alert">
@@ -862,17 +973,17 @@ function Overview({
       className={`class-overview-metric metric-${tone}`}
       onClick={() => go(target)}
     >
-      <span className="metric-top">
-        <span className="metric-label">{label}</span>
-        <span className="metric-icon">
-          <Icon size={20} />
+      <span className="metric-icon">
+        <Icon size={20} />
+      </span>
+      <span className="metric-copy">
+        <span className="metric-value">
+          <strong>{value === null ? '—' : value}</strong>
+          {unit && <em>{unit}</em>}
         </span>
+        <span className="metric-label">{label}</span>
+        <small>{hint}</small>
       </span>
-      <span className="metric-value">
-        <strong>{value === null ? '—' : value}</strong>
-        {unit && <em>{unit}</em>}
-      </span>
-      <small>{hint}</small>
     </button>
   )
   return (
@@ -895,7 +1006,7 @@ function Overview({
           'indigo',
         )}
       </div>
-      <section className="card feature-card class-panel">
+      <section className="card feature-card class-panel class-overview-attention">
         <div className="class-panel-head">
           <div className="class-panel-title">
             <span className="class-panel-icon">
@@ -914,14 +1025,19 @@ function Overview({
           <div className="class-priority-list">
             {attention.map((item) => {
               const state = dueState(item)
+              const StateIcon = stateIcons[state.tone]
               return (
                 <article className={`class-priority-item tone-${state.tone}`} key={item.id}>
+                  <span className="class-priority-icon" aria-hidden="true">
+                    <StateIcon size={22} />
+                  </span>
                   <div className="class-priority-body">
                     <div className="class-priority-tags">
                       <StatePill state={state} />
-                      <code>#{item.id}</code>
                     </div>
-                    <h3>{item.title}</h3>
+                    <h3>
+                      {item.title} <small>#{item.id}</small>
+                    </h3>
                     <p className="class-priority-meta">
                       <span>
                         <CalendarDays size={15} /> Hạn{' '}

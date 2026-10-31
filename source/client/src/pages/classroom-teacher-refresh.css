@@ -1,0 +1,412 @@
+/* Teacher class list and overview follow the same light reference design. */
+.page-content:has(> .teacher-classes) {
+  padding: 38px 36px 80px;
+}
+
+.page-content > .class-page.teacher-classes {
+  max-width: 1180px;
+}
+
+.class-page.teacher-classes .class-create-banner {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 18px;
+  margin: 0 0 42px;
+  padding: 23px;
+  border: 1px solid var(--cl-border);
+  border-radius: 20px;
+  background: #fff;
+  box-shadow: none;
+}
+
+.class-page.teacher-classes .class-create-heading {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.class-page.teacher-classes .class-create-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 49px;
+  height: 49px;
+  border-radius: 14px;
+  background: #eef0ff;
+  color: #465bff;
+}
+
+.class-page.teacher-classes .class-create-heading h2 {
+  margin: 0 0 3px;
+  color: var(--cl-ink);
+  font-size: 18px;
+  line-height: 1.4;
+}
+
+.class-page.teacher-classes .class-create-heading p {
+  color: var(--cl-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.class-page.teacher-classes .class-create-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: 12px;
+  width: 100%;
+  max-width: none;
+}
+
+.class-page.teacher-classes .class-create-field {
+  gap: 8px;
+  min-width: 0;
+}
+
+.class-page.teacher-classes .class-create-input {
+  display: block;
+  position: relative;
+  min-width: 0;
+}
+
+.class-page.teacher-classes .class-create-input input {
+  width: 100%;
+  height: 50px;
+  min-height: 50px;
+  padding: 10px 105px 10px 18px;
+  border: 1px solid var(--cl-border);
+  border-radius: 12px;
+  background: #f6f7fc;
+  color: var(--cl-ink);
+  font-size: 17px;
+}
+
+.class-page.teacher-classes .class-required-note {
+  position: absolute;
+  top: 50%;
+  right: 16px;
+  margin: 0;
+  padding: 2px 9px;
+  transform: translateY(-50%);
+  border-radius: 99px;
+  background: #fff6df;
+  color: #b7790c;
+  font-size: 13px;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.class-page.teacher-classes .class-create-field small {
+  color: var(--cl-muted);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+.class-page.teacher-classes .class-create-form .button.primary {
+  gap: 10px;
+  min-height: 50px;
+  padding: 12px 24px;
+  border: 1px solid #465bff;
+  border-radius: 12px;
+  background: #465bff;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.class-page.teacher-classes .class-create-form .button.primary:hover:not(:disabled) {
+  border-color: #3549ed;
+  background: #3549ed;
+}
+
+/* Keep the class header compact; reveal the existing rename form on request. */
+.class-workspace.classroom-refresh.teacher-class-workspace .class-back-link {
+  position: static;
+  justify-content: flex-start;
+  width: fit-content;
+  min-height: 24px;
+  height: auto;
+  margin: 0 0 18px;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  color: var(--cw-muted);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.class-workspace.classroom-refresh.teacher-class-workspace .class-back-link svg {
+  width: 16px;
+  height: 16px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-hero {
+  overflow: visible;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-detail-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-header-actions {
+  display: flex;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-rename-menu {
+  position: relative;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-rename-menu summary {
+  list-style: none;
+  cursor: pointer;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace
+  .class-rename-menu
+  summary::-webkit-details-marker {
+  display: none;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-rename-menu[open] summary {
+  border-color: #96a3ff;
+  background: #f6f7ff;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-rename-form {
+  position: absolute;
+  z-index: 5;
+  top: calc(100% + 10px);
+  right: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  width: 340px;
+  padding: 16px;
+  border: 1px solid var(--cw-border);
+  border-radius: 14px;
+  background: #fff;
+  box-shadow: 0 10px 30px #15233c12;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-rename-form label {
+  grid-column: 1 / -1;
+  width: auto;
+  font-size: 13px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-rename-form input {
+  width: 100%;
+  min-width: 0;
+  min-height: 42px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-rename-form .button {
+  min-height: 42px;
+  padding: 9px 14px;
+  font-size: 14px;
+}
+
+/* Overview metrics keep their existing navigation targets. */
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview {
+  gap: 26px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview-metrics {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview-metric {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 18px;
+  min-height: 124px;
+  padding: 20px;
+  text-align: left;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview-metric .metric-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 50px;
+  height: 50px;
+  width: 50px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .metric-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .metric-value {
+  margin: 0;
+  line-height: 1.2;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .metric-value strong {
+  font-size: 26px;
+  line-height: 1.2;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview-metric .metric-label {
+  color: var(--cw-ink);
+  font-size: 15px;
+  font-weight: 650;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview-metric small {
+  color: var(--cw-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview-attention {
+  padding: 0;
+  overflow: hidden;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace
+  .class-overview-attention
+  > .class-panel-head {
+  margin: 0;
+  min-height: 74px;
+  padding: 20px 22px;
+  border-bottom: 1px solid var(--cw-border);
+}
+.class-workspace.classroom-refresh.teacher-class-workspace
+  .class-overview-attention
+  .class-panel-title
+  > .class-panel-icon,
+.class-workspace.classroom-refresh.teacher-class-workspace
+  .class-overview-attention
+  .section-label {
+  display: none;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview-attention h2 {
+  font-size: 20px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-overview-attention .text-link {
+  color: #465bff;
+  font-size: 14px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-priority-list {
+  gap: 0;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-priority-item {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  margin: 0;
+  padding: 20px 22px;
+  border: 0;
+  border-radius: 0;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace
+  .class-priority-item
+  + .class-priority-item {
+  border-top: 1px solid var(--cw-border);
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-priority-icon {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: #fff6df;
+  color: #c37b09;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .tone-overdue .class-priority-icon {
+  background: #ffeded;
+  color: #dc3832;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .tone-open .class-priority-icon {
+  background: #e6f6ef;
+  color: #099b65;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .tone-closed .class-priority-icon {
+  background: #f1f3f8;
+  color: var(--cw-muted);
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-priority-tags {
+  margin: 0 0 4px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace
+  .class-priority-tags
+  .class-state-pill
+  > svg {
+  display: none;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-priority-item h3 {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0;
+  font-size: 18px;
+  line-height: 1.4;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-priority-item h3 small {
+  color: var(--cw-muted);
+  font-size: 13px;
+  font-weight: 400;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace .class-priority-meta {
+  margin: 4px 0 0;
+  font-size: 14px;
+}
+.class-workspace.classroom-refresh.teacher-class-workspace
+  .class-overview-attention
+  > .class-empty-state {
+  margin: 18px 22px;
+}
+
+@media (max-width: 900px) {
+  .class-workspace.classroom-refresh.teacher-class-workspace .class-header-actions {
+    width: auto;
+  }
+  .class-workspace.classroom-refresh.teacher-class-workspace .class-overview-metrics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 700px) {
+  .page-content:has(> .teacher-classes) {
+    padding: 24px 18px 110px;
+  }
+  .class-page.teacher-classes .class-create-banner {
+    padding: 18px;
+    margin-bottom: 32px;
+  }
+  .class-page.teacher-classes .class-create-form {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .class-page.teacher-classes .class-create-input input {
+    font-size: 15px;
+    padding-left: 12px;
+    padding-right: 90px;
+  }
+  .class-page.teacher-classes .class-required-note {
+    right: 10px;
+    font-size: 12px;
+  }
+  .class-workspace.classroom-refresh.teacher-class-workspace .class-header-actions {
+    width: 100%;
+  }
+  .class-workspace.classroom-refresh.teacher-class-workspace .class-rename-menu {
+    flex: 1 1 auto;
+  }
+  .class-workspace.classroom-refresh.teacher-class-workspace .class-rename-menu .button {
+    width: 100%;
+  }
+  .class-workspace.classroom-refresh.teacher-class-workspace .class-rename-form {
+    left: 0;
+    right: auto;
+    width: min(280px, calc(100vw - 74px));
+  }
+  .class-workspace.classroom-refresh.teacher-class-workspace .class-priority-item {
+    grid-template-columns: 44px minmax(0, 1fr);
+    padding: 18px;
+    gap: 12px;
+  }
+  .class-workspace.classroom-refresh.teacher-class-workspace .class-priority-item > .button {
+    grid-column: 2;
+    justify-self: start;
+  }
+  .class-workspace.classroom-refresh.teacher-class-workspace
+    .class-overview-attention
+    > .class-panel-head {
+    padding: 18px;
+  }
+}

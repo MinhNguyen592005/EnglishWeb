@@ -57,6 +57,7 @@
   letter-spacing: 1px;
 }
 
+<<<<<<< HEAD
 .teacher-classes .class-create-banner h2 {
   font-size: 22px;
 }
@@ -135,6 +136,22 @@
   font-size: 12px;
   font-weight: 650;
 }
+=======
+.teacher-classes .class-create-banner h2 { font-size: 20px; }
+.teacher-classes .class-create-form { flex: 1; align-items: center; max-width: 620px; }
+.teacher-classes .class-create-field { display: grid; gap: 9px; flex: 1; min-width: 0; font-weight: 650; color: #334155; }
+.class-required-note { display: inline-block; margin-left: 8px; padding: 3px 8px; border-radius: 6px; background: #fef3c7; color: #92400e; font-size: 11px; font-weight: 650; }
+.teacher-classes .class-create-field small { color: #64748b; font-size: 12px; font-weight: 400; line-height: 1.6; }
+.teacher-classes .class-create-form input { width: 100%; box-sizing: border-box; min-height: 50px; border: 1.5px solid #d6a536; background: #fffdf5; border-radius: 12px; padding: 12px 14px; font-size: 13px; }
+.teacher-classes .class-create-form .button.primary { background: #4f46e5; border-color: #4f46e5; color: white; min-height: 50px; }
+.teacher-classes .class-create-form .button:disabled { opacity: .55; cursor: not-allowed; }
+.teacher-classes .class-card:focus-visible { outline: 3px solid #6366f1; outline-offset: 4px; }
+
+.teacher-class-workspace .class-title-row { flex-wrap: wrap; gap: 12px; }
+.teacher-class-workspace .class-title-row h1 { margin: 0; font-size: clamp(21px, 2.43vw, 28px); }
+.teacher-class-workspace .class-rename-form { flex-wrap: wrap; padding: 12px; background: #ffffffb8; border: 1px solid #ddd6fe; border-radius: 12px; }
+.teacher-class-workspace .class-rename-form label { width: 100%; color: #475569; font-size: 12px; font-weight: 650; }
+>>>>>>> 930c244ef4e4c1560832fda2f189395243692842
 
 /* Keep required fields recognizable without showing errors before interaction. */
 .teacher-class-workspace label:has(> :required) {

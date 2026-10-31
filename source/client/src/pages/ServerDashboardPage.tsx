@@ -179,7 +179,7 @@ export function ServerDashboardPage() {
       {/* Tiêu đề phần + trạng thái realtime */}
       <header className="monitor-heading">
         <div className="monitor-title">
-          <span className="section-label">GIÁM SÁT HỆ THỐNG</span>
+          <h2 className="section-label">Giám sát hệ thống</h2>
           <span className={`monitor-live ${connected ? 'online' : ''}`}>
             <i />
             {connected ? 'Trực tiếp · mỗi 2,5 giây' : 'Đang kết nối lại…'}
