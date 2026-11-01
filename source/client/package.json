@@ -7,8 +7,8 @@
     "dev": "vite --host 0.0.0.0",
     "build": "tsc -b && vite build",
     "preview": "vite preview",
-    "format": "prettier --plugin=prettier-plugin-java --ignore-path ../../.prettierignore --write \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"*.{ts,json,html}\" \"../server/src/**/*.java\" \"../server/src/**/*.yml\"",
-    "format:check": "prettier --plugin=prettier-plugin-java --ignore-path ../../.prettierignore --check \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"*.{ts,json,html}\" \"../server/src/**/*.java\" \"../server/src/**/*.yml\""
+    "format": "prettier --plugin=prettier-plugin-java --ignore-path ../../.prettierignore --write \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"*.{ts,json,html}\" \"../server/src/**/*.java\" \"../server/src/**/*.yml\" \"../../*.{json,md}\" \"../../scripts/**/*.json\" \"../common/**/*.json\"",
+    "format:check": "prettier --plugin=prettier-plugin-java --ignore-path ../../.prettierignore --check \"src/**/*.{ts,tsx,css}\" \"scripts/**/*.mjs\" \"*.{ts,json,html}\" \"../server/src/**/*.java\" \"../server/src/**/*.yml\" \"../../*.{json,md}\" \"../../scripts/**/*.json\" \"../common/**/*.json\""
   },
   "dependencies": {
     "@tailwindcss/vite": "4.1.14",

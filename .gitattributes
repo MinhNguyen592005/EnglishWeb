@@ -1,0 +1,18 @@
+# Consistent checkout and formatting on Windows, macOS and Linux.
+* text=auto eol=lf
+
+# Windows command scripts need CRLF; the Unix Maven wrapper needs LF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+source/server/mvnw text eol=lf
+
+# Binary assets must not undergo line-ending conversion.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.docx binary
+*.woff binary
+*.woff2 binary

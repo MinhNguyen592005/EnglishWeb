@@ -1,0 +1,12 @@
+{
+  "name": "grammar-quest",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "setup:client": "npm --prefix source/client ci",
+    "dev:client": "npm --prefix source/client run dev -- --port 5173 --strictPort",
+    "build:client": "npm --prefix source/client run build",
+    "format": "npm --prefix source/client run format",
+    "format:check": "npm --prefix source/client run format:check"
+  }
+}

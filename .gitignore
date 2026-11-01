@@ -1,22 +1,37 @@
+# Dependencies, build output and local test artifacts.
 **/node_modules/
 **/dist/
-source/client/artifacts/
 **/target/
+**/artifacts/
 **/*.tsbuildinfo
 .npm-cache/
+coverage/
+**/coverage/
+**/test-results/
+**/playwright-report/
+
+# Local configuration. Keep distributable example files.
 **/.env
-**/.env.local
-**/.env.local.ps1
-**/.env.local.properties
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+
+# Editor, OS and Python-generated files.
 .idea/
 .vscode/
-.github/
+.DS_Store
+Thumbs.db
+Desktop.ini
+**/__pycache__/
+**/*.py[cod]
+**/.pytest_cache/
+
+# Logs, compiled classes and local backups.
 *.log
 *.class
 /.local-backups/
 
-# Temporary files used to recover classroom UI from compiled output.
+# Temporary classroom recovery files and runtime uploads.
 /source/client/classroom*-recovery.*
-
-source/server/downloads/
-source/server/statics/
+/source/server/downloads/
+/source/server/statics/

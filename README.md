@@ -2,6 +2,45 @@
 
 Website học ngữ pháp tiếng Anh bằng tiếng Việt, gồm lộ trình học, luyện tập, PvP, lớp học và quản trị. Frontend dùng React 19, TypeScript, Vite 7; backend dùng Java 21, Spring Boot 3.5.7; dữ liệu dùng MySQL 8 và Flyway. REST API và WebSocket cung cấp các cập nhật realtime.
 
+## Cấu trúc repository
+
+Giữ cấu trúc giống nhánh `main` trên GitHub:
+
+```text
+EnglishWeb/
+├── source/
+│   ├── client/                 # React, TypeScript, Vite và script kiểm thử giao diện
+│   │   ├── src/
+│   │   └── scripts/
+│   ├── server/                 # Spring Boot, Maven Wrapper và kiểm thử backend
+│   │   └── src/
+│   │       ├── main/java/
+│   │       ├── main/resources/db/migration/
+│   │       └── test/java/
+│   └── common/                 # Schema dùng chung
+├── scripts/                    # Chạy demo, dọn output và sinh nội dung học
+├── examples/                   # Học liệu mẫu để nhập thử
+├── .editorconfig               # Quy tắc editor
+├── .gitattributes              # Quy tắc xuống dòng của Git
+├── .prettierrc.json             # Quy tắc format code
+├── package.json                # Lệnh tiện ích chạy tại thư mục gốc
+├── CONTRIBUTING.md             # Quy trình làm việc và đẩy branch
+└── README.md
+```
+
+`node_modules/`, `dist/`, `target/`, `artifacts/`, log và cấu hình `.env.local*` được tạo trên máy, không đưa vào Git. Cấu hình mẫu `source/client/.env.example` và `source/server/env.example.*` vẫn được lưu trong repository.
+
+Sau khi cài Node.js, có thể chạy tại thư mục gốc:
+
+```powershell
+npm run setup:client
+npm run dev:client
+npm run build:client
+npm run format:check
+```
+
+Các lệnh này sử dụng dependency và lockfile trong `source/client`. Backend vẫn chạy bằng Maven Wrapper theo hướng dẫn bên dưới. Xem [CONTRIBUTING.md](CONTRIBUTING.md) cho quy trình tạo branch, kiểm tra và push.
+
 ## 1. Yêu cầu
 
 - **JDK 21**, cấu hình `JAVA_HOME` và Java trong `PATH`.
@@ -64,11 +103,11 @@ Từ thư mục gốc:
 
 Script nạp `.env.local.ps1`, chạy profile `dev`, bật seed ba tài khoản và khởi động backend. Đợi log `Started GrammarQuestApplication`; cổng mặc định là **8080**.
 
-| Vai trò | Tên đăng nhập | Mật khẩu | Trang chính |
-| --- | --- | --- | --- |
-| Admin | `admin1` | `12345678` | `/admin` |
-| Giáo viên | `teacher1` | `12345678` | `/teacher` |
-| Học sinh | `student1` | `12345678` | `/dashboard` |
+| Vai trò   | Tên đăng nhập | Mật khẩu   | Trang chính  |
+| --------- | ------------- | ---------- | ------------ |
+| Admin     | `admin1`      | `12345678` | `/admin`     |
+| Giáo viên | `teacher1`    | `12345678` | `/teacher`   |
+| Học sinh  | `student1`    | `12345678` | `/dashboard` |
 
 Các tài khoản chỉ được tạo khi chưa tồn tại. Chạy lại **không đặt lại mật khẩu, vai trò hoặc tiến độ** của tài khoản đã có. Mật khẩu trong bảng áp dụng cho tài khoản mới seed và chưa đổi mật khẩu. Tài khoản `student1` mới seed được miễn kiểm tra đầu vào; học sinh tự đăng ký đi theo luồng kiểm tra đầu vào của ứng dụng.
 
@@ -148,6 +187,8 @@ Mật khẩu của tài khoản mới lấy từ `DEMO_PASSWORD`, tối thiểu 
 
 Trong **Quản lý hành trình**, chọn level để thêm module hoặc soạn thay đổi; sửa tên/vị trí, thứ tự bài học, lý thuyết và câu hỏi; xem trước rồi lưu nháp/gửi duyệt. Admin trả lại hoặc xuất bản. Giáo viên xóa đề xuất chưa xuất bản của mình; admin xóa mọi đề xuất chưa xuất bản. Module đã xuất bản dùng lưu trữ để giữ tiến độ. Lịch sử cho phép tạo bản nháp khôi phục từ phiên bản trước.
 
+Cả ba vai trò có thể bấm ảnh đại diện để sửa tên hiển thị. Hồ sơ admin ở `/admin/profile`; giáo viên và học viên ở `/profile`. Học viên chọn khung và huy hiệu PvP đã mở khóa ngay trong hồ sơ; lựa chọn được lưu và dùng chung với đấu trường.
+
 ## 7. Build và kiểm thử
 
 Frontend, trong `source/client`:
@@ -226,17 +267,17 @@ Script dọn `dist`, cache TypeScript, `target` và các log kiểm thử đư�
 
 ## 10. Xử lý lỗi thường gặp
 
-| Hiện tượng | Cách kiểm tra |
-| --- | --- |
-| Maven `Process terminated with exit code: 1` | Đọc lỗi Spring **phía trên** dòng Maven. Đây chỉ là thông báo tiến trình đã dừng. |
-| `Port 8080 was already in use` | Dừng đúng backend cũ trước khi chạy lại. Kiểm tra bằng `Get-NetTCPConnection -LocalPort 8080 -State Listen`. |
-| MySQL `Access denied` hoặc không kết nối được | Kiểm tra dịch vụ MySQL, `DB_HOST`, `DB_PORT`, tên đăng nhập, mật khẩu và `.env.local.properties` nếu có. |
-| `Unknown database` | Tạo database và đối chiếu `DB_NAME`. |
-| Lỗi Flyway/schema | Đọc lỗi migration gốc. Không xóa lịch sử Flyway hoặc sửa checksum để bỏ qua lỗi. |
-| PowerShell chặn script | Có thể chạy `powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1` từ thư mục gốc cho phiên chạy này. |
-| Java không đúng phiên bản | Kiểm tra `java -version`, `JAVA_HOME` và `PATH`; dùng JDK 21. |
-| Frontend mất API/WebSocket | Kiểm tra backend, `VITE_SERVER_PROXY`, URL/cổng frontend và `CLIENT_ORIGIN`. |
-| Tài khoản mẫu không đăng nhập được | Chạy `start-demo.ps1` trên đúng database. Script không đặt lại mật khẩu tài khoản đã có. |
-| Sửa backend nhưng vẫn báo thao tác cũ | Dừng backend cũ, chạy lại mã hiện tại và tải lại trang. |
+| Hiện tượng                                    | Cách kiểm tra                                                                                                    |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| Maven `Process terminated with exit code: 1`  | Đọc lỗi Spring **phía trên** dòng Maven. Đây chỉ là thông báo tiến trình đã dừng.                                |
+| `Port 8080 was already in use`                | Dừng đúng backend cũ trước khi chạy lại. Kiểm tra bằng `Get-NetTCPConnection -LocalPort 8080 -State Listen`.     |
+| MySQL `Access denied` hoặc không kết nối được | Kiểm tra dịch vụ MySQL, `DB_HOST`, `DB_PORT`, tên đăng nhập, mật khẩu và `.env.local.properties` nếu có.         |
+| `Unknown database`                            | Tạo database và đối chiếu `DB_NAME`.                                                                             |
+| Lỗi Flyway/schema                             | Đọc lỗi migration gốc. Không xóa lịch sử Flyway hoặc sửa checksum để bỏ qua lỗi.                                 |
+| PowerShell chặn script                        | Có thể chạy `powershell -ExecutionPolicy Bypass -File scripts/start-demo.ps1` từ thư mục gốc cho phiên chạy này. |
+| Java không đúng phiên bản                     | Kiểm tra `java -version`, `JAVA_HOME` và `PATH`; dùng JDK 21.                                                    |
+| Frontend mất API/WebSocket                    | Kiểm tra backend, `VITE_SERVER_PROXY`, URL/cổng frontend và `CLIENT_ORIGIN`.                                     |
+| Tài khoản mẫu không đăng nhập được            | Chạy `start-demo.ps1` trên đúng database. Script không đặt lại mật khẩu tài khoản đã có.                         |
+| Sửa backend nhưng vẫn báo thao tác cũ         | Dừng backend cũ, chạy lại mã hiện tại và tải lại trang.                                                          |
 
 Mã nguồn: [MinhNguyen592005/EnglishWeb](https://github.com/MinhNguyen592005/EnglishWeb).
