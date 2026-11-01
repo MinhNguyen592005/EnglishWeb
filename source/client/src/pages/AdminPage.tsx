@@ -823,13 +823,9 @@ export function AdminPage() {
               : 'Tổng quan quản trị'
   return (
     <Layout title={tabTitle}>
-<<<<<<< HEAD
       <div
-        className={`admin-page${tab === 'users' || tab === 'reports' ? ' admin-management' : ''}`}
+        className={`admin-page${tab === 'overview' ? ' admin-overview-refresh' : ''}${tab === 'users' || tab === 'reports' ? ' admin-management' : ''}`}
       >
-=======
-      <div className={`admin-page${tab === 'overview' ? ' admin-overview-refresh' : ''}${tab === 'users' || tab === 'reports' ? ' admin-management' : ''}`}>
->>>>>>> 930c244ef4e4c1560832fda2f189395243692842
         {error && (
           <p className="error-banner" role="alert">
             {error}
