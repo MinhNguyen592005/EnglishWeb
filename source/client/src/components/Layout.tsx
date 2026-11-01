@@ -173,9 +173,9 @@ export function Layout({ children, title }: { children: ReactNode; title: string
               </span>
             )}
             <Link
-              to={isAdmin ? '/admin' : '/profile'}
+              to={isAdmin ? '/admin/profile' : '/profile'}
               className="topbar-profile"
-              aria-label={isAdmin ? 'Mở trang quản trị' : 'Mở hồ sơ cá nhân'}
+              aria-label="Mở hồ sơ cá nhân"
             >
               <span className={`avatar ${frameClass}`}>
                 {user?.displayName.slice(0, 1).toUpperCase()}

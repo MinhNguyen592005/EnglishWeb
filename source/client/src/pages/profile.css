@@ -751,3 +751,222 @@
     transition: none;
   }
 }
+
+/* Editable account profiles and earned PvP rewards. */
+.profile-admin-hero {
+  background: linear-gradient(120deg, #252c50, #6350ac);
+}
+.profile-hero h1,
+.teacher-profile-hero h1 {
+  overflow-wrap: anywhere;
+}
+.profile-name-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 20px;
+}
+.profile-name-form > label {
+  font-weight: 700;
+}
+.profile-name-fields {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.profile-name-fields input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 12px 14px;
+  border: 1px solid #d7def0;
+  border-radius: 12px;
+  background: #fff;
+  color: #172b4d;
+  font: inherit;
+}
+.profile-name-fields input:focus-visible {
+  outline: 2px solid #5c6df4;
+  outline-offset: 2px;
+}
+.profile-name-fields input[aria-invalid='true'] {
+  border-color: #dc2626;
+}
+.profile-name-fields input:disabled {
+  background: #f8fafc;
+  color: #64748b;
+}
+.profile-name-fields .button {
+  flex: none;
+  white-space: nowrap;
+}
+.profile-name-form > small {
+  line-height: 1.6;
+}
+.profile-name-form .error-banner,
+.profile-name-form .success-banner {
+  margin: 0;
+}
+.profile-account-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px 60px;
+  margin: 0 0 22px;
+}
+.profile-account-details dt {
+  color: var(--text-muted, #64748b);
+  font-size: 0.8125rem;
+}
+.profile-account-details dd {
+  margin: 6px 0 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.profile-admin-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 18px;
+}
+.profile-equipped-badge {
+  margin-top: 14px;
+}
+.profile-wardrobe {
+  display: grid;
+  gap: 14px;
+}
+.profile-wardrobe .profile-section-heading {
+  align-items: center;
+  margin-bottom: 0;
+}
+.profile-wardrobe .profile-section-heading p {
+  margin-bottom: 0;
+}
+.profile-wardrobe .profile-section-heading > a {
+  flex: none;
+}
+.profile-wardrobe h3 {
+  margin-top: 0;
+}
+.profile-owned-items {
+  display: grid;
+  gap: 12px;
+}
+.profile-owned-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 12px;
+  border: 1px solid #e4e7f2;
+  border-radius: 16px;
+  background: #fff;
+}
+.profile-owned-item.selected {
+  border-color: #a5a6ee;
+  background: #f4f3ff;
+  box-shadow: 0 0 0 1px #dcd9fb inset;
+}
+.profile-owned-item.locked {
+  background: #f8fafc;
+}
+.profile-item-avatar {
+  flex: none;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+}
+.profile-item-badge {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background-color: #eeedff;
+  color: #6054bf;
+}
+.profile-item-copy {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  flex: 1;
+}
+.profile-item-copy strong {
+  font-size: 0.875rem;
+  overflow-wrap: anywhere;
+}
+.profile-item-copy small {
+  color: #64748b;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+.profile-unlock-progress {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.profile-equip-button {
+  flex: none;
+  padding: 8px 10px;
+  font-size: 0.75rem;
+}
+.profile-spinner {
+  animation: profile-spin 1s linear infinite;
+}
+#profile-personal-info {
+  scroll-margin-top: 100px;
+}
+@keyframes profile-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@media (max-width: 1100px) {
+  .profile-owned-item {
+    flex-wrap: wrap;
+  }
+  .profile-equip-button {
+    margin-left: 58px;
+  }
+}
+@media (max-width: 600px) {
+  .profile-name-fields {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .profile-name-fields .button {
+    justify-content: center;
+  }
+  .profile-wardrobe .profile-section-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  .profile-admin-actions {
+    flex-direction: column;
+  }
+  .profile-owned-item {
+    padding: 14px 10px;
+  }
+  .profile-item-copy {
+    flex-basis: calc(100% - 60px);
+  }
+  .profile-hero .profile-edit-button {
+    margin-left: 0;
+    align-self: flex-start;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .profile-spinner {
+    animation: none;
+  }
+}
+
+.brand.admin-brand > span:last-child {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.brand.admin-brand small {
+  font-size: 0.6rem;
+  letter-spacing: 0.1em;
+}

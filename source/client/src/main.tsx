@@ -45,16 +45,18 @@ const TeacherCurriculumPage = React.lazy(() =>
 function Protected({
   children,
   learnerOnly = false,
+  allowAdmin = false,
 }: {
   children: React.ReactNode
   learnerOnly?: boolean
+  allowAdmin?: boolean
 }) {
   const { user, loading } = useAuth()
   const placement = usePlacement()
   const location = useLocation()
   if (loading) return <Loading />
   if (!user) return <Navigate to="/login" replace />
-  if (user.role === 'ADMIN') return <Navigate to="/admin" replace />
+  if (user.role === 'ADMIN' && !allowAdmin) return <Navigate to="/admin" replace />
   if (learnerOnly && user.role !== 'LEARNER') return <Navigate to="/teacher" replace />
   if (user.role === 'LEARNER' && user.placementEligible && location.pathname !== '/placement') {
     if (placement.loading) return <Loading />
@@ -182,7 +184,7 @@ function AppRoutes() {
       <Route
         path="/profile"
         element={
-          <Protected>
+          <Protected allowAdmin>
             <ProfilePage />
           </Protected>
         }
@@ -216,6 +218,14 @@ function AppRoutes() {
         element={
           <AdminOnly>
             <AdminPage />
+          </AdminOnly>
+        }
+      />
+      <Route
+        path="/admin/profile"
+        element={
+          <AdminOnly>
+            <ProfilePage />
           </AdminOnly>
         }
       />

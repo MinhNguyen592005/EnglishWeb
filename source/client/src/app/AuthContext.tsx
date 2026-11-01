@@ -6,6 +6,8 @@ import {
   useRef,
   useState,
   type ReactNode,
+  type Dispatch,
+  type SetStateAction,
 } from 'react'
 import { api } from '../services/api'
 
@@ -14,7 +16,7 @@ import type { Profile } from '../types'
 type AuthState = {
   user: Profile | null
   loading: boolean
-  setUser: (u: Profile | null) => void
+  setUser: Dispatch<SetStateAction<Profile | null>>
   reload: () => Promise<void>
   setReloadHandler: (handler: (() => Promise<Profile>) | null) => void
 }

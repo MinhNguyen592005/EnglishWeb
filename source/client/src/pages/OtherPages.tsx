@@ -1,13 +1,8 @@
 import {
   ArrowRight,
   Award,
-  Check,
   Clock3,
-  Crown,
   Flame,
-  Gem,
-  Palette,
-  Pencil,
   School,
   Shield,
   Sparkles,
@@ -15,9 +10,8 @@ import {
   UsersRound,
   ClipboardList,
   HelpCircle,
-  X,
 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useAuth } from '../app/AuthContext'
 import { useDailyQuests } from '../app/DailyQuestsContext'
@@ -26,10 +20,22 @@ import { ErrorState, Loading } from '../components/States'
 import { api } from '../services/api'
 import type { Attempt } from '../types'
 import './profile.css'
+import {
+  DisplayNameEditor,
+  ProfileCosmetics,
+  useProfileCosmetics,
+} from '../components/ProfileControls'
 
 export function ProfilePage() {
   const { user } = useAuth()
-  return user?.role === 'TEACHER' ? <TeacherProfilePage /> : <LearnerProfilePage />
+  if (!user) return null
+  return user.role === 'ADMIN' ? (
+    <AdminProfilePage />
+  ) : user.role === 'TEACHER' ? (
+    <TeacherProfilePage />
+  ) : (
+    <LearnerProfilePage />
+  )
 }
 function TeacherProfilePage() {
   const { user } = useAuth()
@@ -98,7 +104,7 @@ function TeacherProfilePage() {
                 <div>
                   <span className="section-label">THÔNG TIN TÀI KHOẢN</span>
                   <h2>Thông tin cá nhân</h2>
-                  <p className="muted">Thông tin định danh được đồng bộ từ tài khoản đăng nhập.</p>
+                  <p className="muted">Cập nhật tên để giáo viên và học viên dễ nhận ra bạn.</p>
                 </div>
                 <School size={24} />
               </div>
@@ -129,9 +135,9 @@ function TeacherProfilePage() {
                   </dd>
                 </div>
               </dl>
+              {user && <DisplayNameEditor key={user.id} user={user} />}
               <p className="teacher-profile-note">
-                <HelpCircle size={16} /> Username và vai trò được khóa để bảo vệ quyền truy cập.
-                Liên hệ quản trị viên nếu cần thay đổi thông tin tài khoản.
+                <HelpCircle size={16} /> Đổi tên hiển thị không thay đổi tên đăng nhập của bạn.
               </p>
             </section>
             <section className="card teacher-profile-card">
@@ -232,8 +238,7 @@ function TeacherProfilePage() {
                 <Shield size={22} />
               </div>
               <p>
-                Phiên đăng nhập được bảo vệ bằng session và CSRF. Không hiển thị hoặc lưu mật khẩu
-                trên trang hồ sơ.
+                Chỉ sử dụng tài khoản của bạn và đăng xuất khi dùng xong trên thiết bị dùng chung.
               </p>
               <Link className="text-link" to="/teacher">
                 Mở không gian giảng dạy <ArrowRight size={15} />
@@ -249,184 +254,97 @@ function LearnerProfilePage() {
   const { data: dailyQuests } = useDailyQuests()
   const streak = dailyQuests?.streak
   const { user } = useAuth()
+  const cosmetics = useProfileCosmetics()
   const [history, setHistory] = useState<Attempt[] | null>(null)
-  useRealtimeRefresh(() =>
-    api
-      .history()
-      .then(setHistory)
-      .catch((e) => setError(e.message)),
-  )
   const [error, setError] = useState('')
-  const [editing, setEditing] = useState(false)
-  const [title, setTitle] = useState('Tân binh không gian')
-  const [frame, setFrame] = useState('orbit')
-  const [accent, setAccent] = useState('indigo')
-  const titles = ['Tân binh không gian', 'Thợ săn XP', 'Chiến binh PvP']
-  const frames = [
-    { id: 'orbit', name: 'Blue Orbit', rarity: 'Đã mở khóa', icon: '◈' },
-    { id: 'solar', name: 'Solar Gold', rarity: '800 XP PvP', icon: '✦' },
-    { id: 'nova', name: 'Nova Crown', rarity: '1.500 XP PvP', icon: '◆' },
-  ]
-  const badges = [
-    {
-      name: 'First Victory',
-      detail: 'Thắng trận PvP đầu tiên',
-      icon: <Trophy size={18} />,
-      unlocked: true,
-    },
-    {
-      name: 'Grammar Explorer',
-      detail: 'Hoàn thành 5 bài học',
-      icon: <Sparkles size={18} />,
-      unlocked: true,
-    },
-    {
-      name: 'Arena Veteran',
-      detail: 'Đạt 1.000 XP PvP',
-      icon: <Shield size={18} />,
-      unlocked: false,
-    },
-  ]
+  const reloadHistory = useCallback(
+    () =>
+      api
+        .history()
+        .then((data) => {
+          setHistory(data)
+          setError('')
+        })
+        .catch((e) => setError(e.message)),
+    [],
+  )
+  useRealtimeRefresh(reloadHistory)
   useEffect(() => {
-    api
-      .history()
-      .then(setHistory)
-      .catch((e) => setError(e.message))
-  }, [])
+    void reloadHistory()
+  }, [reloadHistory])
+  if (!user) return null
+  const wins = user.pvpWins ?? 0
+  const matches = wins + (user.pvpLosses ?? 0) + (user.pvpDraws ?? 0)
+  const unlockedBadges = cosmetics.data?.items.filter(
+    (item) => item.type === 'BADGE' && item.unlocked,
+  ).length
   return (
-    <Layout title="Hồ sơ">
+    <Layout title="Hồ sơ học viên">
       <div className="profile-page">
-        <section className={`profile-hero profile-accent-${accent}`}>
-          <div className={`profile-avatar profile-frame-${frame}`}>
-            <span>{user?.displayName.slice(0, 1).toUpperCase()}</span>
-            <Gem size={16} />
+        <section className="profile-hero">
+          <div
+            className={`profile-avatar ${cosmetics.frame?.cssClass ?? 'frame-default'}`}
+            aria-hidden="true"
+          >
+            <span>{user.displayName.slice(0, 1).toUpperCase()}</span>
           </div>
           <div className="profile-hero-copy">
-            <h1>{user?.displayName}</h1>
-            <p>
-              @{user?.username} · <strong>{title}</strong>
-            </p>
+            <span className="section-label">HỒ SƠ HỌC VIÊN</span>
+            <h1>{user.displayName}</h1>
+            <p>@{user.username}</p>
             <div className="profile-hero-meta">
               <span>
-                <Trophy size={15} /> Cấp {user?.level}
+                <Trophy size={15} /> Cấp {user.level}
               </span>
               <span>
-                <Sparkles size={15} /> {user?.totalXp} EXP
+                <Sparkles size={15} /> {user.totalXp.toLocaleString('vi-VN')} EXP
               </span>
               <span>
-                <Shield size={15} /> 640 XP PvP <em>demo</em>
+                <Shield size={15} /> Hạng {user.pvpRankTitle ?? 'Đồng'} · {user.pvpElo ?? 1000} ELO
               </span>
             </div>
+            {cosmetics.badge && (
+              <div className="profile-equipped-badge">
+                <span className={`pvp-badge-pill ${cosmetics.badge.cssClass}`}>
+                  <Award size={15} /> {cosmetics.badge.name}
+                </span>
+              </div>
+            )}
           </div>
-          <button className="profile-edit-button" onClick={() => setEditing(true)}>
-            <Pencil size={16} /> Chỉnh sửa thông tin
-          </button>
+          <a className="profile-edit-button" href="#profile-personal-info">
+            Chỉnh sửa tên
+          </a>
         </section>
         <div className="profile-stat-grid">
           <section className="card profile-mini-stat">
             <Trophy size={20} />
-            <strong>Cấp {user?.level}</strong>
-            <span>{user?.xpInLevel}/1.000 XP cấp hiện tại</span>
+            <strong>Cấp {user.level}</strong>
+            <span>{user.xpInLevel}/1.000 EXP cấp hiện tại</span>
           </section>
           <section className="card profile-mini-stat profile-pvp-stat">
             <Shield size={20} />
-            <strong>640 XP PvP</strong>
-            <span>8 trận · 62% thắng · dữ liệu demo</span>
+            <strong>{user.pvpElo ?? 1000} ELO</strong>
+            <span>
+              {matches} trận · {wins} thắng · {matches ? Math.round((wins / matches) * 100) : 0}%
+              thắng
+            </span>
           </section>
           <section className="card profile-mini-stat">
             <Award size={20} />
-            <strong>{badges.filter((b) => b.unlocked).length} huy hiệu</strong>
-            <span>Đã mở khóa</span>
+            <strong>{unlockedBadges ?? '—'} huy hiệu</strong>
+            <span>Đã mở khóa từ PvP</span>
           </section>
         </div>
-        <div className="profile-cosmetic-grid">
-          <section className="card profile-section">
-            <div className="profile-section-heading">
-              <div>
-                <span className="section-label">COSMETIC</span>
-                <h2>Khung & danh hiệu</h2>
-              </div>
-              <Palette size={22} />
-            </div>
-            <div className="profile-frame-list">
-              {frames.map((item) => (
-                <button
-                  key={item.id}
-                  className={`profile-frame-option ${frame === item.id ? 'selected' : ''}`}
-                  onClick={() => {
-                    setFrame(item.id)
-                    setEditing(true)
-                  }}
-                >
-                  <span className={`profile-option-icon profile-frame-${item.id}`}>
-                    {item.icon}
-                  </span>
-                  <span>
-                    <strong>{item.name}</strong>
-                    <small>{item.rarity}</small>
-                  </span>
-                  {frame === item.id && <Check size={17} />}
-                </button>
-              ))}
-            </div>
-            <div className="profile-title-chips">
-              {titles.map((item) => (
-                <button
-                  key={item}
-                  className={title === item ? 'selected' : ''}
-                  onClick={() => {
-                    setTitle(item)
-                    setEditing(true)
-                  }}
-                >
-                  {item}
-                  {title === item && <Check size={14} />}
-                </button>
-              ))}
-            </div>
-          </section>
-          <section className="card profile-section">
-            <div className="profile-section-heading">
-              <div>
-                <span className="section-label">BADGE SHOWCASE</span>
-                <h2>Huy hiệu nổi bật</h2>
-              </div>
-              <Crown size={22} />
-            </div>
-            <div className="profile-badge-list">
-              {badges.map((b) => (
-                <div className={`profile-badge ${!b.unlocked ? 'locked' : ''}`} key={b.name}>
-                  <span className="profile-badge-icon">{b.icon}</span>
-                  <div>
-                    <strong>{b.name}</strong>
-                    <small>{b.detail}</small>
-                  </div>
-                  {b.unlocked ? <Check size={16} /> : <Shield size={16} />}
-                </div>
-              ))}
-            </div>
-          </section>
-        </div>
-        <section className="card profile-rewards">
-          <div>
-            <span className="section-label">ARENA REWARDS</span>
-            <h2>Phần thưởng từ XP PvP</h2>
-            <p className="muted">Tích lũy XP PvP để mở khóa khung, danh hiệu và badge mới.</p>
-          </div>
-          <div className="profile-reward-track">
-            <span className="profile-reward-node claimed">640</span>
+        <section className="card profile-section" id="profile-personal-info">
+          <div className="profile-section-heading">
             <div>
-              <strong>Blue Orbit</strong>
-              <small>Đã mở khóa · 500 XP PvP</small>
+              <span className="section-label">THÔNG TIN CÁ NHÂN</span>
+              <h2>Chỉnh sửa hồ sơ</h2>
             </div>
-            <span className="profile-reward-node">800</span>
-            <div>
-              <strong>Solar Gold</strong>
-              <small>Còn 160 XP để mở khóa</small>
-            </div>
-            <span className="profile-reward-node">1500</span>
           </div>
+          <DisplayNameEditor key={user.id} user={user} />
         </section>
+        <ProfileCosmetics cosmetics={cosmetics} />
         <section className="card profile-stat">
           <Flame size={28} color="#f59e0b" />
           <strong>Chuỗi {streak?.currentStreak || 0} ngày</strong>
@@ -441,7 +359,7 @@ function LearnerProfilePage() {
           <h2>Lịch sử học tập</h2>
           {!history ? (
             error ? (
-              <ErrorState message={error} />
+              <ErrorState message={error} retry={reloadHistory} />
             ) : (
               <Loading />
             )
@@ -481,63 +399,66 @@ function LearnerProfilePage() {
             </div>
           )}
         </section>
-        {editing && (
-          <div
-            className="profile-editor-backdrop"
-            role="presentation"
-            onClick={() => setEditing(false)}
-          >
-            <section
-              className="profile-editor"
-              role="dialog"
-              aria-modal="true"
-              aria-labelledby="profile-editor-title"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <button
-                className="profile-editor-close"
-                onClick={() => setEditing(false)}
-                aria-label="Đóng"
-              >
-                <X size={18} />
-              </button>
-              <span className="section-label">CUSTOMIZE PROFILE</span>
-              <h2 id="profile-editor-title">Chỉnh sửa thông tin</h2>
-              <p className="muted">
-                Đây là bản xem trước tĩnh. Cosmetic sẽ kết nối phần thưởng PvP sau.
-              </p>
-              <label>
-                Danh hiệu
-                <select value={title} onChange={(e) => setTitle(e.target.value)}>
-                  {titles.map((item) => (
-                    <option key={item}>{item}</option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Khung avatar
-                <select value={frame} onChange={(e) => setFrame(e.target.value)}>
-                  {frames.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name} · {item.rarity}
-                    </option>
-                  ))}
-                </select>
-              </label>
-              <label>
-                Màu hồ sơ
-                <select value={accent} onChange={(e) => setAccent(e.target.value)}>
-                  <option value="indigo">Indigo Orbit</option>
-                  <option value="emerald">Emerald Nova</option>
-                  <option value="gold">Solar Gold</option>
-                </select>
-              </label>
-              <button className="button primary profile-save" onClick={() => setEditing(false)}>
-                Lưu lựa chọn
-              </button>
-            </section>
+      </div>
+    </Layout>
+  )
+}
+
+function AdminProfilePage() {
+  const { user } = useAuth()
+  if (!user) return null
+  return (
+    <Layout title="Hồ sơ quản trị viên">
+      <div className="profile-page">
+        <section className="profile-hero profile-admin-hero">
+          <div className="profile-avatar" aria-hidden="true">
+            {user.displayName.slice(0, 1).toUpperCase()}
           </div>
-        )}
+          <div className="profile-hero-copy">
+            <span className="section-label">HỒ SƠ QUẢN TRỊ VIÊN</span>
+            <h1>{user.displayName}</h1>
+            <p>@{user.username}</p>
+            <div className="profile-hero-meta">
+              <span>
+                <Shield size={15} /> Quản trị viên
+              </span>
+            </div>
+          </div>
+        </section>
+        <section className="card profile-section">
+          <div className="profile-section-heading">
+            <div>
+              <span className="section-label">THÔNG TIN CÁ NHÂN</span>
+              <h2>Chỉnh sửa hồ sơ</h2>
+            </div>
+            <Shield size={23} />
+          </div>
+          <dl className="profile-account-details">
+            <div>
+              <dt>Tên đăng nhập</dt>
+              <dd>@{user.username}</dd>
+            </div>
+            <div>
+              <dt>Vai trò</dt>
+              <dd>Quản trị viên</dd>
+            </div>
+          </dl>
+          <DisplayNameEditor key={user.id} user={user} />
+        </section>
+        <section className="card profile-section">
+          <h2>Công cụ quản trị</h2>
+          <div className="profile-admin-actions">
+            <Link className="button secondary" to="/admin?tab=users">
+              <UsersRound size={18} /> Quản lý tài khoản
+            </Link>
+            <Link className="button secondary" to="/admin?tab=reports">
+              <Shield size={18} /> Báo cáo vi phạm
+            </Link>
+            <Link className="button secondary" to="/admin/journeys">
+              <School size={18} /> Quản lý hành trình
+            </Link>
+          </div>
+        </section>
       </div>
     </Layout>
   )

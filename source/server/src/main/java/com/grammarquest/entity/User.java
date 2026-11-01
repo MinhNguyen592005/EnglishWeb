@@ -3,6 +3,8 @@ package com.grammarquest.entity;
 import jakarta.persistence.*;
 import java.time.Instant;
 
+// Preserve unrelated fields when profile and PvP updates run concurrently.
+@org.hibernate.annotations.DynamicUpdate
 @Entity
 @Table(name = "users")
 public class User {

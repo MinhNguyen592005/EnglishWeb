@@ -55,6 +55,8 @@ public class AuthController {
 
     public record Login(@NotBlank String username, @NotBlank String password) {}
 
+    public record UpdateProfile(@NotBlank @Size(min = 2, max = 120) String displayName) {}
+
     public record Profile(
         Long id,
         String username,
@@ -179,6 +181,30 @@ public class AuthController {
         SecurityContextHolder.setContext(context);
         contextRepository.saveContext(context, request, response);
         return Profile.from(users.findByUsernameIgnoreCase(auth.getName()).orElseThrow());
+    }
+
+    @PatchMapping("/me")
+    @org.springframework.transaction.annotation.Transactional
+    public Profile updateProfile(Authentication auth, @Valid @RequestBody UpdateProfile body) {
+        String displayName = body.displayName() == null ? "" : body.displayName().strip();
+        if (
+            displayName.length() < 2 ||
+            displayName.length() > 120 ||
+            displayName.chars().anyMatch(Character::isISOControl)
+        ) throw new ApiException(
+            HttpStatus.BAD_REQUEST,
+            "INVALID_DISPLAY_NAME",
+            "Tên hiển thị cần có từ 2 đến 120 ký tự trên một dòng."
+        );
+        // Update only the name: concurrent PvP rewards/equipment cannot be overwritten.
+        users.updateDisplayName(auth.getName(), displayName);
+        User user = users.findByUsernameIgnoreCase(auth.getName()).orElseThrow();
+        if (user.locked) throw new ApiException(
+            HttpStatus.FORBIDDEN,
+            "ACCOUNT_LOCKED",
+            "Tài khoản đã bị khóa"
+        );
+        return Profile.from(user);
     }
 
     @GetMapping("/me")

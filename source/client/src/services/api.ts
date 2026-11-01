@@ -139,6 +139,8 @@ export const api = {
   adminDeleteLesson: (id: number) => request(`/admin/lessons/${id}`, { method: 'DELETE' }),
   adminDeleteQuestion: (id: number) => request(`/admin/questions/${id}`, { method: 'DELETE' }),
   me: () => request<Profile>('/auth/me'),
+  updateProfile: (displayName: string) =>
+    request<Profile>('/auth/me', { method: 'PATCH', body: JSON.stringify({ displayName }) }),
   login: (username: string, password: string) =>
     request<Profile>('/auth/login', {
       method: 'POST',
