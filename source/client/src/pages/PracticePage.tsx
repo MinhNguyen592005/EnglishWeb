@@ -294,22 +294,6 @@ export function PracticePage() {
                                 ? `${module.lessonCount} bài học · ${module.completedCount} bài đã hoàn thành`
                                 : module.lockReason || 'Tiếp tục lộ trình để mở module này.'}
                             </p>
-<<<<<<< HEAD
-                            <div
-                              className="practice-module-progress"
-                              role="progressbar"
-                              aria-label={`Tiến độ học ${module.title}`}
-                              aria-valuemin={0}
-                              aria-valuemax={module.lessonCount || 1}
-                              aria-valuenow={module.completedCount}
-                            >
-                              <span
-                                style={{
-                                  width: `${module.lessonCount ? Math.min(100, (module.completedCount / module.lessonCount) * 100) : 0}%`,
-                                }}
-                              />
-                            </div>
-=======
                           </div>
                           <div
                             className="practice-module-progress"
@@ -324,7 +308,6 @@ export function PracticePage() {
                                 width: `${module.lessonCount ? Math.min(100, (module.completedCount / module.lessonCount) * 100) : 0}%`,
                               }}
                             />
->>>>>>> 930c244ef4e4c1560832fda2f189395243692842
                           </div>
                           <button
                             type="button"

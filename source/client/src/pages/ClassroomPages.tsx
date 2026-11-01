@@ -216,29 +216,6 @@ export function ClassesPage() {
         )}
         {teacher ? (
           <section className="class-create-banner">
-<<<<<<< HEAD
-            <div>
-              <span className="class-eyebrow">
-                <School size={16} /> KHÔNG GIAN GIẢNG DẠY
-              </span>
-              <h2>Tạo lớp học mới</h2>
-              <p>Mã tham gia sẽ được tạo tự động.</p>
-            </div>
-            <form className="class-create-form" onSubmit={create}>
-              <label className="class-create-field" htmlFor="new-class-name">
-                <span>
-                  Tên lớp học <span className="class-required-note">Bắt buộc</span>
-                </span>
-                <input
-                  id="new-class-name"
-                  required
-                  maxLength={120}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Ví dụ: Tiếng Anh 10A · Năm học 2026"
-                  aria-describedby="new-class-help"
-                />
-=======
             <div className="class-create-heading">
               <span className="class-create-icon" aria-hidden="true">
                 <School size={24} />
@@ -263,7 +240,6 @@ export function ClassesPage() {
                   />
                   <span className="class-required-note">Bắt buộc</span>
                 </span>
->>>>>>> 930c244ef4e4c1560832fda2f189395243692842
                 <small id="new-class-help">Đặt tên dễ nhận biết để học viên tìm đúng lớp.</small>
               </label>
               <button className="button primary" disabled={busy || !name.trim()}>
@@ -653,9 +629,10 @@ export function ClassDetailPage() {
   }
   return (
     <Layout title={detail.name}>
-      <div className={`class-workspace classroom-refresh${isOwner ? ' teacher-class-workspace' : ''}`}>
+      <div
+        className={`class-workspace classroom-refresh${isOwner ? ' teacher-class-workspace' : ''}`}
+      >
         <div className="class-detail-top-row">
-<<<<<<< HEAD
           <Link
             to="/classes"
             className="button secondary class-back-link"
@@ -663,6 +640,7 @@ export function ClassDetailPage() {
             title="Quay lại lớp học"
           >
             <ArrowLeft size={16} />
+            {isOwner && <span>Quay lại danh sách lớp</span>}
           </Link>
           {/* Hero: quay lại danh sách, tên lớp, metadata, thao tác, tab */}
           <section className="class-hero with-tabs">
@@ -697,50 +675,39 @@ export function ClassDetailPage() {
                   <Copy size={16} /> Sao chép mã
                 </button>
                 {isOwner && (
-                  <form onSubmit={rename} className="class-rename-form">
-                    <label htmlFor="class-rename">Tên lớp học</label>
-                    <input
-                      id="class-rename"
-                      required
-                      aria-label="Tên lớp"
-                      value={className}
-                      maxLength={120}
-                      onChange={(e) => setClassName(e.target.value)}
-                    />
-                    <button
-                      className="button secondary"
-                      disabled={busy || !className.trim() || className.trim() === detail.name}
-                    >
+                  <details className="class-rename-menu">
+                    <summary className="button secondary">
                       <Pencil size={15} /> Đổi tên
-                    </button>
-                  </form>
+                    </summary>
+                    <form onSubmit={rename} className="class-rename-form">
+                      <label htmlFor="class-rename">Tên lớp học</label>
+                      <input
+                        id="class-rename"
+                        required
+                        aria-label="Tên lớp"
+                        value={className}
+                        maxLength={120}
+                        onChange={(e) => setClassName(e.target.value)}
+                      />
+                      <button
+                        className="button secondary"
+                        disabled={busy || !className.trim() || className.trim() === detail.name}
+                      >
+                        <Pencil size={15} /> Lưu tên
+                      </button>
+                    </form>
+                  </details>
                 )}
                 <button
                   type="button"
                   className="button primary"
                   disabled={refreshing}
                   onClick={() => void refresh()}
-=======
-        <Link to="/classes" className="button secondary class-back-link" aria-label="Quay lại lớp học" title="Quay lại lớp học">
-          <ArrowLeft size={16} />
-          {isOwner && <span>Quay lại danh sách lớp</span>}
-        </Link>
-        {/* Hero: quay lại danh sách, tên lớp, metadata, thao tác, tab */}
-        <section className="class-hero with-tabs">
-          <div className="class-detail-header">
-            <div>
-              <div className="class-title-row">
-                <h1>{detail.name}</h1>
-                <span
-                  className={`class-live-pill ${connected ? 'online' : 'offline'}`}
-                  role="status"
->>>>>>> 930c244ef4e4c1560832fda2f189395243692842
                 >
                   <RefreshCw size={16} className={refreshing ? 'spin' : ''} /> Tải lại dữ liệu
                 </button>
               </div>
             </div>
-<<<<<<< HEAD
             {(isOwner || learnerView) && (
               <nav className="tab-bar class-tabs" aria-label="Công cụ lớp học">
                 {TABS.filter((tab) => !learnerView || allowedViews.includes(tab.key)).map((tab) => {
@@ -764,69 +731,6 @@ export function ClassDetailPage() {
               </nav>
             )}
           </section>
-=======
-            <div className="class-header-actions">
-              <button type="button" className="button secondary" onClick={() => void copyCode()}>
-                <Copy size={16} /> Sao chép mã
-              </button>
-              {isOwner && (
-                <details className="class-rename-menu">
-                  <summary className="button secondary">
-                    <Pencil size={15} /> Đổi tên
-                  </summary>
-                  <form onSubmit={rename} className="class-rename-form">
-                    <label htmlFor="class-rename">Tên lớp học</label>
-                    <input
-                      id="class-rename"
-                      required
-                      aria-label="Tên lớp"
-                      value={className}
-                      maxLength={120}
-                      onChange={(e) => setClassName(e.target.value)}
-                    />
-                    <button
-                      className="button secondary"
-                      disabled={busy || !className.trim() || className.trim() === detail.name}
-                    >
-                      <Pencil size={15} /> Lưu tên
-                    </button>
-                  </form>
-                </details>
-              )}
-              <button
-                type="button"
-                className="button primary"
-                disabled={refreshing}
-                onClick={() => void refresh()}
-              >
-                <RefreshCw size={16} className={refreshing ? 'spin' : ''} /> Tải lại dữ liệu
-              </button>
-            </div>
-          </div>
-          {(isOwner || learnerView) && (
-            <nav className="tab-bar class-tabs" aria-label="Công cụ lớp học">
-              {TABS.filter((tab) => !learnerView || allowedViews.includes(tab.key)).map((tab) => {
-                const Icon = tab.icon,
-                  count = tabCount[tab.key]
-                return (
-                  <button
-                    type="button"
-                    className={view === tab.key ? 'active' : ''}
-                    key={tab.key}
-                    onClick={() => go(tab.key)}
-                  >
-                    <Icon size={18} />
-                    <span>
-                      {learnerView && tab.key === 'grades' ? 'Kết quả của tôi' : tab.label}
-                    </span>
-                    {count !== undefined && <span className="class-tab-count">{count}</span>}
-                  </button>
-                )
-              })}
-            </nav>
-          )}
-        </section>
->>>>>>> 930c244ef4e4c1560832fda2f189395243692842
         </div>
         {error && (
           <div className="error-banner" role="alert">
